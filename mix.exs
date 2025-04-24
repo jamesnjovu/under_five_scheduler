@@ -9,7 +9,8 @@ defmodule App.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: releases()
     ]
   end
 
@@ -63,6 +64,18 @@ defmodule App.MixProject do
       {:timex, "~> 3.7"}
     ]
   end
+
+
+  def releases() do
+    [
+      under_five_rel: [
+        version: "0.1.0",
+        include_executables_for: [:unix],
+        applications: [
+          runtime_tools: :permanent
+        ]
+      ]
+    ]
 
   # Aliases are shortcuts or tasks specific to the current project.
   # For example, to install project dependencies and perform other setup tasks, run:
