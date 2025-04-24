@@ -103,34 +103,18 @@ defmodule AppWeb.UserRegistrationLive do
                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
                   />
                 </div>
-
                 <div>
-                  <label class="block text-sm font-medium text-gray-700">I am a:</label>
-                  <div class="mt-2 flex space-x-4">
-                    <div class="flex items-center">
-                      <input
-                        id="role-parent"
-                        name="user[role]"
-                        type="radio"
-                        value="parent"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                        checked
-                      />
-                      <label for="role-parent" class="ml-2 block text-sm text-gray-700">Parent</label>
-                    </div>
-                    <div class="flex items-center">
-                      <input
-                        id="role-provider"
-                        name="user[role]"
-                        type="radio"
-                        value="provider"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                      />
-                      <label for="role-provider" class="ml-2 block text-sm text-gray-700">
-                        Healthcare Provider
-                      </label>
-                    </div>
-                  </div>
+                  <.input
+                    field={@form[:role]}
+                    type="select"
+                    label="I am a:"
+                    required
+                    options={[
+                      {"Parent", "parent"},
+                      {"Healthcare Provider", "provider"}
+                    ]}
+                    class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
+                  />
                 </div>
               </div>
               <div class="mt-8">
