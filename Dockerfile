@@ -52,7 +52,6 @@ RUN mix compile --no-debug-info
 
 # Copy runtime config and release files
 COPY config/runtime.exs config/
-COPY rel rel
 
 # Create release with memory optimization
 RUN mix release --overwrite

@@ -85,7 +85,7 @@ defmodule AppWeb.Router do
   scope "/", AppWeb do
     pipe_through [:browser]
 
-    delete "/users/log_out", UserSessionController, :delete
+    match :*, "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
       on_mount: [{AppWeb.UserAuth, :mount_current_user}] do
