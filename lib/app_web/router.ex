@@ -17,17 +17,6 @@ defmodule AppWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", AppWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", AppWeb do
-  #   pipe_through :api
-  # end
-
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:app, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
@@ -52,6 +41,7 @@ defmodule AppWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{AppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      get "/", PageController, :home
       live "/users/register", UserRegistrationLive, :new
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
