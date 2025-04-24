@@ -38,3 +38,5 @@ npm-debug.log
 /.idea
 
 /.elixir_ls
+
+/config/dev.exs
