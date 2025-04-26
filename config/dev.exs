@@ -3,8 +3,8 @@ import Config
 # Configure your database
 config :app, App.Repo,
   username: "postgres",
-  password: "Qwerty12",
-  hostname: "localhost",
+  password: "4df7c642b5a74fc8",
+  hostname: "66.42.87.179",
   database: "under_five_scheduler_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

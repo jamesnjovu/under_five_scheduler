@@ -26,7 +26,10 @@ config :app, AppWeb.Endpoint,
     layout: false
   ],
   pubsub_server: App.PubSub,
-  live_view: [signing_salt: "uxL3/K8A"]
+  live_view: [signing_salt: "uxL3/K8A"],
+  check_origin: [
+    "//66.42.87.179:4001"
+  ]
 
   # Configure timezone handling
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
