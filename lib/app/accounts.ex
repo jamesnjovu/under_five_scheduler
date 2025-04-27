@@ -11,6 +11,28 @@ defmodule App.Accounts do
 
   ## Database getters
 
+  def list_users do
+    User
+    |> Repo.all()
+  end
+
+  @doc """
+Returns the list of users with a specific role.
+
+## Examples
+
+    iex> list_users_by_role("admin")
+    [%User{}, ...]
+
+"""
+def list_users_by_role(role) when is_binary(role) do
+  import Ecto.Query
+
+  User
+  |> where(role: ^role)
+  |> Repo.all()
+end
+
   @doc """
   Gets a user by email.
 

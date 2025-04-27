@@ -1,0 +1,687 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation -->
+  <div class="w-64 bg-indigo-800 text-white">
+    <div class="p-4">
+      <h2 class="text-xl font-bold text-center">Admin Portal</h2>
+    </div>
+
+    <nav class="mt-8">
+      <a
+        href={~p"/admin/dashboard"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="7" height="9" />
+          <rect x="14" y="3" width="7" height="5" />
+          <rect x="14" y="12" width="7" height="9" />
+          <rect x="3" y="16" width="7" height="5" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="px-4 py-2 flex items-center space-x-2 bg-indigo-900 border-l-4 border-white">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Providers</span>
+      </div>
+
+      <a
+        href={~p"/admin/parents"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Parents</span>
+      </a>
+
+      <a
+        href={~p"/admin/appointments"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Appointments</span>
+      </a>
+
+      <a
+        href={~p"/admin/reports"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 20V10"></path>
+          <path d="M18 14l-6-6-6 6"></path>
+        </svg>
+        <span>Reports</span>
+      </a>
+
+      <a
+        href={~p"/admin/settings"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
+        <span>Settings</span>
+      </a>
+
+      <div class="mt-8 border-t border-indigo-700"></div>
+
+      <a
+        href={~p"/users/log_out"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2 mt-4"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </div>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-700">{@user.email}</span>
+          <span class="bg-indigo-100 text-indigo-800 py-1 px-3 rounded-full text-sm font-medium">
+            Admin
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Stats cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Users stats -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                <svg
+                  class="h-6 w-6 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Total Users
+                  </dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">{@stats.total_users}</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <div class="text-sm">
+              <.link navigate={~p"/admin/parents"} class="font-medium text-indigo-600 hover:text-indigo-900">
+                {@stats.total_parents} Parents • 
+              </.link>
+              <.link navigate={~p"/admin/providers"} class="font-medium text-indigo-600 hover:text-indigo-900">
+                {@stats.total_providers} Providers
+              </.link>
+            </div>
+          </div>
+        </div>
+        
+<!-- Children stats -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                <svg
+                  class="h-6 w-6 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197L15 21z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Registered Children
+                  </dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@stats.total_children}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <div class="text-sm">
+              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-900">
+                View all children
+              </a>
+            </div>
+          </div>
+        </div>
+        
+<!-- Appointments today -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                <svg
+                  class="h-6 w-6 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Today's Appointments
+                  </dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@stats.today_appointments}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <div class="text-sm">
+              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-900">
+                View today's schedule
+              </a>
+            </div>
+          </div>
+        </div>
+        
+<!-- Upcoming appointments -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                <svg
+                  class="h-6 w-6 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Upcoming Appointments
+                  </dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@stats.upcoming_appointments}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-5 py-3">
+            <div class="text-sm">
+              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-900">
+                View all scheduled
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Charts section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Monthly appointments chart -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">
+            Appointment Statistics (Last 6 Months)
+          </h2>
+          <div class="flex justify-center space-x-4 mt-4">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-green-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Completed</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-blue-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Scheduled</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-red-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Cancelled</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-yellow-500 mr-1"></div>
+              <span class="text-xs text-gray-600">No-show</span>
+            </div>
+          </div>
+          <div class="h-80">
+            <!-- Phoenix doesn't natively render charts, so in a real app we'd use a JS charting library -->
+            <!-- This is a placeholder for a bar chart -->
+            <div class="h-full flex items-end space-x-4 border-b border-l">
+              <%= for data <- @appointment_chart_data do %>
+                <div class="flex-1 flex flex-col items-center">
+                  <div class="w-full flex flex-col space-y-1" style="height: 90%;">
+                    <div
+                      class="bg-green-500"
+                      style={"height: #{(data.completed / max(1, data.total)) * 100 }%;"}
+                    >
+                    </div>
+                    <div
+                      class="bg-blue-500"
+                      style={"height: #{(data.scheduled / max(1, data.total)) * 100  }%;"}
+                    >
+                    </div>
+                    <div
+                      class="bg-red-500"
+                      style={"height: #{(data.cancelled / max(1, data.total)) * 100  }%;"}
+                    >
+                    </div>
+                    <div
+                      class="bg-yellow-500"
+                      style={"height: #{(data.no_show / max(1, data.total)) * 100  }%;"}
+                    >
+                    </div>
+                  </div>
+                  <div class="text-xs font-medium text-gray-500 mt-2">
+                    {data.month}
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            <div class="px-6 py-4 bg-gray-50">
+              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                View all providers
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Recent activity section -->
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-lg font-medium leading-6 text-gray-900">
+                Recent Activity
+              </h3>
+            </div>
+            <ul role="list" class="divide-y divide-gray-200">
+              <li class="px-6 py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <svg
+                        class="h-5 w-5 text-green-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      New appointment completed
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      Dr. Sarah Johnson completed an appointment with Emma Doe
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 text-sm text-gray-500">
+                    30 minutes ago
+                  </div>
+                </div>
+              </li>
+              <li class="px-6 py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg
+                        class="h-5 w-5 text-blue-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      New child registered
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      John Doe added a new child: James Doe (3 months)
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 text-sm text-gray-500">
+                    2 hours ago
+                  </div>
+                </div>
+              </li>
+              <li class="px-6 py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <span class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <svg
+                        class="h-5 w-5 text-yellow-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      Appointment rescheduled
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      Appointment for Oliver Doe with Dr. Michael Chen was rescheduled to next week
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 text-sm text-gray-500">
+                    5 hours ago
+                  </div>
+                </div>
+              </li>
+              <li class="px-6 py-4">
+                <div class="flex items-center space-x-4">
+                  <div class="flex-shrink-0">
+                    <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                      <svg
+                        class="h-5 w-5 text-red-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      Appointment cancelled
+                    </p>
+                    <p class="text-sm text-gray-500 truncate">
+                      Appointment for Sophia Johnson was cancelled
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 text-sm text-gray-500">
+                    Yesterday at 4:30 PM
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <div class="px-6 py-4 bg-gray-50">
+              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                View all activity
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Monthly statistics -->
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Monthly Performance</h2>
+
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">Completion Rate</span>
+            <span class="text-sm font-medium text-gray-700">
+              {round(@stats.monthly_completed / max(1, @stats.monthly_appointments) * 100)}%
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              class="bg-green-600 h-2.5 rounded-full"
+              style={"width: #{round((@stats.monthly_completed / max(1, @stats.monthly_appointments)) * 100) }%"}
+            >
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">Cancellation Rate</span>
+            <span class="text-sm font-medium text-gray-700">
+              {round(@stats.monthly_cancelled / max(1, @stats.monthly_appointments) * 100)}%
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              class="bg-red-600 h-2.5 rounded-full"
+              style={"width: #{round((@stats.monthly_cancelled / max(1, @stats.monthly_appointments)) * 100) }%"}
+            >
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-700">No-show Rate</span>
+            <span class="text-sm font-medium text-gray-700">
+              {round(@stats.monthly_no_show / max(1, @stats.monthly_appointments) * 100)}%
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              class="bg-yellow-600 h-2.5 rounded-full"
+              style={"width: #{round((@stats.monthly_no_show / max(1, @stats.monthly_appointments)) * 100) }%"}
+            >
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 text-center">
+          <p class="text-3xl font-bold text-gray-900">{@stats.monthly_appointments}</p>
+          <p class="text-sm font-medium text-gray-500">Total appointments this month</p>
+        </div>
+      </div>
+      
+<!-- Provider performance table -->
+      <div class="bg-white shadow rounded-lg mb-8">
+        <div class="px-6 py-5 border-b border-gray-200">
+          <h3 class="text-lg font-medium leading-6 text-gray-900">
+            Top Provider Performance
+          </h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Provider
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Specialization
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Total Appointments
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Completion Rate
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  No-show Rate
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <%= for provider_data <- @providers do %>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          {provider_data.provider.name}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      {provider_data.provider.specialization}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">{provider_data.total_appointments}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          class="bg-green-600 h-2 rounded-full"
+                          style={"width: #{provider_data.completion_rate }%"}
+                        >
+                        </div>
+                      </div>
+                      <span class="text-sm text-gray-900">
+                        {round(provider_data.completion_rate)}%
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= if provider_data.total_appointments > 0 do %>
+                      <span class="text-sm text-gray-900">
+                        {round(
+                          provider_data.no_show_appointments / provider_data.total_appointments *
+                            100
+                        )}%
+                      </span>
+                    <% else %>
+                      <span class="text-sm text-gray-900">0%</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

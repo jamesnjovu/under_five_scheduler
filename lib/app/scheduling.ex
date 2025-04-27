@@ -41,7 +41,12 @@ defmodule App.Scheduling do
       ** (Ecto.NoResultsError)
 
   """
-  def get_provider!(id), do: Repo.get!(Provider, id)
+  def get_provider!(id) do
+    Provider
+    |> where(id: ^id)
+    |> limit(1)
+    |> Repo.one()
+  end
 
   def get_provider_by_user_id(user_id) do
     Repo.get_by(Provider, user_id: user_id)
@@ -412,7 +417,7 @@ defmodule App.Scheduling do
 
   defp schedule_appointment_notifications(appointment) do
     appointment = Repo.preload(appointment, child: :user)
-    IO.inspect appointment
+    IO.inspect(appointment)
     user = appointment.child.user
 
     # Schedule reminder notifications based on user preferences

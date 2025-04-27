@@ -1,0 +1,491 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation - same as dashboard -->
+  <div class="w-64 bg-indigo-800 text-white">
+    <div class="p-4">
+      <h2 class="text-xl font-bold text-center">Admin Portal</h2>
+    </div>
+
+    <nav class="mt-8">
+      <a
+        href={~p"/admin/dashboard"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="7" height="9" />
+          <rect x="14" y="3" width="7" height="5" />
+          <rect x="14" y="12" width="7" height="9" />
+          <rect x="3" y="16" width="7" height="5" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="px-4 py-2 flex items-center space-x-2 bg-indigo-900 border-l-4 border-white">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Providers</span>
+      </div>
+
+      <a
+        href={~p"/admin/parents"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Parents</span>
+      </a>
+
+      <a
+        href={~p"/admin/appointments"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Appointments</span>
+      </a>
+
+      <a
+        href={~p"/admin/reports"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 20V10"></path>
+          <path d="M18 14l-6-6-6 6"></path>
+        </svg>
+        <span>Reports</span>
+      </a>
+
+      <a
+        href={~p"/admin/settings"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
+        <span>Settings</span>
+      </a>
+
+      <div class="mt-8 border-t border-indigo-700"></div>
+
+      <a
+        href={~p"/users/log_out"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2 mt-4"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </div>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Provider Management</h1>
+        <div class="flex items-center space-x-4">
+          <button
+            phx-click="toggle-form"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            {if @show_form, do: "Cancel", else: "Add Provider"}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Provider creation form -->
+      <%= if @show_form do %>
+        <div class="bg-white shadow rounded-lg mb-6 p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-6">Add New Provider</h2>
+
+          <.form for={@provider_changeset.provider} id="provider-form" phx-submit="save">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="space-y-4">
+                <h3 class="font-medium text-gray-700">Provider Details</h3>
+
+                <div>
+                  <label for="provider_name" class="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    name="provider[name]"
+                    id="provider_name"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="provider_specialization"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Specialization
+                  </label>
+                  <select
+                    name="provider[specialization]"
+                    id="provider_specialization"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  >
+                    <option value="">Select a specialization</option>
+                    <option value="pediatrician">Pediatrician</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="general_practitioner">General Practitioner</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="font-medium text-gray-700">Account Details</h3>
+
+                <div>
+                  <label for="user_name" class="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="user[name]"
+                    id="user_name"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label for="user_email" class="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="user[email]"
+                    id="user_email"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label for="user_phone" class="block text-sm font-medium text-gray-700">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="user[phone]"
+                    id="user_phone"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="font-medium text-gray-700">Password</h3>
+
+                <div>
+                  <label for="user_password" class="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name="user[password]"
+                    id="user_password"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="user_password_confirmation"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="user[password_confirmation]"
+                    id="user_password_confirmation"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+
+                <div class="pt-5">
+                  <button
+                    type="submit"
+                    class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Create Provider
+                  </button>
+                </div>
+              </div>
+            </div>
+          </.form>
+        </div>
+      <% end %>
+      
+<!-- Search and filter section -->
+      <div class="bg-white shadow rounded-lg mb-6 p-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-700">Filter by:</span>
+            <form phx-change="filter" id="filter-form" class="flex-1">
+              <select
+                name="filter"
+                id="filter"
+                class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="all" selected={@filter == "all"}>All Providers</option>
+                <option value="pediatrician" selected={@filter == "pediatrician"}>
+                  Pediatricians
+                </option>
+                <option value="nurse" selected={@filter == "nurse"}>Nurses</option>
+                <option value="general_practitioner" selected={@filter == "general_practitioner"}>
+                  General Practitioners
+                </option>
+              </select>
+            </form>
+          </div>
+
+          <div class="w-full md:w-64">
+            <form phx-change="search" id="search-form">
+              <div class="relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                  placeholder="Search providers..."
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+<!-- Provider listing -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+          <h3 class="text-lg font-medium leading-6 text-gray-900">
+            {length(filtered_providers(@providers, @filter, @search))} Providers
+          </h3>
+        </div>
+
+        <%= if Enum.empty?(@providers) do %>
+          <div class="flex flex-col items-center justify-center py-12">
+            <svg
+              class="h-12 w-12 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1"
+                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+              >
+              </path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1"
+                d="M23 21v-2a4 4 0 0 0-3-3.87"
+              >
+              </path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1"
+                d="M16 3.13a4 4 0 0 1 0 7.75"
+              >
+              </path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No providers</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by adding a new provider.</p>
+            <div class="mt-6">
+              <button
+                phx-click="toggle-form"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Add Provider
+              </button>
+            </div>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Provider
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Specialization
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Contact
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Appointments
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <%= for provider <- filtered_providers(@providers, @filter, @search) do %>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                          <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-800 font-medium">
+                              {String.at(provider.name, 0)}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">
+                            {provider.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{provider.specialization}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{provider.user.email}</div>
+                      <div class="text-sm text-gray-500">{provider.user.phone}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{provider.total_appointments} total</div>
+                      <div class="text-sm text-gray-500">
+                        {provider.upcoming_appointments} upcoming
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div class="flex space-x-2">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900">Schedule</a>
+                        <button
+                          phx-click="delete"
+                          phx-value-id={provider.id}
+                          data-confirm="Are you sure you want to delete this provider?"
+                          class="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>
