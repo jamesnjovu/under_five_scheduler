@@ -79,6 +79,9 @@ defmodule AppWeb.Router do
         {AppWeb.UserAuth, :ensure_provider}
       ] do
       live "/dashboard", Dashboard, :index
+      live "/patients", Patients, :index
+      live "/schedule", Schedule, :index
+      live "/appointments", Appointments, :index
     end
   end
 
@@ -87,7 +90,6 @@ defmodule AppWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{AppWeb.UserAuth, :ensure_authenticated}] do
-
       # Dashboard
       live "/dashboard", DashboardLive.Index, :index
 
@@ -104,9 +106,6 @@ defmodule AppWeb.Router do
       live "/appointments/:id/reschedule", AppointmentLive.Reschedule, :edit
 
       # Provider routes (for healthcare staff)
-      live "/provider/dashboard", ProviderLive.Dashboard, :index
-      live "/provider/schedule", ProviderLive.Schedule, :index
-      live "/provider/appointments", ProviderLive.Appointments, :index
 
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email

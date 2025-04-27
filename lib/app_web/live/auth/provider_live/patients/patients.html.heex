@@ -1,0 +1,400 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Mobile sidebar toggle -->
+  <div class="fixed z-20 top-4 left-4 md:hidden">
+    <button
+      phx-click="toggle_sidebar"
+      class="p-2 rounded-md bg-indigo-600 text-white shadow-md hover:bg-indigo-700 focus:outline-none"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+  </div>
+  
+<!-- Sidebar navigation - with responsive behavior -->
+  <div class={
+    "w-64 bg-indigo-800 text-white transform transition-transform duration-300 ease-in-out z-10 h-full md:translate-x-0 fixed md:static " <> 
+    if(@show_sidebar, do: "translate-x-0", else: "-translate-x-full")
+  }>
+    <!-- Close button shown only on mobile -->
+    <div class="absolute right-2 top-2 md:hidden">
+      <button phx-click="toggle_sidebar" class="text-white p-2 hover:bg-indigo-700 rounded">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Provider Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@provider.name}</span>
+      </div>
+    </div>
+
+    {live_render(@socket, AppWeb.Auth.Navigation, sticky: true, id: "Nav")}
+  </div>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto md:pl-0">
+    <header class="bg-white shadow pl-4 md:pl-0">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Patients</h1>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Search form -->
+      <div class="mb-6">
+        <form phx-change="search" id="search-form">
+          <div class="relative rounded-md shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                class="h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              name="search"
+              id="search"
+              value={@search}
+              class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+              placeholder="Search patients by name or medical record number..."
+            />
+          </div>
+        </form>
+      </div>
+
+      <%= if @selected_patient do %>
+        <!-- Patient details view -->
+        <div class="bg-white shadow sm:rounded-lg mb-6">
+          <div class="flex justify-between items-center px-4 py-5 sm:px-6">
+            <div>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Patient Information
+              </h3>
+              <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Complete details and medical history.
+              </p>
+            </div>
+            <button
+              phx-click="clear_selection"
+              class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to list
+            </button>
+          </div>
+          <div class="border-t border-gray-200">
+            <dl>
+              <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Full name
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {@selected_patient.name}
+                </dd>
+              </div>
+              <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Date of birth
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {Date.to_string(@selected_patient.date_of_birth)} ({@selected_patient.age} years old)
+                </dd>
+              </div>
+              <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Medical Record Number
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {@selected_patient.medical_record_number}
+                </dd>
+              </div>
+              <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Parent/Guardian
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {@selected_patient.parent.name} ({@selected_patient.parent.phone})
+                </dd>
+              </div>
+              <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Total visits
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {@selected_patient.appointments_count} visits
+                </dd>
+              </div>
+              <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">
+                  Most recent visit
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  {format_date(@selected_patient.most_recent_visit)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+        
+<!-- Appointment history -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Appointment History
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              Past and upcoming appointments.
+            </p>
+          </div>
+          <div class="border-t border-gray-200">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Time
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Notes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@selected_patient.appointment_history) do %>
+                    <tr>
+                      <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No appointment history found.
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for appointment <- @selected_patient.appointment_history do %>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {Date.to_string(appointment.scheduled_date)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {Time.to_string(appointment.scheduled_time)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            #{case appointment.status do
+                              "scheduled" -> "bg-blue-100 text-blue-800"
+                              "confirmed" -> "bg-green-100 text-green-800"
+                              "completed" -> "bg-indigo-100 text-indigo-800"
+                              "cancelled" -> "bg-red-100 text-red-800"
+                              "no_show" -> "bg-yellow-100 text-yellow-800"
+                              _ -> "bg-gray-100 text-gray-800"
+                            end}"}>
+                            {String.capitalize(appointment.status)}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 max-w-sm truncate">
+                          {appointment.notes || "No notes"}
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <!-- Patients listing -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Patient List ({length(filtered_patients(@patients, @search))})
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              Children you have seen in your practice.
+            </p>
+          </div>
+
+          <%= if Enum.empty?(filtered_patients(@patients, @search)) do %>
+            <div class="px-4 py-10 text-center text-gray-500">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No patients</h3>
+              <p class="mt-1 text-sm text-gray-500">
+                <%= if @search == "" do %>
+                  You haven't seen any patients yet.
+                <% else %>
+                  No patients match your search criteria.
+                <% end %>
+              </p>
+            </div>
+          <% else %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      MRN
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Age
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Last Visit
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Total Visits
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= for patient <- filtered_patients(@patients, @search) do %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0 h-10 w-10">
+                            <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                              <span class="text-indigo-800 font-medium">
+                                {String.first(patient.name)}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">
+                              {patient.name}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {patient.medical_record_number}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {patient.age} years
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {format_date(patient.most_recent_visit)}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {patient.appointments_count}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          phx-click="view_patient"
+                          phx-value-id={patient.id}
+                          class="text-indigo-600 hover:text-indigo-900"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </main>
+  </div>
+</div>

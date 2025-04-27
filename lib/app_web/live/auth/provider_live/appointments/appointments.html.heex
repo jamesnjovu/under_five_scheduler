@@ -1,0 +1,332 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation -->
+  <div class="w-64 bg-indigo-800 text-white">
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Provider Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span><%= @provider.name %></span>
+      </div>
+    </div>
+
+    <%= live_render(@socket, AppWeb.Auth.Navigation, sticky: true, id: "Nav") %>
+  </div>
+  
+  <!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Appointments</h1>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Date navigation and view selection -->
+      <div class="bg-white shadow rounded-lg mb-6">
+        <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div class="flex items-center space-x-4">
+            <button
+              phx-click="previous_day"
+              class="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+              <svg
+                class="h-5 w-5 text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <div class="flex items-center space-x-2">
+              <input
+                type="date"
+                id="date-picker"
+                name="date"
+                value={Date.to_iso8601(@current_date)}
+                phx-change="change_date"
+                class="block w-44 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+
+              <div class="text-gray-700 font-medium">
+                <%= format_date(@current_date) %>
+              </div>
+            </div>
+
+            <button phx-click="next_day" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+              <svg
+                class="h-5 w-5 text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-gray-700">View:</span>
+            <div class="relative z-0 inline-flex shadow-sm rounded-md">
+              <button
+                phx-click="change_view"
+                phx-value-view="day"
+                type="button"
+                class={"relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium #{if @view_mode == "day", do: "text-indigo-600 z-10 bg-indigo-50 border-indigo-500", else: "text-gray-700 hover:bg-gray-50"}"}
+              >
+                Day
+              </button>
+              <button
+                phx-click="change_view"
+                phx-value-view="week"
+                type="button"
+                class={"relative inline-flex items-center px-4 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium #{if @view_mode == "week", do: "text-indigo-600 z-10 bg-indigo-50 border-indigo-500", else: "text-gray-700 hover:bg-gray-50"}"}
+              >
+                Week
+              </button>
+              <button
+                phx-click="change_view"
+                phx-value-view="month"
+                type="button"
+                class={"relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium #{if @view_mode == "month", do: "text-indigo-600 z-10 bg-indigo-50 border-indigo-500", else: "text-gray-700 hover:bg-gray-50"}"}
+              >
+                Month
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Search and filter section -->
+      <div class="bg-white shadow rounded-lg mb-6 p-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-700">Filter by:</span>
+            <form phx-change="filter" id="filter-form" class="flex-1">
+              <select
+                name="filter"
+                id="filter"
+                class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="all" selected={@filter == "all"}>All Appointments</option>
+                <option value="scheduled" selected={@filter == "scheduled"}>Scheduled</option>
+                <option value="confirmed" selected={@filter == "confirmed"}>Confirmed</option>
+                <option value="completed" selected={@filter == "completed"}>Completed</option>
+                <option value="cancelled" selected={@filter == "cancelled"}>Cancelled</option>
+                <option value="no_show" selected={@filter == "no_show"}>No-shows</option>
+              </select>
+            </form>
+          </div>
+
+          <div class="w-full md:w-64">
+            <form phx-change="search" id="search-form">
+              <div class="relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  value={@search}
+                  class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                  placeholder="Search appointments..."
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appointment listing -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+          <h3 class="text-lg font-medium leading-6 text-gray-900">
+            <%= length(filtered_appointments(@appointments, @filter, @search)) %> Appointments for <%= format_date(@current_date) %>
+          </h3>
+        </div>
+
+        <%= if Enum.empty?(filtered_appointments(@appointments, @filter, @search)) do %>
+          <div class="flex flex-col items-center justify-center py-12">
+            <svg
+              class="h-12 w-12 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No appointments</h3>
+            <p class="mt-1 text-sm text-gray-500">No appointments scheduled for this date.</p>
+          </div>
+        <% else %>
+          <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+            <%= for appointment <- filtered_appointments(@appointments, @filter, @search) do %>
+              <div class="p-6" id={"appointment-#{appointment.id}"}>
+                <div class="flex flex-col md:flex-row md:items-start space-y-4 md:space-y-0">
+                  <div class="flex-1">
+                    <div class="flex items-center">
+                      <span class={"flex h-10 w-10 rounded-full items-center justify-center 
+                        #{case appointment.status do
+                          "scheduled" -> "bg-blue-100 text-blue-800"
+                          "confirmed" -> "bg-green-100 text-green-800"
+                          "completed" -> "bg-indigo-100 text-indigo-800"
+                          "cancelled" -> "bg-red-100 text-red-800"
+                          "no_show" -> "bg-yellow-100 text-yellow-800"
+                          _ -> "bg-gray-100 text-gray-800"
+                        end}"}>
+                        <%= String.first(appointment.child.name) %>
+                      </span>
+                      <div class="ml-4">
+                        <h4 class="text-lg font-medium text-gray-900">
+                          <%= appointment.child.name %>
+                        </h4>
+                        <div class="flex space-x-4 text-sm text-gray-500">
+                          <p><%= appointment.formatted_time %></p>
+                          <p><%= appointment.age %> years old</p>
+                          <p>MRN: <%= appointment.child.medical_record_number %></p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 ml-14">
+                      <label for={"notes-#{appointment.id}"} class="block text-sm font-medium text-gray-700">
+                        Notes
+                      </label>
+                      <div class="mt-1 flex space-x-2">
+                        <textarea
+                          id={"notes-#{appointment.id}"}
+                          rows="2"
+                          class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                          phx-blur="add_notes"
+                          phx-value-id={appointment.id}
+                          phx-value-notes={appointment.notes}
+                        ><%= appointment.notes %></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col items-center md:items-end space-y-4">
+                    <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                      #{case appointment.status do
+                        "scheduled" -> "bg-blue-100 text-blue-800"
+                        "confirmed" -> "bg-green-100 text-green-800"
+                        "completed" -> "bg-indigo-100 text-indigo-800"
+                        "cancelled" -> "bg-red-100 text-red-800"
+                        "no_show" -> "bg-yellow-100 text-yellow-800"
+                        _ -> "bg-gray-100 text-gray-800"
+                      end}"}>
+                      <%= String.capitalize(appointment.status) %>
+                    </span>
+
+                    <div class="w-full md:w-auto flex md:flex-col space-x-2 md:space-x-0 md:space-y-2">
+                      <div x-data="{ open: false }" class="relative">
+                        <button
+                          @click="open = !open"
+                          class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          Update Status
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 ml-1"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                        <div
+                          x-show="open"
+                          @click.away="open = false"
+                          class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-10"
+                          x-transition:enter="transition ease-out duration-100"
+                          x-transition:enter-start="transform opacity-0 scale-95"
+                          x-transition:enter-end="transform opacity-100 scale-100"
+                          x-transition:leave="transition ease-in duration-75"
+                          x-transition:leave-start="transform opacity-100 scale-100"
+                          x-transition:leave-end="transform opacity-0 scale-95"
+                          style="display: none;"
+                        >
+                          <div class="py-1">
+                            <button
+                              phx-click="update_status"
+                              phx-value-id={appointment.id}
+                              phx-value-status="confirmed"
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              phx-click="update_status"
+                              phx-value-id={appointment.id}
+                              phx-value-status="completed"
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Complete
+                            </button>
+                          </div>
+                          <div class="py-1">
+                            <button
+                              phx-click="update_status"
+                              phx-value-id={appointment.id}
+                              phx-value-status="cancelled"
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              phx-click="update_status"
+                              phx-value-id={appointment.id}
+                              phx-value-status="no_show"
+                              class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              No-show
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>
