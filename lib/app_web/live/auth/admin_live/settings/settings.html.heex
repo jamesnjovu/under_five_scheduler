@@ -1,0 +1,523 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation - same as dashboard -->
+  <div class="w-64 bg-indigo-800 text-white">
+    <div class="p-4">
+      <h2 class="text-xl font-bold text-center">Admin Portal</h2>
+    </div>
+
+    <nav class="mt-8">
+      <a
+        href={~p"/admin/dashboard"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="7" height="9" />
+          <rect x="14" y="3" width="7" height="5" />
+          <rect x="14" y="12" width="7" height="9" />
+          <rect x="3" y="16" width="7" height="5" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <a
+        href={~p"/admin/providers"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>Providers</span>
+      </a>
+
+      <a
+        href={~p"/admin/parents"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Parents</span>
+      </a>
+
+      <a
+        href={~p"/admin/appointments"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Appointments</span>
+      </a>
+
+      <a
+        href={~p"/admin/reports"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 20V10"></path>
+          <path d="M18 14l-6-6-6 6"></path>
+        </svg>
+        <span>Reports</span>
+      </a>
+
+      <div class="px-4 py-2 flex items-center space-x-2 bg-indigo-900 border-l-4 border-white">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
+        <span>Settings</span>
+      </div>
+
+      <div class="mt-8 border-t border-indigo-700"></div>
+
+      <a
+        href={~p"/users/log_out"}
+        class="block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2 mt-4"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </div>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900">System Settings</h1>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Settings Tabs -->
+      <div class="mb-8">
+        <div class="sm:hidden">
+          <label for="tabs" class="sr-only">Select a tab</label>
+          <select
+            id="tabs"
+            name="tabs"
+            phx-change="change_tab"
+            class="block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="notification" selected={@active_tab == "notification"}>
+              Notification Settings
+            </option>
+            <option value="appointment" selected={@active_tab == "appointment"}>
+              Appointment Settings
+            </option>
+            <option value="ussd" selected={@active_tab == "ussd"}>USSD Settings</option>
+          </select>
+        </div>
+        <div class="hidden sm:block">
+          <div class="border-b border-gray-200">
+            <nav class="flex -mb-px space-x-8" aria-label="Tabs">
+              <button
+                phx-click="change_tab"
+                phx-value-tab="notification"
+                class={
+                  "py-4 px-1 border-b-2 font-medium text-sm " <> 
+                  if(@active_tab == "notification", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                }
+              >
+                Notification Settings
+              </button>
+              <button
+                phx-click="change_tab"
+                phx-value-tab="appointment"
+                class={
+                  "py-4 px-1 border-b-2 font-medium text-sm " <> 
+                  if(@active_tab == "appointment", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                }
+              >
+                Appointment Settings
+              </button>
+              <button
+                phx-click="change_tab"
+                phx-value-tab="ussd"
+                class={
+                  "py-4 px-1 border-b-2 font-medium text-sm " <> 
+                  if(@active_tab == "ussd", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                }
+              >
+                USSD Settings
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+      
+<!-- Tab content -->
+      <div class="bg-white shadow rounded-lg">
+        <%= case @active_tab do %>
+          <% "notification" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Notification Settings
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Configure how and when notifications are sent to users
+                </p>
+              </div>
+
+              <form phx-submit="update_notification_settings" class="mt-6 space-y-6">
+                <div>
+                  <fieldset>
+                    <legend class="text-base font-medium text-gray-900">
+                      Notification Methods
+                    </legend>
+                    <div class="mt-4 space-y-4">
+                      <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                          <input
+                            id="email_enabled"
+                            name="notification[email_enabled]"
+                            type="checkbox"
+                            value="true"
+                            checked={@notification_settings.email_enabled}
+                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
+                        </div>
+                        <div class="ml-3 text-sm">
+                          <label for="email_enabled" class="font-medium text-gray-700">
+                            Email Notifications
+                          </label>
+                          <p class="text-gray-500">Send notifications via email</p>
+                        </div>
+                      </div>
+                      <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                          <input
+                            id="sms_enabled"
+                            name="notification[sms_enabled]"
+                            type="checkbox"
+                            value="true"
+                            checked={@notification_settings.sms_enabled}
+                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
+                        </div>
+                        <div class="ml-3 text-sm">
+                          <label for="sms_enabled" class="font-medium text-gray-700">
+                            SMS Notifications
+                          </label>
+                          <p class="text-gray-500">Send notifications via SMS</p>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+
+                <div>
+                  <label for="reminder_hours" class="block text-sm font-medium text-gray-700">
+                    Reminder Time (hours before appointment)
+                  </label>
+                  <select
+                    id="reminder_hours"
+                    name="notification[reminder_hours]"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="12" selected={@notification_settings.reminder_hours == 12}>
+                      12 hours
+                    </option>
+                    <option value="24" selected={@notification_settings.reminder_hours == 24}>
+                      24 hours
+                    </option>
+                    <option value="48" selected={@notification_settings.reminder_hours == 48}>
+                      48 hours
+                    </option>
+                    <option value="72" selected={@notification_settings.reminder_hours == 72}>
+                      72 hours
+                    </option>
+                  </select>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          <% "appointment" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Appointment Settings
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Configure appointment scheduling rules and constraints
+                </p>
+              </div>
+
+              <form phx-submit="update_appointment_settings" class="mt-6 space-y-6">
+                <div>
+                  <label
+                    for="allow_reschedule_hours"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Allow Rescheduling (hours before appointment)
+                  </label>
+                  <select
+                    id="allow_reschedule_hours"
+                    name="appointment[allow_reschedule_hours]"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option
+                      value="12"
+                      selected={@appointment_settings.allow_reschedule_hours == 12}
+                    >
+                      12 hours
+                    </option>
+                    <option
+                      value="24"
+                      selected={@appointment_settings.allow_reschedule_hours == 24}
+                    >
+                      24 hours
+                    </option>
+                    <option
+                      value="48"
+                      selected={@appointment_settings.allow_reschedule_hours == 48}
+                    >
+                      48 hours
+                    </option>
+                    <option
+                      value="72"
+                      selected={@appointment_settings.allow_reschedule_hours == 72}
+                    >
+                      72 hours
+                    </option>
+                  </select>
+                  <p class="mt-2 text-sm text-gray-500">
+                    Parents can reschedule appointments up to this many hours before the scheduled time
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="max_appointments_per_day"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Maximum Appointments per Day (per provider)
+                  </label>
+                  <input
+                    type="number"
+                    id="max_appointments_per_day"
+                    name="appointment[max_appointments_per_day]"
+                    value={@appointment_settings.max_appointments_per_day}
+                    min="1"
+                    max="20"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="appointment_duration_minutes"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Appointment Duration (minutes)
+                  </label>
+                  <select
+                    id="appointment_duration_minutes"
+                    name="appointment[appointment_duration_minutes]"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option
+                      value="15"
+                      selected={@appointment_settings.appointment_duration_minutes == 15}
+                    >
+                      15 minutes
+                    </option>
+                    <option
+                      value="30"
+                      selected={@appointment_settings.appointment_duration_minutes == 30}
+                    >
+                      30 minutes
+                    </option>
+                    <option
+                      value="45"
+                      selected={@appointment_settings.appointment_duration_minutes == 45}
+                    >
+                      45 minutes
+                    </option>
+                    <option
+                      value="60"
+                      selected={@appointment_settings.appointment_duration_minutes == 60}
+                    >
+                      60 minutes
+                    </option>
+                  </select>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          <% "ussd" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  USSD Settings
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Configure USSD (Unstructured Supplementary Service Data) service settings
+                </p>
+              </div>
+
+              <form phx-submit="update_ussd_settings" class="mt-6 space-y-6">
+                <div>
+                  <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                      <input
+                        id="ussd_enabled"
+                        name="ussd[enabled]"
+                        type="checkbox"
+                        value="true"
+                        checked={@ussd_settings.enabled}
+                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      />
+                    </div>
+                    <div class="ml-3 text-sm">
+                      <label for="ussd_enabled" class="font-medium text-gray-700">
+                        Enable USSD Service
+                      </label>
+                      <p class="text-gray-500">Allow users to book appointments via USSD</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="service_code" class="block text-sm font-medium text-gray-700">
+                    USSD Service Code
+                  </label>
+                  <input
+                    type="text"
+                    id="service_code"
+                    name="ussd[service_code]"
+                    value={@ussd_settings.service_code}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="*123#"
+                  />
+                  <p class="mt-2 text-sm text-gray-500">
+                    The code users will dial to access the service
+                  </p>
+                </div>
+
+                <div>
+                  <label for="provider" class="block text-sm font-medium text-gray-700">
+                    USSD Provider
+                  </label>
+                  <select
+                    id="provider"
+                    name="ussd[provider]"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="Default" selected={@ussd_settings.provider == "Default"}>
+                      Default
+                    </option>
+                    <option
+                      value="Africa's Talking"
+                      selected={@ussd_settings.provider == "Africa's Talking"}
+                    >
+                      Africa's Talking
+                    </option>
+                    <option value="Infobip" selected={@ussd_settings.provider == "Infobip"}>
+                      Infobip
+                    </option>
+                    <option value="Twilio" selected={@ussd_settings.provider == "Twilio"}>
+                      Twilio
+                    </option>
+                  </select>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+        <% end %>
+      </div>
+    </main>
+  </div>
+</div>
