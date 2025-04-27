@@ -80,7 +80,7 @@ defmodule AppWeb.Auth.Navigation do
         navigate={~p"/admin/parents"}
         class={
           if @current_url in [
-               ~p"/admin/providers"
+               ~p"/admin/parents"
              ],
              do: active_class(),
              else: nav_class()
@@ -105,7 +105,7 @@ defmodule AppWeb.Auth.Navigation do
         navigate={~p"/admin/appointments"}
         class={
           if @current_url in [
-               ~p"/admin/providers"
+               ~p"/admin/appointments"
              ],
              do: active_class(),
              else: nav_class()
@@ -132,7 +132,7 @@ defmodule AppWeb.Auth.Navigation do
         navigate={~p"/provider/appointments"}
         class={
           if @current_url in [
-               ~p"/admin/providers"
+               ~p"/provider/appointments"
              ],
              do: active_class(),
              else: nav_class()
@@ -159,7 +159,7 @@ defmodule AppWeb.Auth.Navigation do
         navigate={~p"/provider/schedule"}
         class={
           if @current_url in [
-               ~p"/admin/providers"
+               ~p"/provider/schedule"
              ],
              do: active_class(),
              else: nav_class()
@@ -219,7 +219,8 @@ defmodule AppWeb.Auth.Navigation do
         }
         class={
           if @current_url in [
-               ~p"/admin/providers"
+               ~p"/admin/reports",
+               ~p"/provider/reports",
              ],
              do: active_class(),
              else: nav_class()

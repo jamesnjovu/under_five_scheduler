@@ -26,6 +26,8 @@ defmodule AppWeb.ProviderLive.Schedule do
         |> assign(:active_tab, "schedule")
         |> assign(:editing_day, nil)
         |> assign(:form, nil)
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else
@@ -45,12 +47,14 @@ defmodule AppWeb.ProviderLive.Schedule do
       if schedule do
         to_form(Scheduling.change_schedule(schedule))
       else
-        to_form(Scheduling.change_schedule(%Scheduling.Schedule{
-          provider_id: socket.assigns.provider.id,
-          day_of_week: day_num,
-          start_time: ~T[09:00:00],
-          end_time: ~T[17:00:00]
-        }))
+        to_form(
+          Scheduling.change_schedule(%Scheduling.Schedule{
+            provider_id: socket.assigns.provider.id,
+            day_of_week: day_num,
+            start_time: ~T[09:00:00],
+            end_time: ~T[17:00:00]
+          })
+        )
       end
 
     {:noreply, socket |> assign(:editing_day, day_num) |> assign(:form, form)}

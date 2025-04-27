@@ -29,6 +29,8 @@ defmodule AppWeb.ProviderLive.Appointments do
         |> assign(:appointments, get_appointments_for_date(provider.id, today))
         |> assign(:filter, "all")
         |> assign(:search, "")
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

@@ -23,6 +23,8 @@ defmodule AppWeb.AdminLive.Reports do
         |> assign(:report_type, "appointment_summary")
         |> assign(:reports, generate_reports(one_month_ago, today))
         |> assign(:providers, Scheduling.list_providers())
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

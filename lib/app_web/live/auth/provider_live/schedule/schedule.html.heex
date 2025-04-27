@@ -1,6 +1,5 @@
 <div class="flex h-screen bg-gray-50">
-  <!-- Sidebar navigation -->
-  <div class="w-64 bg-indigo-800 text-white">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
     <div class="p-4">
       <div class="flex items-center justify-center">
         <span class="text-xl font-bold">Provider Portal</span>
@@ -9,9 +8,7 @@
         <span>{@provider.name}</span>
       </div>
     </div>
-
-    {live_render(@socket, AppWeb.Auth.Navigation, sticky: true, id: "Nav")}
-  </div>
+  </.side_nav_res>
   
 <!-- Main content area -->
   <div class="flex-1 overflow-auto">

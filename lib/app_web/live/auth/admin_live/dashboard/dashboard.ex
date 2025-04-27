@@ -65,6 +65,8 @@ defmodule AppWeb.AdminLive.Dashboard do
         |> assign(:providers, providers_with_appointments)
         |> assign(:appointment_chart_data, get_appointment_chart_data())
         |> assign(:page_title, "Admin Dashboard")
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

@@ -13,6 +13,10 @@ defmodule AppWeb.Router do
     plug :fetch_current_user
   end
 
+  pipeline :sidebar_layout do
+    plug(:put_root_layout, html: {AppWeb.Layouts, :sidebar})
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -82,6 +86,7 @@ defmodule AppWeb.Router do
       live "/patients", Patients, :index
       live "/schedule", Schedule, :index
       live "/appointments", Appointments, :index
+      live "/reports", Reports, :index
     end
   end
 

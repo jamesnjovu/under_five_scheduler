@@ -29,7 +29,8 @@ defmodule AppWeb.ProviderLive.Dashboard do
         |> assign(:statistics, get_statistics(provider.id, one_month_ago, today))
         |> assign(:today_appointments, get_today_appointments(provider.id))
         |> assign(:upcoming_appointments, get_upcoming_appointments(provider.id))
-        |> assign(:active_tab, "dashboard")
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else
@@ -41,8 +42,17 @@ defmodule AppWeb.ProviderLive.Dashboard do
   end
 
   @impl true
-  def handle_event("change_tab", %{"tab" => tab}, socket) do
-    {:noreply, assign(socket, :active_tab, tab)}
+  def handle_params(params, _url, socket) do
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp apply_action(socket, :index, _params) do
+    socket
+  end
+
+  @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
   end
 
   @impl true
@@ -147,9 +157,9 @@ defmodule AppWeb.ProviderLive.Dashboard do
       total_appointments: appointment_count,
       status_counts: status_counts,
       rates: %{
-        completion_rate: completion_rate/1,
-        cancellation_rate: cancellation_rate/1,
-        no_show_rate: no_show_rate/1
+        completion_rate: completion_rate / 1,
+        cancellation_rate: cancellation_rate / 1,
+        no_show_rate: no_show_rate / 1
       },
       monthly_counts: monthly_counts,
       daily_counts: daily_counts,

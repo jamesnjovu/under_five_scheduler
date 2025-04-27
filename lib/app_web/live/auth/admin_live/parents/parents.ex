@@ -22,6 +22,8 @@ defmodule AppWeb.AdminLive.Parents do
         |> assign(:page_title, "Parent Management")
         |> assign(:filter, "all")
         |> assign(:search, "")
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

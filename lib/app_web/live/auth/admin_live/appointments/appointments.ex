@@ -31,6 +31,8 @@ defmodule AppWeb.AdminLive.Appointments do
         |> assign(:appointments, list_appointments_with_details(today))
         |> assign(:upcoming_appointments, get_upcoming_appointments())
         |> assign(:statistics, get_appointment_statistics())
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

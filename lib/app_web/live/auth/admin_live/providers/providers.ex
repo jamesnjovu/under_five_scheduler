@@ -25,6 +25,8 @@ defmodule AppWeb.AdminLive.Providers do
         |> assign(:search, "")
         |> assign(:show_form, false)
         |> assign(:provider_changeset, new_provider_changeset())
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else

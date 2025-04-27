@@ -29,6 +29,8 @@ defmodule AppWeb.AdminLive.Settings do
           provider: "Default"
         })
         |> assign(:active_tab, "notification")
+        # For responsive sidebar toggle
+        |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else
