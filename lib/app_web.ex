@@ -93,6 +93,10 @@ defmodule AppWeb do
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 
+      def noreply(socket), do: {:noreply, socket}
+
+      def ok(socket), do: {:ok, socket}
+
       # Routes generation with the ~p sigil
       unquote(verified_routes())
     end

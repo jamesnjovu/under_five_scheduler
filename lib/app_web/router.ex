@@ -53,7 +53,7 @@ defmodule AppWeb.Router do
 
   # Authenticated routes
   # Admin routes
-  scope "/admin", AppWeb do
+  scope "/admin", AppWeb.AdminLive do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_admin_user,
@@ -61,12 +61,24 @@ defmodule AppWeb.Router do
         {AppWeb.UserAuth, :ensure_authenticated},
         {AppWeb.UserAuth, :ensure_admin}
       ] do
-      live "/dashboard", AdminLive.Dashboard, :index
-      live "/providers", AdminLive.Providers, :index
-      live "/parents", AdminLive.Parents, :index
-      live "/appointments", AdminLive.Appointments, :index
-      live "/reports", AdminLive.Reports, :index
-      live "/settings", AdminLive.Settings, :index
+      live "/dashboard", Dashboard, :index
+      live "/providers", Providers, :index
+      live "/parents", Parents, :index
+      live "/appointments", Appointments, :index
+      live "/reports", Reports, :index
+      live "/settings", Settings, :index
+    end
+  end
+
+  scope "/provider", AppWeb.ProviderLive do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_provider_user,
+      on_mount: [
+        {AppWeb.UserAuth, :ensure_authenticated},
+        {AppWeb.UserAuth, :ensure_provider}
+      ] do
+      live "/dashboard", Dashboard, :index
     end
   end
 
