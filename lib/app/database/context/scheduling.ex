@@ -325,6 +325,15 @@ defmodule App.Scheduling do
           handle_status_change(updated_appointment, appointment.status)
         end
 
+        # Broadcast to all subscribers
+        Phoenix.PubSub.broadcast(
+          App.PubSub,
+          "appointments:updates",
+          {:appointment_updated, updated_appointment}
+        )
+
+        # Also broadcast to dashboard for metric updates
+        Phoenix.PubSub.broadcast(App.PubSub, "dashboard:updates", {:stats_updated})
         {:ok, updated_appointment}
 
       error ->

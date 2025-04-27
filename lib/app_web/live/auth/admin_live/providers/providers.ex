@@ -86,6 +86,18 @@ defmodule AppWeb.AdminLive.Providers do
     # In a real app, consider soft-deletion or checking for dependencies
     with {:ok, _} <- Scheduling.delete_provider(provider),
          {:ok, _} <- Accounts.delete_user(user) do
+      App.Administration.Auditing.log_action(%{
+        action: "delete",
+        entity_type: "provider",
+        entity_id: id,
+        user_id: user.id,
+        ip_address: socket.assigns.client_ip,
+        details: %{
+          provider_name: provider.name,
+          specialization: provider.specialization
+        }
+      })
+
       {:noreply,
        socket
        |> put_flash(:info, "Provider deleted successfully.")
