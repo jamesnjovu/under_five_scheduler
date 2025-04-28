@@ -17,21 +17,66 @@ defmodule App.Accounts do
   end
 
   @doc """
-Returns the list of users with a specific role.
+  Updates a user's profile information.
 
-## Examples
+  ## Examples
 
-    iex> list_users_by_role("admin")
-    [%User{}, ...]
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
 
-"""
-def list_users_by_role(role) when is_binary(role) do
-  import Ecto.Query
+      iex> update_user(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
 
-  User
-  |> where(role: ^role)
-  |> Repo.all()
-end
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking notification preference changes.
+
+  ## Examples
+
+      iex> change_notification_preference(notification_preference)
+      %Ecto.Changeset{data: %NotificationPreference{}}
+
+  """
+  def change_notification_preference(
+        %NotificationPreference{} = notification_preference,
+        attrs \\ %{}
+      ) do
+    NotificationPreference.changeset(notification_preference, attrs)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user changes.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+  """
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
+  end
+
+  @doc """
+  Returns the list of users with a specific role.
+
+  ## Examples
+
+      iex> list_users_by_role("admin")
+      [%User{}, ...]
+
+  """
+  def list_users_by_role(role) when is_binary(role) do
+    import Ecto.Query
+
+    User
+    |> where(role: ^role)
+    |> Repo.all()
+  end
 
   @doc """
   Gets a user by email.
@@ -452,7 +497,6 @@ end
   def get_child!(id), do: Repo.get!(Child, id)
 
   def get_child(id), do: Repo.get(Child, id)
-
 
   @doc """
   Creates a child.

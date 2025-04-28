@@ -245,14 +245,14 @@ defmodule AppWeb.Auth.Navigation do
         navigate={
           case @current_user.role do
             "admin" -> ~p"/admin/settings"
-            "provider" -> ~p"/users/settings"
+            "provider" -> ~p"/provider/settings"
             _a -> ~p"/dashboard"
           end
         }
         class={
           if @current_url in [
                ~p"/admin/settings",
-               ~p"/users/settings",
+               ~p"/provider/settings",
              ],
              do: active_class(),
              else: nav_class()

@@ -26,6 +26,9 @@ defmodule App.Accounts.User do
     timestamps(type: :utc_datetime)
   end
 
+  @doc """
+  A user changeset for updating basic profile information.
+  """
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:name, :email, :phone, :role])
