@@ -5,6 +5,10 @@ defmodule AppWeb.USSDController do
   alias App.Scheduling
   alias App.USSDSession
 
+  @doc """
+  Main entry point for USSD requests.
+  Handles requests from telecom USSD gateway.
+  """
   def handle(
         conn,
         %{"sessionId" => session_id, "phoneNumber" => phone_number, "text" => text} = params
@@ -27,7 +31,7 @@ defmodule AppWeb.USSDController do
       }) do
     # Get or create USSD session
     session = USSDSession.get_or_create(session_id, phone_number)
-    IO.inspect(session, label: "Session Data")
+
     # Parse the user input
     input_parts = String.split(text, "*")
     current_input = List.last(input_parts) || ""
@@ -46,6 +50,9 @@ defmodule AppWeb.USSDController do
       :check_appointments ->
         handle_check_appointments(session, current_input)
 
+      :cancel_appointment ->
+        handle_cancel_appointment(session, current_input)
+
       :select_child ->
         handle_select_child(session, current_input)
 
@@ -58,87 +65,127 @@ defmodule AppWeb.USSDController do
       :confirm_booking ->
         handle_confirm_booking(session, current_input)
 
+      :select_appointment_to_cancel ->
+        handle_select_appointment_to_cancel(session, current_input)
+
+      :confirm_cancellation ->
+        handle_confirm_cancellation(session, current_input)
+
       _ ->
-        "END An error occurred. Please try again."
+        "END An error occurred. Please restart your session."
     end
+  # rescue
+  #   e ->
+  #     # Log error but provide user-friendly response
+  #     IO.inspect(e, label: "USSD Error")
+  #     "END An error occurred. Please try again later."
   end
 
+  @doc """
+  Initial greeting and verification of the user.
+  """
   defp handle_initial_menu(session, phone_number) do
     user = Accounts.get_user_by_phone(phone_number)
 
     if user do
-      USSDSession.update_state(session, :main_menu, %{user_id: user.id})
+      USSDSession.update_state(session, :main_menu, %{user_id: user.id, user_name: user.name})
 
       """
       CON Welcome to Under Five Health Check-Up
       1. Book Appointment
       2. Check Appointments
       3. Cancel Appointment
+      4. Update Preferences
       """
     else
-      "END Phone number not registered. Please register on our website."
+      "END Phone number not registered. Please register on our website or app first."
     end
   end
 
+  @doc """
+  Main menu handler - routes to different features.
+  """
   defp handle_main_menu(session, input) do
     case input do
       "1" ->
-        USSDSession.update_state(session, :select_child)
-        handle_select_child(session, "")
+        USSDSession.update_state(session, :book_appointment)
+        handle_book_appointment(session, "")
 
       "2" ->
         USSDSession.update_state(session, :check_appointments)
         handle_check_appointments(session, "")
 
       "3" ->
-        "END This feature is coming soon."
+        USSDSession.update_state(session, :cancel_appointment)
+        handle_cancel_appointment(session, "")
+
+      "4" ->
+        "END Feature coming soon. Please use the app or website to update your preferences."
 
       _ ->
-        "CON Invalid option. Please select:\n1. Book Appointment\n2. Check Appointments\n3. Cancel Appointment"
+        """
+        CON Invalid option. Please select:
+        1. Book Appointment
+        2. Check Appointments
+        3. Cancel Appointment
+        4. Update Preferences
+        """
     end
   end
 
+  @doc """
+  Book appointment entry point - transitions to child selection.
+  """
   defp handle_book_appointment(session, _input) do
-    # This function is called when the state is :book_appointment
-    # At this point, the user has already selected to book an appointment
-    # and we need to guide them through the booking process
-
-    # Since this state is just transitional, we immediately move to selecting a child
+    # Transition to child selection
     USSDSession.update_state(session, :select_child)
     handle_select_child(session, "")
   end
 
+  @doc """
+  Displays and handles child selection for appointment booking.
+  """
   defp handle_select_child(session, input) do
     user_id = session.data.user_id
     children = Accounts.list_children(user_id)
 
-    if input == "" do
-      # Display children list
-      child_options =
-        children
-        |> Enum.with_index(1)
-        |> Enum.map(fn {child, index} -> "#{index}. #{child.name}" end)
-        |> Enum.join("\n")
-
-      "CON Select child:\n#{child_options}"
+    if Enum.empty?(children) do
+      "END You don't have any children registered. Please register a child on our website or app first."
     else
-      # Process selection
-      index = String.to_integer(input) - 1
+      if input == "" do
+        # Display children list
+        child_options =
+          children
+          |> Enum.with_index(1)
+          |> Enum.map(fn {child, index} -> "#{index}. #{child.name}" end)
+          |> Enum.join("\n")
 
-      if child = Enum.at(children, index) do
-        USSDSession.update_state(
-          session,
-          :select_date,
-          Map.put(session.data, :child_id, child.id)
-        )
-
-        handle_select_date(session, "")
+        "CON Select child:\n#{child_options}"
       else
-        "CON Invalid selection. Please try again:\n" <> handle_select_child(session, "")
+        # Process selection
+        index = String.to_integer(input) - 1
+
+        if child = Enum.at(children, index) do
+          updated_session =
+            USSDSession.update_state(
+              session,
+              :select_date,
+              Map.put(session.data, :child_id, child.id)
+            )
+
+          handle_select_date(updated_session, "")
+        else
+          "CON Invalid selection. Please try again:\n" <> handle_select_child(session, "")
+        end
       end
     end
+  rescue
+    _ -> "CON Invalid input. Please enter a number:\n" <> handle_select_child(session, "")
   end
 
+  @doc """
+  Displays and handles date selection for appointment booking.
+  """
   defp handle_select_date(session, input) do
     if input == "" do
       # Show available dates (next 5 working days)
@@ -157,85 +204,85 @@ defmodule AppWeb.USSDController do
       dates = get_next_available_dates(5)
 
       if date = Enum.at(dates, index) do
-        USSDSession.update_state(session, :select_time, Map.put(session.data, :date, date))
-        handle_select_time(session, "")
+        updated_session =
+          USSDSession.update_state(session, :select_time, Map.put(session.data, :date, date))
+
+        handle_select_time(updated_session, "")
       else
         "CON Invalid selection. Please try again:\n" <> handle_select_date(session, "")
       end
     end
+  rescue
+    _ -> "CON Invalid input. Please enter a number:\n" <> handle_select_date(session, "")
   end
 
+  @doc """
+  Displays and handles time slot selection for appointment booking.
+  """
   defp handle_select_time(session, input) do
     if input == "" do
-      # Show available time slots
+      # Get available provider (in real app, this would have more complex logic)
       provider = get_available_provider()
       date = session.data.date
-      slots = Scheduling.get_available_slots(provider.id, date)
+
+      # Get available slots from the scheduling system
+      slots = get_time_slots(provider.id, date)
 
       if Enum.empty?(slots) do
-        # For testing purposes, generate some dummy slots if none are returned
-        slots = [
-          ~T[09:00:00],
-          ~T[10:00:00],
-          ~T[11:30:00],
-          ~T[14:00:00],
-          ~T[15:30:00]
-        ]
+        "END No available time slots for the selected date. Please try another date."
+      else
+        time_options =
+          slots
+          |> Enum.with_index(1)
+          |> Enum.map(fn {slot, index} -> "#{index}. #{format_time(slot)}" end)
+          |> Enum.join("\n")
+
+        "CON Select appointment time:\n#{time_options}"
       end
-
-      time_options =
-        slots
-        |> Enum.with_index(1)
-        |> Enum.map(fn {slot, index} -> "#{index}. #{format_time(slot)}" end)
-        |> Enum.join("\n")
-
-      "CON Select appointment time:\n#{time_options}"
     else
       # Process time selection
       index = String.to_integer(input) - 1
       provider = get_available_provider()
       date = session.data.date
-      slots = Scheduling.get_available_slots(provider.id, date)
-
-      if Enum.empty?(slots) do
-        # For testing purposes, generate some dummy slots if none are returned
-        slots = [
-          ~T[09:00:00],
-          ~T[10:00:00],
-          ~T[11:30:00],
-          ~T[14:00:00],
-          ~T[15:30:00]
-        ]
-      end
+      slots = get_time_slots(provider.id, date)
 
       if time_slot = Enum.at(slots, index) do
-        USSDSession.update_state(
-          session,
-          :confirm_booking,
-          Map.merge(session.data, %{
-            time: time_slot,
-            provider_id: provider.id
-          })
-        )
+        updated_session =
+          USSDSession.update_state(
+            session,
+            :confirm_booking,
+            Map.merge(session.data, %{
+              time: time_slot,
+              provider_id: provider.id,
+              provider_name: provider.name
+            })
+          )
 
-        handle_confirm_booking(session, "")
+        handle_confirm_booking(updated_session, "")
       else
         "CON Invalid selection. Please try again:\n" <> handle_select_time(session, "")
       end
     end
+  rescue
+    _ -> "CON Invalid input. Please enter a number:\n" <> handle_select_time(session, "")
   end
 
+  @doc """
+  Final confirmation screen for booking an appointment.
+  """
   defp handle_confirm_booking(session, input) do
     if input == "" do
       child = Accounts.get_child!(session.data.child_id)
       date = session.data.date
       time = session.data.time
+      provider_name = session.data.provider_name
 
       """
       CON Confirm appointment:
       Child: #{child.name}
       Date: #{format_date(date)}
       Time: #{format_time(time)}
+      Provider: #{provider_name}
 
       1. Confirm
       2. Cancel
@@ -244,6 +291,7 @@ defmodule AppWeb.USSDController do
       case input do
         "1" ->
           # Create the appointment
+          IO.inspect session
           case Scheduling.create_appointment(%{
                  child_id: session.data.child_id,
                  provider_id: session.data.provider_id,
@@ -254,49 +302,188 @@ defmodule AppWeb.USSDController do
                }) do
             {:ok, appointment} ->
               USSDSession.end_session(session)
-              "END Appointment booked successfully! You will receive a confirmation SMS."
+              "END Appointment booked successfully! You will receive a confirmation SMS shortly."
 
-            {:error, _} ->
-              "END Failed to book appointment. Please try again later."
+            {:error, changeset} ->
+              error_message = format_changeset_errors(changeset)
+              "END Failed to book appointment: #{error_message}. Please try again later."
           end
 
         "2" ->
-          USSDSession.update_state(session, :main_menu)
-          handle_main_menu(session, "")
+          updated_session = USSDSession.update_state(session, :main_menu)
+          handle_main_menu(updated_session, "")
 
         _ ->
           "CON Invalid option. Please select:\n1. Confirm\n2. Cancel"
       end
     end
+  rescue
+    _ -> "END An error occurred during booking. Please try again."
   end
 
+  @doc """
+  Lists upcoming appointments for the user's children.
+  """
   defp handle_check_appointments(session, _input) do
     user_id = session.data.user_id
     children = Accounts.list_children(user_id)
 
-    appointments =
-      children
-      |> Enum.flat_map(fn child ->
-        Scheduling.upcoming_appointments(child.id)
-      end)
-      |> Enum.take(3)
-
-    if Enum.empty?(appointments) do
-      "END You have no upcoming appointments."
+    if Enum.empty?(children) do
+      "END You don't have any children registered."
     else
-      appointment_list =
-        appointments
-        |> Enum.map(fn appt ->
-          "#{appt.child.name} - #{format_date(appt.scheduled_date)} at #{format_time(appt.scheduled_time)}"
+      appointments =
+        children
+        |> Enum.flat_map(fn child ->
+          Scheduling.upcoming_appointments(child.id)
         end)
-        |> Enum.join("\n")
+        |> Enum.sort_by(fn appt -> {appt.scheduled_date, appt.scheduled_time} end)
+        # Limit to 5 to avoid long messages
+        |> Enum.take(5)
 
-      "END Upcoming appointments:\n#{appointment_list}"
+      if Enum.empty?(appointments) do
+        "END You have no upcoming appointments."
+      else
+        appointment_list =
+          appointments
+          |> Enum.map(fn appt ->
+            IO.inspect appt
+            "#{appt.child.name} - #{format_date(appt.scheduled_date)} at #{format_time(appt.scheduled_time)} with #{appt.provider.name}"
+          end)
+          |> Enum.join("\n")
+
+        "END Upcoming appointments:\n#{appointment_list}"
+      end
     end
+  # rescue
+  #   e ->
+  #     IO.inspect(e, label: "Error checking appointments")
+  #     "END An error occurred while retrieving appointments. Please try again later."
   end
 
-  # Helper functions
+  @doc """
+  Starts the appointment cancellation flow.
+  """
+  defp handle_cancel_appointment(session, _input) do
+    # Transition to selection of which appointment to cancel
+    updated_session = USSDSession.update_state(session, :select_appointment_to_cancel)
+    handle_select_appointment_to_cancel(updated_session, "")
+  end
 
+  @doc """
+  Displays and handles appointment selection for cancellation.
+  """
+  defp handle_select_appointment_to_cancel(session, input) do
+    user_id = session.data.user_id
+    children = Accounts.list_children(user_id)
+
+    if Enum.empty?(children) do
+      "END You don't have any children registered."
+    else
+      # Get upcoming active appointments for all children
+      appointments =
+        children
+        |> Enum.flat_map(fn child ->
+          Scheduling.upcoming_appointments(child.id)
+        end)
+        |> Enum.sort_by(fn appt -> {appt.scheduled_date, appt.scheduled_time} end)
+
+      if Enum.empty?(appointments) do
+        "END You have no upcoming appointments to cancel."
+      else
+        if input == "" do
+          # Display list of appointments that can be cancelled
+          appointment_options =
+            appointments
+            |> Enum.with_index(1)
+            |> Enum.map(fn {appt, index} ->
+              "#{index}. #{appt.child.name} - #{format_date(appt.scheduled_date)} at #{format_time(appt.scheduled_time)}"
+            end)
+            |> Enum.join("\n")
+
+          "CON Select appointment to cancel:\n#{appointment_options}\n99. Go back"
+        else
+          if input == "99" do
+            # Go back to main menu
+            updated_session = USSDSession.update_state(session, :main_menu)
+            handle_main_menu(updated_session, "")
+          else
+            # Process appointment selection
+            index = String.to_integer(input) - 1
+
+            if appointment = Enum.at(appointments, index) do
+              updated_session =
+                USSDSession.update_state(
+                  session,
+                  :confirm_cancellation,
+                  Map.put(session.data, :appointment_id, appointment.id)
+                )
+
+              handle_confirm_cancellation(updated_session, "")
+            else
+              "CON Invalid selection. Please try again:\n" <>
+                handle_select_appointment_to_cancel(session, "")
+            end
+          end
+        end
+      end
+    end
+  rescue
+    _ ->
+      "CON Invalid input. Please enter a number:\n" <>
+        handle_select_appointment_to_cancel(session, "")
+  end
+
+  @doc """
+  Confirms appointment cancellation.
+  """
+  defp handle_confirm_cancellation(session, input) do
+    appointment_id = session.data.appointment_id
+    appointment = Scheduling.get_appointment!(appointment_id)
+
+    if input == "" do
+      """
+      CON Confirm cancellation of:
+      Child: #{appointment.child.name}
+      Date: #{format_date(appointment.scheduled_date)}
+      Time: #{format_time(appointment.scheduled_time)}
+      Provider: #{appointment.provider.name}
+
+      1. Yes, cancel appointment
+      2. No, keep appointment
+      """
+    else
+      case input do
+        "1" ->
+          # Cancel the appointment
+          case Scheduling.update_appointment(appointment, %{status: "cancelled"}) do
+            {:ok, _updated} ->
+              USSDSession.end_session(session)
+
+              "END Appointment cancelled successfully. You will receive a confirmation SMS shortly."
+
+            {:error, _changeset} ->
+              "END Failed to cancel appointment. Please try again later or contact support."
+          end
+
+        "2" ->
+          updated_session = USSDSession.update_state(session, :main_menu)
+          handle_main_menu(updated_session, "")
+
+        _ ->
+          "CON Invalid option. Please select:\n1. Yes, cancel appointment\n2. No, keep appointment"
+      end
+    end
+  rescue
+    _ -> "END An error occurred during cancellation. Please try again."
+  end
+
+  # ==========================
+  # Helper functions
+  # ==========================
+
+  @doc """
+  Gets the next available dates for appointments, excluding weekends.
+  """
   defp get_next_available_dates(count) do
     today = Date.utc_today()
 
@@ -310,13 +497,40 @@ defmodule AppWeb.USSDController do
     |> Enum.take(count)
   end
 
+  @doc """
+  Gets available time slots for a provider on a specific date.
+  In a real application, this would check the database for available slots.
+  """
+  defp get_time_slots(provider_id, date) do
+    # First try to get actual available slots
+    slots = Scheduling.get_available_slots(provider_id, date)
+
+    if Enum.empty?(slots) do
+      # For testing/demo purposes, generate some dummy slots if none are returned
+      [
+        ~T[09:00:00],
+        ~T[10:00:00],
+        ~T[11:30:00],
+        ~T[14:00:00],
+        ~T[15:30:00]
+      ]
+    else
+      slots
+    end
+  end
+
+  @doc """
+  Gets an available provider for appointment booking.
+  In a real application, this would use more complex logic based on
+  specialization, location, availability, etc.
+  """
   defp get_available_provider do
     # For simplicity, get the first available provider
     # In a real app, this would be more sophisticated
     providers = Scheduling.list_providers()
 
     if Enum.empty?(providers) do
-      # Create a mock provider for testing
+      # Create a mock provider for testing if none exist
       %{
         id: 1,
         name: "Dr. Smith",
@@ -327,11 +541,32 @@ defmodule AppWeb.USSDController do
     end
   end
 
+  @doc """
+  Formats a date for display in the USSD interface.
+  """
   defp format_date(date) do
     Calendar.strftime(date, "%d %b %Y")
   end
 
+  @doc """
+  Formats a time for display in the USSD interface.
+  """
   defp format_time(time) do
     Calendar.strftime(time, "%I:%M %p")
+  end
+
+  @doc """
+  Formats changeset errors into a readable string.
+  """
+  defp format_changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
+    |> Enum.map(fn {k, v} -> "#{k} #{v}" end)
+    |> Enum.join(", ")
+  rescue
+    _ -> "Invalid data provided"
   end
 end

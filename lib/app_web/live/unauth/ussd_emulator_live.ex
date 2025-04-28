@@ -79,7 +79,7 @@ defmodule AppWeb.USSDEmulatorLive do
 
     # This would normally be an HTTP request, but we can directly call the controller function
     # since we're in the same application
-    try do
+    # try do
       # Create a conn-like structure with the required parameters
       params = %{
         "sessionId" => session_id,
@@ -105,13 +105,13 @@ defmodule AppWeb.USSDEmulatorLive do
        |> assign(:current_screen, display_text)
        |> assign(:history, updated_history)
        |> assign(:error, nil)}
-    rescue
-      e ->
-        {:noreply,
-         socket
-         |> assign(:loading, false)
-         |> assign(:error, "Error: #{inspect(e)}")}
-    end
+    # rescue
+    #   e ->
+    #     {:noreply,
+    #      socket
+    #      |> assign(:loading, false)
+    #      |> assign(:error, "Error: #{inspect(e)}")}
+    # end
   end
 
   defp is_empty?(str), do: String.trim(str) == ""

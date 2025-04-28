@@ -23,8 +23,8 @@ defmodule App.Scheduling.Appointment do
   @doc false
   def changeset(appointment, attrs) do
     appointment
-    |> cast(attrs, [:scheduled_date, :scheduled_time, :status, :notes, :child_id])
-    |> validate_required([:scheduled_date, :scheduled_time, :status, :notes, :child_id])
+    |> cast(attrs, [:scheduled_date, :scheduled_time, :status, :notes, :child_id, :provider_id])
+    |> validate_required([:scheduled_date, :scheduled_time, :status, :notes, :child_id, :provider_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_appointment_time()
     |> validate_no_double_booking()
