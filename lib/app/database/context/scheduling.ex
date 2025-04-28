@@ -445,7 +445,7 @@ defmodule App.Scheduling do
       limit: 5
     )
     |> Repo.all()
-    |> Repo.preload([:provider])
+    |> Repo.preload([:provider, :child])
   end
 
   def past_appointments(child_id) do

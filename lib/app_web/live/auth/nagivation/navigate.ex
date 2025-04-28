@@ -76,6 +76,30 @@ defmodule AppWeb.Auth.Navigation do
       </.link>
 
       <.link
+        :if={@current_user.role == "parent"}
+        navigate={~p"/children"}
+        class={
+          if @current_url in [
+               ~p"/children"
+             ],
+             do: active_class(),
+             else: nav_class()
+        }
+      >
+      <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197L15 21z" />
+        </svg>
+        <span>My Children</span>
+      </.link>
+
+      <.link
         :if={@current_user.role == "admin"}
         navigate={~p"/admin/parents"}
         class={
@@ -101,11 +125,21 @@ defmodule AppWeb.Auth.Navigation do
       </.link>
 
       <.link
-        :if={@current_user.role == "admin"}
-        navigate={~p"/admin/appointments"}
+        :if={@current_user.role in ["admin", "provider","parent"]}
+        navigate={
+          case @current_user.role do
+            "admin" -> ~p"/admin/appointments"
+            "parent" -> ~p"/appointments"
+            "provider" -> ~p"/provider/appointments"
+            _a -> ~p"/"
+          end
+        }
         class={
           if @current_url in [
-               ~p"/admin/appointments"
+               ~p"/admin/appointments",
+               ~p"/appointments",
+               ~p"/provider/appointments",
+
              ],
              do: active_class(),
              else: nav_class()
@@ -123,33 +157,6 @@ defmodule AppWeb.Auth.Navigation do
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <span>Appointments</span>
-      </.link>
-
-      <.link
-        :if={@current_user.role == "provider"}
-        navigate={~p"/provider/appointments"}
-        class={
-          if @current_url in [
-               ~p"/provider/appointments"
-             ],
-             do: active_class(),
-             else: nav_class()
-        }
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         <span>Appointments</span>
       </.link>
@@ -241,18 +248,20 @@ defmodule AppWeb.Auth.Navigation do
       </.link>
 
       <.link
-        :if={@current_user.role in ["admin", "provider"]}
+        :if={@current_user.role in ["admin", "provider", "parent"]}
         navigate={
           case @current_user.role do
             "admin" -> ~p"/admin/settings"
             "provider" -> ~p"/provider/settings"
-            _a -> ~p"/dashboard"
+            "parent" -> ~p"/users/settings"
+            _a -> ~p"/"
           end
         }
         class={
           if @current_url in [
                ~p"/admin/settings",
                ~p"/provider/settings",
+               ~p"/user/settings",
              ],
              do: active_class(),
              else: nav_class()

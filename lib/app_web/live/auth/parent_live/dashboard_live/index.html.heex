@@ -1,0 +1,460 @@
+<div class="flex h-screen bg-gray-50">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Parent Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@user.name}</span>
+      </div>
+    </div>
+  </.side_nav_res>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <!-- Mobile sidebar toggle -->
+    <div class="fixed z-20 top-4 left-4 md:hidden">
+      <button
+        phx-click="toggle_sidebar"
+        class="p-2 rounded-md bg-indigo-600 text-white shadow-md hover:bg-indigo-700 focus:outline-none"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">Parent Dashboard</h1>
+        <div class="flex items-center">
+          <span class="mr-4 text-gray-700">{@user.email}</span>
+          <a
+            href="/users/log_out"
+            class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Logout
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Quick actions -->
+      <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <a
+          href="/children/new"
+          class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-green-500"
+        >
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-md p-3 group-hover:bg-green-200">
+              <svg
+                class="h-6 w-6 text-green-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h2 class="text-lg font-medium text-gray-900">Register Child</h2>
+              <p class="text-sm text-gray-500">Add a new child to your account</p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/appointments/new"
+          class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-blue-500"
+        >
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3 group-hover:bg-blue-200">
+              <svg
+                class="h-6 w-6 text-blue-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h2 class="text-lg font-medium text-gray-900">Schedule Appointment</h2>
+              <p class="text-sm text-gray-500">Book a new health check-up</p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/children"
+          class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-purple-500"
+        >
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-purple-100 rounded-md p-3 group-hover:bg-purple-200">
+              <svg
+                class="h-6 w-6 text-purple-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h2 class="text-lg font-medium text-gray-900">Manage Children</h2>
+              <p class="text-sm text-gray-500">View and edit children's profiles</p>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+<!-- Children -->
+      <div class="mb-8">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
+            <div>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                My Children
+              </h3>
+              <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Registered children under your account.
+              </p>
+            </div>
+            <a
+              href="/children/new"
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Add Child
+            </a>
+          </div>
+
+          <%= if Enum.empty?(@children) do %>
+            <div class="px-4 py-10 flex flex-col items-center justify-center">
+              <svg
+                class="h-12 w-12 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No children registered</h3>
+              <p class="mt-1 text-sm text-gray-500">Add a child to manage appointments</p>
+              <div class="mt-6">
+                <a
+                  href="/children/new"
+                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <svg
+                    class="-ml-1 mr-2 h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Add Child
+                </a>
+              </div>
+            </div>
+          <% else %>
+            <ul role="list" class="divide-y divide-gray-200">
+              <%= for child <- @children do %>
+                <li>
+                  <a href={"/children/#{child.id}"} class="block hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 font-medium text-lg">
+                              {String.first(child.name)}
+                            </span>
+                          </div>
+                          <div class="ml-4">
+                            <p class="text-sm font-medium text-indigo-600 truncate">
+                              {child.name}
+                            </p>
+                            <div class="flex space-x-4">
+                              <p class="mt-1 text-sm text-gray-500">
+                                {child.date_of_birth} ({App.Accounts.Child.age(child)} years old)
+                              </p>
+                              <p class="mt-1 text-sm text-gray-500">
+                                MRN: {child.medical_record_number}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="ml-2 flex-shrink-0 flex">
+                          <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Next check-up: {App.Accounts.Child.next_checkup_age(child)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+      </div>
+      
+<!-- Upcoming Appointments -->
+      <div class="mb-8">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
+            <div>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Upcoming Appointments
+              </h3>
+              <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Your next scheduled health check-ups.
+              </p>
+            </div>
+            <a
+              href="/appointments/new"
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Schedule
+            </a>
+          </div>
+
+          <%= if Enum.empty?(@upcoming_appointments) do %>
+            <div class="px-4 py-10 flex flex-col items-center justify-center">
+              <svg
+                class="h-12 w-12 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No upcoming appointments</h3>
+              <p class="mt-1 text-sm text-gray-500">Schedule a health check-up</p>
+              <div class="mt-6">
+                <a
+                  href="/appointments/new"
+                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <svg
+                    class="-ml-1 mr-2 h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Schedule Appointment
+                </a>
+              </div>
+            </div>
+          <% else %>
+            <div class="overflow-hidden overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Child
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date & Time
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Provider
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= for appointment <- @upcoming_appointments do %>
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 font-medium text-lg">
+                              {String.first(appointment.child.name)}
+                            </span>
+                          </div>
+                          <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">
+                              {appointment.child.name}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                          {format_date(appointment.scheduled_date)}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          {format_time(appointment.scheduled_time)}
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{appointment.provider.name}</div>
+                        <div class="text-sm text-gray-500">
+                          {appointment.provider.specialization}
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          #{case appointment.status do
+                            "scheduled" -> "bg-blue-100 text-blue-800"
+                            "confirmed" -> "bg-green-100 text-green-800"
+                            "completed" -> "bg-indigo-100 text-indigo-800"
+                            "cancelled" -> "bg-red-100 text-red-800"
+                            "no_show" -> "bg-yellow-100 text-yellow-800"
+                            _ -> "bg-gray-100 text-gray-800"
+                          end}"}>
+                          {String.capitalize(appointment.status)}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a
+                          href={"/appointments/#{appointment.id}"}
+                          class="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                          View
+                        </a>
+                        <a
+                          href={"/appointments/#{appointment.id}/reschedule"}
+                          class="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Reschedule
+                        </a>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+            <div class="py-4 px-4 bg-gray-50 border-t border-gray-200">
+              <a
+                href="/appointments"
+                class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                View all appointments
+              </a>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+<!-- Health Tips Section -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Health Tips for Young Children
+          </h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            Important health reminders for children under five.
+          </p>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h4 class="text-blue-800 font-medium mb-2">Regular Checkups</h4>
+              <p class="text-sm text-gray-600">
+                Regular health check-ups are essential for tracking your child's growth and development, especially in the first five years.
+              </p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h4 class="text-green-800 font-medium mb-2">Vaccination Schedule</h4>
+              <p class="text-sm text-gray-600">
+                Keep up with your child's vaccination schedule to protect them from preventable diseases and maintain community immunity.
+              </p>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+              <h4 class="text-purple-800 font-medium mb-2">Nutrition</h4>
+              <p class="text-sm text-gray-600">
+                A balanced diet rich in fruits, vegetables, proteins, and whole grains is crucial for your child's physical and cognitive development.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

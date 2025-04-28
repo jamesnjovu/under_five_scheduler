@@ -1,0 +1,349 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation - responsive version -->
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Parent Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@user.name}</span>
+      </div>
+    </div>
+  </.side_nav_res>
+  <!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <!-- Mobile sidebar toggle -->
+    <div class="fixed z-20 top-4 left-4 md:hidden">
+      <button
+        phx-click="toggle_sidebar"
+        class="p-2 rounded-md bg-indigo-600 text-white shadow-md hover:bg-indigo-700 focus:outline-none"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
+        <h1 class="text-3xl font-bold text-gray-900">My Children</h1>
+        <div class="flex items-center">
+          <.link
+            patch={~p"/children/new"}
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Child
+          </.link>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <.flash_group flash={@flash} />
+
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Registered Children
+          </h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            Manage your children's profiles and health records.
+          </p>
+        </div>
+
+        <%= if Enum.empty?(@children) do %>
+          <div class="py-10 px-4 flex flex-col items-center justify-center">
+            <svg
+              class="h-12 w-12 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z"
+              />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No children registered</h3>
+            <p class="mt-1 text-sm text-gray-500">Add a child to manage appointments</p>
+            <div class="mt-6">
+              <.link
+                patch={~p"/children/new"}
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg
+                  class="-ml-1 mr-2 h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Add Child
+              </.link>
+            </div>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Date of Birth
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Age
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Medical Record No.
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Next Check-up
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <%= for child <- @children do %>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <span class="text-indigo-600 font-medium text-lg">
+                            {String.first(child.name)}
+                          </span>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">
+                            {child.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{format_date(child.date_of_birth)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">
+                        {App.Accounts.Child.age(child)} years old
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{child.medical_record_number}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {App.Accounts.Child.next_checkup_age(child)}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div class="flex justify-end space-x-3">
+                        <.link
+                          patch={~p"/children/#{child}/edit"}
+                          class="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </.link>
+                        <.link
+                          href={~p"/appointments/new?child_id=#{child.id}"}
+                          class="text-green-600 hover:text-green-900"
+                        >
+                          Book Appointment
+                        </.link>
+                        <button
+                          phx-click="delete"
+                          phx-value-id={child.id}
+                          data-confirm="Are you sure you want to delete this child? This will also delete all associated appointments."
+                          class="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+      
+<!-- Information panel -->
+      <div class="mt-8 bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Why is regular check-up important?
+          </h3>
+          <div class="mt-2 max-w-xl text-sm text-gray-500">
+            <p>
+              Children under five years old need regular health check-ups to monitor growth, development, and overall health. These visits help identify potential issues early and ensure timely interventions when needed.
+            </p>
+          </div>
+          <div class="mt-5">
+            <a
+              href="/appointments/new"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Schedule a check-up
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+<!-- Modal for adding/editing child -->
+  <%= if @show_modal do %>
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true">
+        </div>
+        
+<!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                  {if @live_action == :new, do: "Add New Child", else: "Edit Child"}
+                </h3>
+                <div class="mt-6">
+                  <.form for={@changeset} id="child-form" phx-change="validate" phx-submit="save">
+                    <div class="space-y-6">
+                      <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                          Child's Name
+                        </label>
+                        <div class="mt-1">
+                          <%!-- {#text_input(@changeset, :name,
+                            class:
+                              "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                            placeholder: "Enter child's full name",
+                            required: true
+                          )}
+                          {#error_tag(@changeset, :name)} --%>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label for="date_of_birth" class="block text-sm font-medium text-gray-700">
+                          Date of Birth
+                        </label>
+                        <div class="mt-1">
+                          <%!-- {#date_input(@changeset, :date_of_birth,
+                            class:
+                              "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                            required: true
+                          )}
+                          {#error_tag(@changeset, :date_of_birth)} --%>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Child must be under 5 years old</p>
+                      </div>
+
+                      <%= if @live_action == :edit do %>
+                        <div>
+                          <label
+                            for="medical_record_number"
+                            class="block text-sm font-medium text-gray-700"
+                          >
+                            Medical Record Number
+                          </label>
+                          <div class="mt-1">
+                            <%!-- {text_input(@changeset, :medical_record_number,
+                              class:
+                                "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-100",
+                              readonly: true
+                            )} --%>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500">MRN cannot be changed</p>
+                        </div>
+                      <% end %>
+                    </div>
+                  </.form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="submit"
+              form="child-form"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              {if @live_action == :new, do: "Add Child", else: "Save Changes"}
+            </button>
+            <button
+              type="button"
+              phx-click="close_modal"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
