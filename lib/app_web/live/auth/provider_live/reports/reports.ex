@@ -17,9 +17,9 @@ defmodule AppWeb.ProviderLive.Reports do
         Phoenix.PubSub.subscribe(App.PubSub, "appointments:updates")
       end
 
-      # Get date range for report
+      # Get date range for report - default to current month
       today = Date.utc_today()
-      start_date = get_start_date(today, "month")
+      start_date = Date.beginning_of_month(today)
 
       socket =
         socket
@@ -28,6 +28,7 @@ defmodule AppWeb.ProviderLive.Reports do
         |> assign(:page_title, "Provider Reports")
         |> assign(:date_range, %{start_date: start_date, end_date: today})
         |> assign(:period, "month")
+        |> assign(:report_type, "overview")
         |> assign(:show_sidebar, false)
         |> assign(:report_data, generate_report_data(provider.id, start_date, today))
 
@@ -56,7 +57,7 @@ defmodule AppWeb.ProviderLive.Reports do
 
   @impl true
   def handle_event("change_period", %{"period" => period}, socket)
-      when period in ["week", "month", "quarter", "year"] do
+      when period in ["week", "month", "quarter", "year", "custom"] do
     today = Date.utc_today()
     start_date = get_start_date(today, period)
 
@@ -65,6 +66,11 @@ defmodule AppWeb.ProviderLive.Reports do
      |> assign(:period, period)
      |> assign(:date_range, %{start_date: start_date, end_date: today})
      |> assign(:report_data, generate_report_data(socket.assigns.provider.id, start_date, today))}
+  end
+
+  @impl true
+  def handle_event("change_report_type", %{"report_type" => report_type}, socket) do
+    {:noreply, assign(socket, :report_type, report_type)}
   end
 
   @impl true
@@ -108,6 +114,19 @@ defmodule AppWeb.ProviderLive.Reports do
     {:noreply, assign(socket, :report_data, report_data)}
   end
 
+  @impl true
+  def handle_info({:stats_updated}, socket) do
+    # Refresh report data when stats are updated elsewhere
+    report_data =
+      generate_report_data(
+        socket.assigns.provider.id,
+        socket.assigns.date_range.start_date,
+        socket.assigns.date_range.end_date
+      )
+
+    {:noreply, assign(socket, :report_data, report_data)}
+  end
+
   defp get_user_from_session(session) do
     token = session["user_token"]
     user = Accounts.get_user_by_session_token(token)
@@ -117,11 +136,12 @@ defmodule AppWeb.ProviderLive.Reports do
   defp get_start_date(today, period) do
     case period do
       "week" -> Date.add(today, -7)
-      "month" -> Date.add(today, -30)
+      "month" -> Date.beginning_of_month(today)
       "quarter" -> Date.add(today, -90)
       "year" -> Date.add(today, -365)
+      "custom" -> today
       # Default to month
-      _ -> Date.add(today, -30)
+      _ -> Date.beginning_of_month(today)
     end
   end
 
@@ -170,6 +190,14 @@ defmodule AppWeb.ProviderLive.Reports do
       end)
       |> Enum.sort_by(fn %{date: date} -> date end)
 
+    # Weekly distribution
+    weekly_data =
+      group_by_week(appointments, start_date, end_date)
+
+    # Monthly distribution
+    monthly_data =
+      group_by_month(appointments, start_date, end_date)
+
     # Child age distribution
     children_ids = appointments |> Enum.map(& &1.child_id) |> Enum.uniq()
 
@@ -182,17 +210,33 @@ defmodule AppWeb.ProviderLive.Reports do
       |> Enum.sort()
       |> Enum.into(%{})
 
+    # Time of day distribution
+    time_distribution =
+      appointments
+      |> Enum.group_by(fn a ->
+        cond do
+          a.scheduled_time.hour < 12 -> :morning
+          a.scheduled_time.hour < 17 -> :afternoon
+          true -> :evening
+        end
+      end)
+      |> Enum.map(fn {time_of_day, appts} -> {time_of_day, length(appts)} end)
+      |> Enum.into(%{})
+
     # Return all report data
     %{
       total_appointments: total_count,
       status_counts: status_counts,
       rates: %{
-        completion_rate: completion_rate,
-        cancellation_rate: cancellation_rate,
-        no_show_rate: no_show_rate
+        completion_rate: completion_rate/1,
+        cancellation_rate: cancellation_rate/1,
+        no_show_rate: no_show_rate/1
       },
       daily_data: daily_data,
+      weekly_data: weekly_data,
+      monthly_data: monthly_data,
       age_distribution: age_distribution,
+      time_distribution: time_distribution,
       date_range: %{
         start_date: start_date,
         end_date: end_date,
@@ -207,11 +251,112 @@ defmodule AppWeb.ProviderLive.Reports do
     }
   end
 
+  defp group_by_week(appointments, start_date, end_date) do
+    # Get all weeks in the range
+    week_range = get_week_range(start_date, end_date)
+
+    week_range
+    |> Enum.map(fn {week_start, week_end} ->
+      week_appointments =
+        Enum.filter(appointments, fn appt ->
+          Date.compare(appt.scheduled_date, week_start) in [:eq, :gt] &&
+            Date.compare(appt.scheduled_date, week_end) in [:lt, :eq]
+        end)
+
+      %{
+        week_start: week_start,
+        week_end: week_end,
+        display: "Week #{iso_week_string(week_start)}",
+        total: length(week_appointments),
+        completed: Enum.count(week_appointments, &(&1.status == "completed")),
+        no_show: Enum.count(week_appointments, &(&1.status == "no_show")),
+        cancelled: Enum.count(week_appointments, &(&1.status == "cancelled"))
+      }
+    end)
+  end
+
+  defp get_week_range(start_date, end_date) do
+    # Adjust start_date to the beginning of the week (Monday)
+    adjusted_start = Date.beginning_of_week(start_date)
+
+    # Get the number of weeks
+    days_diff = Date.diff(end_date, adjusted_start)
+    weeks = div(days_diff, 7) + 1
+
+    # Generate a list of week start/end dates
+    Enum.map(0..(weeks - 1), fn week_offset ->
+      week_start = Date.add(adjusted_start, week_offset * 7)
+      week_end = Date.add(week_start, 6)
+      {week_start, week_end}
+    end)
+  end
+
+  defp group_by_month(appointments, start_date, end_date) do
+    # Get all months in the range
+    month_range = get_month_range(start_date, end_date)
+
+    month_range
+    |> Enum.map(fn {month_start, month_end} ->
+      month_appointments =
+        Enum.filter(appointments, fn appt ->
+          Date.compare(appt.scheduled_date, month_start) in [:eq, :gt] &&
+            Date.compare(appt.scheduled_date, month_end) in [:lt, :eq]
+        end)
+
+      %{
+        month_start: month_start,
+        month_end: month_end,
+        display: Calendar.strftime(month_start, "%b %Y"),
+        total: length(month_appointments),
+        completed: Enum.count(month_appointments, &(&1.status == "completed")),
+        no_show: Enum.count(month_appointments, &(&1.status == "no_show")),
+        cancelled: Enum.count(month_appointments, &(&1.status == "cancelled"))
+      }
+    end)
+  end
+
+  defp get_month_range(start_date, end_date) do
+    # Adjust start_date to the beginning of the month
+    adjusted_start = Date.beginning_of_month(start_date)
+
+    # Recursively build a list of month start/end dates
+    build_month_range(adjusted_start, end_date, [])
+  end
+
+  defp build_month_range(current_date, end_date, acc) do
+    if Date.compare(current_date, end_date) == :gt do
+      # We've gone past the end date, so return the accumulated months
+      Enum.reverse(acc)
+    else
+      month_start = current_date
+      month_end = Date.end_of_month(current_date)
+
+      # Move to the next month
+      next_month = Date.add(month_end, 1)
+
+      # Add the current month to our accumulator and continue
+      build_month_range(next_month, end_date, [{month_start, month_end} | acc])
+    end
+  end
+
   defp format_date(date) do
     Calendar.strftime(date, "%b %d, %Y")
   end
 
   defp format_percentage(value) do
-    :erlang.float_to_binary(value / 1, decimals: 1) <> "%"
+    :erlang.float_to_binary(value, decimals: 1) <> "%"
+  end
+
+  defp get_chart_height(value, max_value) do
+    if max_value > 0 do
+      "#{value / max_value * 100}%"
+    else
+      "0%"
+    end
+  end
+
+  def iso_week_string(%Date{} = date) do
+    {year, week} = :calendar.iso_week_number({date.year, date.month, date.day})
+    "#{year}-W#{String.pad_leading(Integer.to_string(week), 2, "0")}"
   end
 end

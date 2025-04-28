@@ -101,289 +101,1197 @@
             @date_range.end_date
           )} ({@report_data.date_range.days} days)
         </div>
-      </div>
-      
-<!-- Summary cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total appointments -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+        <div class="px-6 py-4 border-t border-b border-gray-200">
+          <div class="flex flex-wrap items-center space-x-4">
+            <span class="text-sm font-medium text-gray-700">Report Type:</span>
+            <button
+              phx-click="change_report_type"
+              phx-value-report_type="overview"
+              class={"px-3 py-1 text-sm rounded-md #{if @report_type == "overview", do: "bg-indigo-100 text-indigo-700", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+            >
+              Overview
+            </button>
+            <button
+              phx-click="change_report_type"
+              phx-value-report_type="appointments"
+              class={"px-3 py-1 text-sm rounded-md #{if @report_type == "appointments", do: "bg-indigo-100 text-indigo-700", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+            >
+              Appointments
+            </button>
+            <button
+              phx-click="change_report_type"
+              phx-value-report_type="patients"
+              class={"px-3 py-1 text-sm rounded-md #{if @report_type == "patients", do: "bg-indigo-100 text-indigo-700", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+            >
+              Patients
+            </button>
+            <button
+              phx-click="change_report_type"
+              phx-value-report_type="trends"
+              class={"px-3 py-1 text-sm rounded-md #{if @report_type == "trends", do: "bg-indigo-100 text-indigo-700", else: "bg-gray-100 text-gray-700 hover:bg-gray-200"}"}
+            >
+              Trends
+            </button>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 text-sm text-gray-700 border-gray-200">
+          <div class="flex justify-between items-center">
+            <span class="font-medium">
+              Report Period: {format_date(@date_range.start_date)} to {format_date(
+                @date_range.end_date
+              )} ({@report_data.date_range.days} days)
+            </span>
+            <div class="flex items-center space-x-2">
+              <button class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
                 <svg
-                  class="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 inline mr-1"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Total Appointments
-                  </dt>
-                  <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">
-                      {@report_data.total_appointments}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 px-5 py-3">
-            <div class="text-sm text-gray-500">
-              Avg. {:erlang.float_to_binary(@report_data.avg_appointments_per_day, decimals: 1)} per day
+                Export
+              </button>
+              <button class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 inline mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                  />
+                </svg>
+                Print
+              </button>
             </div>
           </div>
         </div>
-        
+      </div>
+      <%= case @report_type do %>
+        <% "overview" -> %>
+          <!-- Overview Report -->
+          <!-- Summary stats cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total appointments -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                    <svg
+                      class="h-6 w-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">
+                        Total Appointments
+                      </dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">
+                          {@report_data.total_appointments}
+                        </div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm text-gray-500">
+                  Avg. {:erlang.float_to_binary(@report_data.avg_appointments_per_day, decimals: 1)} per day
+                </div>
+              </div>
+            </div>
+            
 <!-- Completion Rate -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                <svg
-                  class="h-6 w-6 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <svg
+                      class="h-6 w-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">
+                        Completion Rate
+                      </dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">
+                          {format_percentage(@report_data.rates.completion_rate)}
+                        </div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Completion Rate
-                  </dt>
-                  <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">
-                      {format_percentage(@report_data.rates.completion_rate)}
-                    </div>
-                  </dd>
-                </dl>
+              <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm text-gray-500">
+                  {@report_data.status_counts.completed} completed appointments
+                </div>
               </div>
             </div>
-          </div>
-          <div class="bg-gray-50 px-5 py-3">
-            <div class="text-sm text-gray-500">
-              {@report_data.status_counts.completed} completed appointments
-            </div>
-          </div>
-        </div>
-        
+            
 <!-- No-show Rate -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                <svg
-                  class="h-6 w-6 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                    <svg
+                      class="h-6 w-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">
+                        No-show Rate
+                      </dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">
+                          {format_percentage(@report_data.rates.no_show_rate)}
+                        </div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    No-show Rate
-                  </dt>
-                  <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">
-                      {format_percentage(@report_data.rates.no_show_rate)}
+              <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm text-gray-500">
+                  {@report_data.status_counts.no_show} missed appointments
+                </div>
+              </div>
+            </div>
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+              <div class="p-5">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                    <svg
+                      class="h-6 w-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197L15 21z" />
+                    </svg>
+                  </div>
+                  <div class="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt class="text-sm font-medium text-gray-500 truncate">
+                        Unique Patients
+                      </dt>
+                      <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">
+                          {@report_data.children_count}
+                        </div>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-5 py-3">
+                <div class="text-sm text-gray-500">
+                  {:erlang.float_to_binary(
+                    @report_data.total_appointments / max(@report_data.children_count, 1),
+                    decimals: 1
+                  )} appointments per child
+                </div>
+              </div>
+            </div>
+          </div>
+          
+<!-- Status breakdown chart -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Appointment Status</h3>
+              </div>
+              <div class="p-6">
+                <!-- A simplified donut chart representation -->
+                <div class="relative w-full pt-1">
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700">Completed</span>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {@report_data.status_counts.completed} ({format_percentage(
+                          @report_data.rates.completion_rate
+                        )})
+                      </span>
                     </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 px-5 py-3">
-            <div class="text-sm text-gray-500">
-              {@report_data.status_counts.no_show} missed appointments
-            </div>
-          </div>
-        </div>
-        
-<!-- Unique Children -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                <svg
-                  class="h-6 w-6 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197L15 21z" />
-                </svg>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">
-                    Unique Patients
-                  </dt>
-                  <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">
-                      {@report_data.children_count}
+                    <div class="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        class="h-full bg-green-500 rounded-full"
+                        style={"width: #{@report_data.rates.completion_rate}%"}
+                      >
+                      </div>
                     </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 px-5 py-3">
-            <div class="text-sm text-gray-500">
-              {:erlang.float_to_binary(
-                @report_data.total_appointments / max(@report_data.children_count, 1),
-                decimals: 1
-              )} appointments per child
-            </div>
-          </div>
-        </div>
-      </div>
-      
-<!-- Charts section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Appointment Status Chart -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="px-6 py-5 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Appointment Status</h3>
-          </div>
-          <div class="p-6">
-            <!-- A simplified donut chart representation -->
-            <div class="relative w-full pt-1">
-              <div class="mb-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-700">Completed</span>
                   </div>
-                  <span class="text-sm font-medium text-gray-900">
-                    {@report_data.status_counts.completed} ({format_percentage(
-                      @report_data.rates.completion_rate
-                    )})
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                  <div
-                    class="h-full bg-green-500 rounded-full"
-                    style={"width: #{@report_data.rates.completion_rate}%"}
-                  >
-                  </div>
-                </div>
-              </div>
 
-              <div class="mb-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-700">Scheduled/Confirmed</span>
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700">Scheduled/Confirmed</span>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {@report_data.status_counts.scheduled +
+                          @report_data.status_counts.confirmed} ({format_percentage(
+                          (@report_data.status_counts.scheduled +
+                             @report_data.status_counts.confirmed) /
+                            max(@report_data.total_appointments, 1) * 100
+                        )})
+                      </span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        class="h-full bg-blue-500 rounded-full"
+                        style={"width: #{(@report_data.status_counts.scheduled + @report_data.status_counts.confirmed) / max(@report_data.total_appointments, 1) * 100}%"}
+                      >
+                      </div>
+                    </div>
                   </div>
-                  <span class="text-sm font-medium text-gray-900">
-                    {@report_data.status_counts.scheduled + @report_data.status_counts.confirmed} ({format_percentage(
-                      (@report_data.status_counts.scheduled + @report_data.status_counts.confirmed) /
-                        max(@report_data.total_appointments, 1) * 100
-                    )})
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                  <div
-                    class="h-full bg-blue-500 rounded-full"
-                    style={"width: #{(@report_data.status_counts.scheduled + @report_data.status_counts.confirmed) / max(@report_data.total_appointments, 1) * 100}%"}
-                  >
-                  </div>
-                </div>
-              </div>
 
-              <div class="mb-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-700">Cancelled</span>
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700">Cancelled</span>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {@report_data.status_counts.cancelled} ({format_percentage(
+                          @report_data.rates.cancellation_rate
+                        )})
+                      </span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        class="h-full bg-red-500 rounded-full"
+                        style={"width: #{@report_data.rates.cancellation_rate}%"}
+                      >
+                      </div>
+                    </div>
                   </div>
-                  <span class="text-sm font-medium text-gray-900">
-                    {@report_data.status_counts.cancelled} ({format_percentage(
-                      @report_data.rates.cancellation_rate
-                    )})
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                  <div
-                    class="h-full bg-red-500 rounded-full"
-                    style={"width: #{@report_data.rates.cancellation_rate}%"}
-                  >
-                  </div>
-                </div>
-              </div>
 
-              <div class="mb-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-700">No-show</span>
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700">No-show</span>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {@report_data.status_counts.no_show} ({format_percentage(
+                          @report_data.rates.no_show_rate
+                        )})
+                      </span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        class="h-full bg-yellow-500 rounded-full"
+                        style={"width: #{@report_data.rates.no_show_rate}%"}
+                      >
+                      </div>
+                    </div>
                   </div>
-                  <span class="text-sm font-medium text-gray-900">
-                    {@report_data.status_counts.no_show} ({format_percentage(
-                      @report_data.rates.no_show_rate
-                    )})
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                  <div
-                    class="h-full bg-yellow-500 rounded-full"
-                    style={"width: #{@report_data.rates.no_show_rate}%"}
-                  >
-                  </div>
-                </div>
-              </div>
 
-              <div class="mb-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-700">Rescheduled</span>
-                  </div>
-                  <span class="text-sm font-medium text-gray-900">
-                    {@report_data.status_counts.rescheduled} ({format_percentage(
-                      @report_data.status_counts.rescheduled /
-                        max(@report_data.total_appointments, 1) * 100
-                    )})
-                  </span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                  <div
-                    class="h-full bg-purple-500 rounded-full"
-                    style={"width: #{@report_data.status_counts.rescheduled / max(@report_data.total_appointments, 1) * 100}%"}
-                  >
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <div class="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-700">Rescheduled</span>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {@report_data.status_counts.rescheduled} ({format_percentage(
+                          @report_data.status_counts.rescheduled /
+                            max(@report_data.total_appointments, 1) * 100
+                        )})
+                      </span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full mt-1">
+                      <div
+                        class="h-full bg-purple-500 rounded-full"
+                        style={"width: #{@report_data.status_counts.rescheduled / max(@report_data.total_appointments, 1) * 100}%"}
+                      >
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            
+<!-- Age distribution chart -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Patient Age Distribution</h3>
+              </div>
+              <div class="p-6">
+                <div class="h-64 flex items-end space-x-2">
+                  <%= if map_size(@report_data.age_distribution) > 0 do %>
+                    <% max_count = @report_data.age_distribution |> Map.values() |> Enum.max() %>
+                    <%= for {age, count} <- Enum.sort(@report_data.age_distribution) do %>
+                      <div class="flex-1 flex flex-col items-center">
+                        <div class="w-full flex flex-col-reverse h-full">
+                          <div
+                            class="bg-indigo-500 w-full rounded-t"
+                            style={"height: #{get_chart_height(count, max_count)}"}
+                          >
+                          </div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">{age} years</div>
+                        <div class="text-xs font-semibold">{count}</div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="w-full flex items-center justify-center text-gray-500">
+                      No age distribution data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+          
+<!-- Time distribution and monthly chart -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Time of day distribution -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Time of Day Distribution</h3>
+              </div>
+              <div class="p-6">
+                <div class="flex justify-around h-64 items-end">
+                  <%= if map_size(@report_data.time_distribution) > 0 do %>
+                    <% max_count = @report_data.time_distribution |> Map.values() |> Enum.max() %>
+                    
+<!-- Morning -->
+                    <div class="flex flex-col items-center w-1/3">
+                      <div class="w-full flex flex-col-reverse h-full">
+                        <div
+                          class="bg-yellow-400 w-full rounded-t"
+                          style={"height: #{get_chart_height(Map.get(@report_data.time_distribution, :morning, 0), max_count)}"}
+                        >
+                        </div>
+                      </div>
+                      <div class="text-sm font-medium mt-2">Morning</div>
+                      <div class="text-xs text-gray-500">
+                        {Map.get(@report_data.time_distribution, :morning, 0)} appts
+                      </div>
+                    </div>
+                    
+<!-- Afternoon -->
+                    <div class="flex flex-col items-center w-1/3">
+                      <div class="w-full flex flex-col-reverse h-full">
+                        <div
+                          class="bg-orange-500 w-full rounded-t"
+                          style={"height: #{get_chart_height(Map.get(@report_data.time_distribution, :afternoon, 0), max_count)}"}
+                        >
+                        </div>
+                      </div>
+                      <div class="text-sm font-medium mt-2">Afternoon</div>
+                      <div class="text-xs text-gray-500">
+                        {Map.get(@report_data.time_distribution, :afternoon, 0)} appts
+                      </div>
+                    </div>
+                    
+<!-- Evening -->
+                    <div class="flex flex-col items-center w-1/3">
+                      <div class="w-full flex flex-col-reverse h-full">
+                        <div
+                          class="bg-indigo-600 w-full rounded-t"
+                          style={"height: #{get_chart_height(Map.get(@report_data.time_distribution, :evening, 0), max_count)}"}
+                        >
+                        </div>
+                      </div>
+                      <div class="text-sm font-medium mt-2">Evening</div>
+                      <div class="text-xs text-gray-500">
+                        {Map.get(@report_data.time_distribution, :evening, 0)} appts
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="w-full flex items-center justify-center text-gray-500">
+                      No time distribution data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+<!-- Monthly appointments chart -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Monthly Trend</h3>
+              </div>
+              <div class="p-6">
+                <div class="h-64 flex items-end space-x-2">
+                  <%= if length(@report_data.monthly_data) > 0 do %>
+                    <% max_count = Enum.map(@report_data.monthly_data, & &1.total) |> Enum.max() %>
+                    <%= for month <- @report_data.monthly_data do %>
+                      <div class="flex-1 flex flex-col items-center">
+                        <div class="w-full flex flex-col-reverse h-full">
+                          <div class="w-full flex flex-col-reverse">
+                            <div
+                              class="bg-green-500 w-full"
+                              style={"height: #{get_chart_height(month.completed, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-yellow-500 w-full"
+                              style={"height: #{get_chart_height(month.no_show, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-red-500 w-full"
+                              style={"height: #{get_chart_height(month.cancelled, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-blue-500 w-full rounded-t"
+                              style={"height: #{get_chart_height(month.total - month.completed - month.no_show - month.cancelled, max_count)}"}
+                            >
+                            </div>
+                          </div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">{month.display}</div>
+                        <div class="text-xs font-semibold">{month.total}</div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="w-full flex items-center justify-center text-gray-500">
+                      No monthly data available.
+                    </div>
+                  <% end %>
+                </div>
+
+                <div class="mt-4 flex justify-center">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-blue-500 mr-1"></div>
+                      <span class="text-xs text-gray-600">Scheduled</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-green-500 mr-1"></div>
+                      <span class="text-xs text-gray-600">Completed</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-red-500 mr-1"></div>
+                      <span class="text-xs text-gray-600">Cancelled</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-yellow-500 mr-1"></div>
+                      <span class="text-xs text-gray-600">No-shows</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% "appointments" -> %>
+          <!-- Appointments Details Report -->
+          <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Daily Appointment Details</h3>
+            </div>
+            
+<!-- Daily breakdown table -->
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Total
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Completed
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      No-shows
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Cancelled
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Completion Rate
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@report_data.daily_data) do %>
+                    <tr>
+                      <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No daily appointment data available for this period.
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for day <- @report_data.daily_data do %>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {Calendar.strftime(day.date, "%a, %b %d")}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {day.total}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {day.completed}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {day.no_show}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {day.cancelled}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <%= if day.total > 0 do %>
+                            {format_percentage(day.completed / day.total * 100)}
+                          <% else %>
+                            -
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+<!-- Weekly summary -->
+          <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Weekly Summary</h3>
+            </div>
+
+            <div class="p-6">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Weekly data table -->
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Week
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Total
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Completed
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          No-shows
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <%= if Enum.empty?(@report_data.weekly_data) do %>
+                        <tr>
+                          <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No weekly data available for this period.
+                          </td>
+                        </tr>
+                      <% else %>
+                        <%= for week <- @report_data.weekly_data do %>
+                          <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {week.display} ({format_date(week.week_start)} - {format_date(
+                                week.week_end
+                              )})
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {week.total}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {week.completed}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {week.no_show}
+                            </td>
+                          </tr>
+                        <% end %>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+                
+<!-- Weekly chart -->
+                <div class="h-64 flex items-end space-x-2">
+                  <%= if length(@report_data.weekly_data) > 0 do %>
+                    <% max_count = Enum.map(@report_data.weekly_data, & &1.total) |> Enum.max() %>
+                    <%= for week <- @report_data.weekly_data do %>
+                      <div class="flex-1 flex flex-col items-center">
+                        <div class="w-full flex flex-col-reverse h-full">
+                          <div class="w-full flex flex-col-reverse">
+                            <div
+                              class="bg-green-500 w-full"
+                              style={"height: #{get_chart_height(week.completed, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-yellow-500 w-full"
+                              style={"height: #{get_chart_height(week.no_show, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-red-500 w-full"
+                              style={"height: #{get_chart_height(week.cancelled, max_count)}"}
+                            >
+                            </div>
+                            <div
+                              class="bg-blue-500 w-full rounded-t"
+                              style={"height: #{get_chart_height(week.total - week.completed - week.no_show - week.cancelled, max_count)}"}
+                            >
+                            </div>
+                          </div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">{week.display}</div>
+                        <div class="text-xs font-semibold">{week.total}</div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="w-full flex items-center justify-center text-gray-500">
+                      No weekly data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% "patients" -> %>
+          <!-- Patient Demographics Report -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Age distribution -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Patient Age Distribution</h3>
+              </div>
+              <div class="p-6">
+                <div class="h-64 flex items-end space-x-2">
+                  <%= if map_size(@report_data.age_distribution) > 0 do %>
+                    <% max_count = @report_data.age_distribution |> Map.values() |> Enum.max() %>
+                    <%= for {age, count} <- Enum.sort(@report_data.age_distribution) do %>
+                      <div class="flex-1 flex flex-col items-center">
+                        <div class="w-full flex flex-col-reverse h-full">
+                          <div
+                            class="bg-indigo-500 w-full rounded-t"
+                            style={"height: #{get_chart_height(count, max_count)}"}
+                          >
+                          </div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">{age} years</div>
+                        <div class="text-xs font-semibold">{count}</div>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <div class="w-full flex items-center justify-center text-gray-500">
+                      No age distribution data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+<!-- Patient summary -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Patient Summary</h3>
+              </div>
+              <div class="p-6">
+                <div class="flex flex-col space-y-4">
+                  <div class="flex justify-between">
+                    <span class="font-medium text-gray-700">Total Unique Patients:</span>
+                    <span class="font-semibold text-gray-900">{@report_data.children_count}</span>
+                  </div>
+
+                  <div class="flex justify-between">
+                    <span class="font-medium text-gray-700">
+                      Average Appointments Per Patient:
+                    </span>
+                    <span class="font-semibold text-gray-900">
+                      {:erlang.float_to_binary(
+                        @report_data.total_appointments / max(@report_data.children_count, 1),
+                        decimals: 1
+                      )}
+                    </span>
+                  </div>
+
+                  <div class="border-t border-gray-200 pt-4 mt-2">
+                    <h4 class="font-medium text-gray-900 mb-2">Age Breakdown</h4>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <%= if map_size(@report_data.age_distribution) > 0 do %>
+                        <% total_patients = @report_data.children_count %>
+                        
+<!-- Under 1 year -->
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-700">Under 1 year:</span>
+                          <span class="text-sm font-medium text-gray-900">
+                            <% infants =
+                              Enum.filter(@report_data.age_distribution, fn {age, _} ->
+                                age < 1
+                              end)
+                              |> Enum.reduce(0, fn {_, count}, acc -> acc + count end) %>
+                            {infants} (<%= if total_patients > 0 do %>
+                              {format_percentage(infants / total_patients * 100)}
+                            <% else %>
+                              0%
+                            <% end %>)
+                          </span>
+                        </div>
+                        
+<!-- 1-2 years -->
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-700">1-2 years:</span>
+                          <span class="text-sm font-medium text-gray-900">
+                            <% toddlers =
+                              Enum.filter(@report_data.age_distribution, fn {age, _} ->
+                                age >= 1 && age <= 2
+                              end)
+                              |> Enum.reduce(0, fn {_, count}, acc -> acc + count end) %>
+                            {toddlers} (<%= if total_patients > 0 do %>
+                              {format_percentage(toddlers / total_patients * 100)}
+                            <% else %>
+                              0%
+                            <% end %>)
+                          </span>
+                        </div>
+                        
+<!-- 3-4 years -->
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-700">3-4 years:</span>
+                          <span class="text-sm font-medium text-gray-900">
+                            <% preschool =
+                              Enum.filter(@report_data.age_distribution, fn {age, _} ->
+                                age >= 3 && age <= 4
+                              end)
+                              |> Enum.reduce(0, fn {_, count}, acc -> acc + count end) %>
+                            {preschool} (<%= if total_patients > 0 do %>
+                              {format_percentage(preschool / total_patients * 100)}
+                            <% else %>
+                              0%
+                            <% end %>)
+                          </span>
+                        </div>
+                        
+<!-- 5 and older -->
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-700">5 years:</span>
+                          <span class="text-sm font-medium text-gray-900">
+                            <% older =
+                              Enum.filter(@report_data.age_distribution, fn {age, _} ->
+                                age >= 5
+                              end)
+                              |> Enum.reduce(0, fn {_, count}, acc -> acc + count end) %>
+                            {older} (<%= if total_patients > 0 do %>
+                              {format_percentage(older / total_patients * 100)}
+                            <% else %>
+                              0%
+                            <% end %>)
+                          </span>
+                        </div>
+                      <% else %>
+                        <div class="col-span-2 text-center text-gray-500">
+                          No age data available.
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+<!-- Appointment frequency by patient -->
+          <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Patient Visit Frequency</h3>
+            </div>
+            <div class="p-6">
+              <p class="text-sm text-gray-500 mb-4">
+                Distribution of patients by number of appointments in the selected period.
+              </p>
+
+              <div class="relative pt-1">
+                <div class="flex items-center justify-between mb-2">
+                  <div>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
+                      Single Visit Patients
+                    </span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs font-semibold inline-block text-indigo-600">
+                      <%= if @report_data.children_count > 0 do %>
+                        <% single_visit =
+                          Enum.count(
+                            Enum.filter(@report_data.daily_data, fn day -> day.total == 1 end)
+                          ) %>
+                        {single_visit} patients ({format_percentage(
+                          single_visit / @report_data.children_count * 100
+                        )})
+                      <% else %>
+                        0 patients (0%)
+                      <% end %>
+                    </span>
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <div class="h-2 bg-gray-200 rounded-full">
+                    <div class="h-full bg-indigo-500 rounded-full" style="width: 35%"></div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-2">
+                  <div>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">
+                      Regular Patients (2-3 visits)
+                    </span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs font-semibold inline-block text-green-600">
+                      <%= if @report_data.children_count > 0 do %>
+                        <% regular_visits =
+                          Enum.count(
+                            Enum.filter(@report_data.daily_data, fn day ->
+                              day.total >= 2 && day.total <= 3
+                            end)
+                          ) %>
+                        {regular_visits} patients ({format_percentage(
+                          regular_visits / @report_data.children_count * 100
+                        )})
+                      <% else %>
+                        0 patients (0%)
+                      <% end %>
+                    </span>
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <div class="h-2 bg-gray-200 rounded-full">
+                    <div class="h-full bg-green-500 rounded-full" style="width: 45%"></div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-2">
+                  <div>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+                      Frequent Patients (4+ visits)
+                    </span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs font-semibold inline-block text-blue-600">
+                      <%= if @report_data.children_count > 0 do %>
+                        <% frequent_visits =
+                          Enum.count(
+                            Enum.filter(@report_data.daily_data, fn day -> day.total >= 4 end)
+                          ) %>
+                        {frequent_visits} patients ({format_percentage(
+                          frequent_visits / @report_data.children_count * 100
+                        )})
+                      <% else %>
+                        0 patients (0%)
+                      <% end %>
+                    </span>
+                  </div>
+                </div>
+                <div class="mb-6">
+                  <div class="h-2 bg-gray-200 rounded-full">
+                    <div class="h-full bg-blue-500 rounded-full" style="width: 20%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% "trends" -> %>
+          <!-- Trends Report -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Completion Rate Trend -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Completion Rate Trend</h3>
+              </div>
+              <div class="p-6">
+                <div class="h-64 relative">
+                  <%= if length(@report_data.weekly_data) > 0 do %>
+                    <div class="absolute inset-0 flex items-end">
+                      <div class="flex w-full h-full items-end">
+                        <%= for {week, index} <- Enum.with_index(@report_data.weekly_data) do %>
+                          <%= if week.total > 0 do %>
+                            <div class="flex-1 flex flex-col items-center justify-end h-full">
+                              <div
+                                class="w-16 bg-green-500 rounded-t"
+                                style={"height: #{week.completed / week.total * 100}%"}
+                              >
+                              </div>
+                              <div class="mt-2 text-xs text-gray-500">Week {index + 1}</div>
+                              <div class="text-xs font-medium">
+                                {format_percentage(week.completed / week.total * 100)}
+                              </div>
+                            </div>
+                          <% else %>
+                            <div class="flex-1 flex flex-col items-center justify-end h-full">
+                              <div class="w-16 bg-gray-200 rounded-t h-2"></div>
+                              <div class="mt-2 text-xs text-gray-500">Week {index + 1}</div>
+                              <div class="text-xs font-medium">0%</div>
+                            </div>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                      No trend data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+<!-- No-show Rate Trend -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">No-show Rate Trend</h3>
+              </div>
+              <div class="p-6">
+                <div class="h-64 relative">
+                  <%= if length(@report_data.weekly_data) > 0 do %>
+                    <div class="absolute inset-0 flex items-end">
+                      <div class="flex w-full h-full items-end">
+                        <%= for {week, index} <- Enum.with_index(@report_data.weekly_data) do %>
+                          <%= if week.total > 0 do %>
+                            <div class="flex-1 flex flex-col items-center justify-end h-full">
+                              <div
+                                class="w-16 bg-yellow-500 rounded-t"
+                                style={"height: #{week.no_show / week.total * 100}%"}
+                              >
+                              </div>
+                              <div class="mt-2 text-xs text-gray-500">Week {index + 1}</div>
+                              <div class="text-xs font-medium">
+                                {format_percentage(week.no_show / week.total * 100)}
+                              </div>
+                            </div>
+                          <% else %>
+                            <div class="flex-1 flex flex-col items-center justify-end h-full">
+                              <div class="w-16 bg-gray-200 rounded-t h-2"></div>
+                              <div class="mt-2 text-xs text-gray-500">Week {index + 1}</div>
+                              <div class="text-xs font-medium">0%</div>
+                            </div>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                      No trend data available.
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+<!-- Monthly Trend Analysis -->
+          <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">Monthly Trend Analysis</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Month
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Total
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Change
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Completion Rate
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      No-show Rate
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <%= if Enum.empty?(@report_data.monthly_data) do %>
+                    <tr>
+                      <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No monthly trend data available for this period.
+                      </td>
+                    </tr>
+                  <% else %>
+                    <%= for {month, index} <- Enum.with_index(@report_data.monthly_data) do %>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {month.display}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {month.total}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <%= if index > 0 do %>
+                            <% prev_month = Enum.at(@report_data.monthly_data, index - 1) %>
+                            <% change = month.total - prev_month.total %>
+                            <% change_percent =
+                              if prev_month.total > 0,
+                                do: change / prev_month.total * 100,
+                                else: 0 %>
+
+                            <%= if change > 0 do %>
+                              <span class="text-sm text-green-600">
+                                +{change} ({format_percentage(change_percent)})
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4 inline"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M5 10l7-7m0 0l7 7m-7-7v18"
+                                  />
+                                </svg>
+                              </span>
+                            <% else %>
+                              <span class="text-sm text-red-600">
+                                {change} ({format_percentage(change_percent)})
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4 inline"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                                  />
+                                </svg>
+                              </span>
+                            <% end %>
+                          <% else %>
+                            <span class="text-sm text-gray-500">-</span>
+                          <% end %>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <%= if month.total > 0 do %>
+                            {format_percentage(month.completed / month.total * 100)}
+                          <% else %>
+                            -
+                          <% end %>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <%= if month.total > 0 do %>
+                            {format_percentage(month.no_show / month.total * 100)}
+                          <% else %>
+                            -
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+      <% end %>
     </main>
   </div>
 </div>
