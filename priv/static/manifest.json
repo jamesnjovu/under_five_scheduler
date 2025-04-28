@@ -1,0 +1,112 @@
+{
+    "name": "Under Five Health Check-Up",
+    "short_name": "U5 Health",
+    "description": "Schedule and manage health check-ups for children under five years old",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#4F46E5",
+    "theme_color": "#4F46E5",
+    "orientation": "portrait-primary",
+    "dir": "ltr",
+    "lang": "en-US",
+    "categories": ["healthcare", "children", "medical", "appointments"],
+    "iarc_rating_id": "", 
+    "screenshots": [
+      {
+        "src": "/images/screenshots/screen1.png",
+        "sizes": "1280x720",
+        "type": "image/png",
+        "platform": "wide",
+        "label": "Dashboard View"
+      },
+      {
+        "src": "/images/screenshots/screen2.png",
+        "sizes": "1280x720",
+        "type": "image/png",
+        "platform": "wide",
+        "label": "Appointment Booking"
+      },
+      {
+        "src": "/images/screenshots/mobile1.png",
+        "sizes": "750x1334",
+        "type": "image/png",
+        "platform": "narrow",
+        "label": "Mobile Dashboard"
+      }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "icons": [
+      {
+        "src": "/images/icon-72.png",
+        "sizes": "72x72",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-96.png",
+        "sizes": "96x96",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-128.png",
+        "sizes": "128x128",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-144.png",
+        "sizes": "144x144",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-152.png",
+        "sizes": "152x152",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-192.svg",
+        "sizes": "192x192",
+        "type": "image/svg",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-384.png",
+        "sizes": "384x384",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/icon-512.svg",
+        "sizes": "512x512",
+        "type": "image/svg",
+        "purpose": "any"
+      },
+      {
+        "src": "/images/maskable-icon.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
+    ],
+    "shortcuts": [
+      {
+        "name": "Book Appointment",
+        "short_name": "Book",
+        "description": "Book a new appointment",
+        "url": "/appointments/new",
+        "icons": [{ "src": "/images/shortcuts/book.png", "sizes": "96x96" }]
+      },
+      {
+        "name": "View Appointments",
+        "short_name": "Appointments",
+        "description": "View your upcoming appointments",
+        "url": "/appointments",
+        "icons": [{ "src": "/images/shortcuts/calendar.png", "sizes": "96x96" }]
+      }
+    ]
+  }

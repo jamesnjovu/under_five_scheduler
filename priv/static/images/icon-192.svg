@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Background -->
+  <rect width="192" height="192" rx="38" fill="#4F46E5" />
+  
+  <!-- Stethoscope -->
+  <path d="M96 45 C 86 53, 71 53, 60 60 C 49 68, 41 83, 41 98 C 41 113, 47 126, 56 135 C 66 144, 83 146, 94 139 C 101 134, 105 128, 105 113 L 105 90 L 116 90 C 124 90, 131 98, 131 105 C 131 113, 126 118, 118 118 C 113 118, 107 114, 105 109" stroke="white" stroke-width="8" fill="none" stroke-linecap="round"/>
+  
+  <!-- Child silhouette -->
+  <circle cx="120" cy="71" r="15" fill="white" />
+  <path d="M109 86 L 131 86 L 146 128 L 139 131 L 128 105 L 120 128 L 113 105 L 101 131 L 94 127 Z" fill="white" />
+</svg>

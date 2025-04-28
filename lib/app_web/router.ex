@@ -121,6 +121,18 @@ defmodule AppWeb.Router do
   scope "/", AppWeb do
     pipe_through [:browser]
 
+    # PWA specific routes
+    get "/manifest.json", PWAController, :manifest
+    get "/service-worker.js", PWAController, :service_worker
+    get "/service-worker-registration.js", PWAController, :service_worker_registration
+    get "/offline.html", PWAController, :offline
+
+    # Connectivity verification
+    get "/connectivity-check", PWAController, :connectivity_check
+
+    # Web Push notifications
+    post "/push/subscribe", PWAController, :subscribe_push
+
     match :*, "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
