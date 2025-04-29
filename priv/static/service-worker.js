@@ -63,64 +63,86 @@ self.addEventListener('activate', event => {
 
 // Fetch event - handle network requests with cache strategies
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // Handle API requests (network first, fall back to offline response)
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/live/')) {
-    event.respondWith(networkFirstStrategy(event.request));
-    return;
+  // CRITICAL: Skip non-HTTP(S) requests completely (like chrome-extension://)
+  if (!event.request.url.startsWith('http')) {
+    console.log('[Service Worker] Skipping non-HTTP request:', event.request.url);
+    return; // Don't call respondWith for non-HTTP requests
   }
   
-  // Handle asset requests (cache first)
-  if (
-    url.pathname.startsWith('/assets/') ||
-    url.pathname.startsWith('/images/') ||
-    url.pathname.includes('.js') ||
-    url.pathname.includes('.css')
-  ) {
-    event.respondWith(cacheFirstStrategy(event.request, ASSETS_CACHE));
-    return;
+  try {
+    const url = new URL(event.request.url);
+    
+    // Handle API requests (network first, fall back to offline response)
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/live/')) {
+      event.respondWith(networkFirstStrategy(event.request));
+      return;
+    }
+    
+    // Handle asset requests (cache first)
+    if (
+      url.pathname.startsWith('/assets/') ||
+      url.pathname.startsWith('/images/') ||
+      url.pathname.includes('.js') ||
+      url.pathname.includes('.css')
+    ) {
+      event.respondWith(cacheFirstStrategy(event.request, ASSETS_CACHE));
+      return;
+    }
+    
+    // For HTML navigation requests, use network first
+    if (event.request.mode === 'navigate') {
+      event.respondWith(
+        fetch(event.request)
+          .catch(() => {
+            return caches.match('/offline.html');
+          })
+      );
+      return;
+    }
+    
+    // Default to cache first for everything else (but only for HTTP requests)
+    event.respondWith(cacheFirstStrategy(event.request, DYNAMIC_CACHE));
+  } catch (error) {
+    console.error('[Service Worker] Error in fetch handler:', error);
+    // Don't attempt to handle this request
   }
-  
-  // For HTML navigation requests, use network first
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return caches.match('/offline.html');
-        })
-    );
-    return;
-  }
-  
-  // Default to cache first for everything else
-  event.respondWith(cacheFirstStrategy(event.request, DYNAMIC_CACHE));
 });
 
 // Cache-first strategy: try cache first, then network
 async function cacheFirstStrategy(request, cacheName) {
-  const cachedResponse = await caches.match(request);
-  
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
   try {
+    // Double-check we're only processing HTTP requests
+    if (!request.url.startsWith('http')) {
+      console.log('[Service Worker] Skipping non-HTTP URL in cacheFirstStrategy:', request.url);
+      return fetch(request);
+    }
+    
+    const cachedResponse = await caches.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
     const networkResponse = await fetch(request);
     
-    // Only cache valid responses that are not CORS opaque responses
+    // Only cache valid responses from HTTP/HTTPS requests
     if (
       networkResponse && 
       networkResponse.status === 200 &&
       networkResponse.type !== 'opaque'
     ) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
+      try {
+        const cache = await caches.open(cacheName);
+        await cache.put(request, networkResponse.clone());
+      } catch (cacheError) {
+        console.error('[Service Worker] Cache put error:', cacheError, 'for URL:', request.url);
+        // Continue even if caching fails
+      }
     }
     
     return networkResponse;
   } catch (error) {
-    console.error('[Service Worker] Fetch failed:', error);
+    console.error('[Service Worker] Fetch failed:', error, 'for URL:', request.url);
     
     // For image requests, you might want to return a fallback
     if (request.url.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
@@ -135,37 +157,56 @@ async function cacheFirstStrategy(request, cacheName) {
 // Network-first strategy: try network first, then cache
 async function networkFirstStrategy(request) {
   try {
+    // Double-check we're only processing HTTP requests
+    if (!request.url.startsWith('http')) {
+      console.log('[Service Worker] Skipping non-HTTP URL in networkFirstStrategy:', request.url);
+      return fetch(request);
+    }
+    
     const networkResponse = await fetch(request);
     
-    // Cache the response for future
-    if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+    // Cache the response for future if it's an HTTP request
+    if (
+      networkResponse && 
+      networkResponse.status === 200 && 
+      networkResponse.type !== 'opaque'
+    ) {
+      try {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        await cache.put(request, networkResponse.clone());
+      } catch (cacheError) {
+        console.error('[Service Worker] Cache put error:', cacheError, 'for URL:', request.url);
+        // Continue even if caching fails
+      }
     }
     
     return networkResponse;
   } catch (error) {
-    console.log('[Service Worker] Fetch failed, falling back to cache:', error);
+    console.log('[Service Worker] Fetch failed, falling back to cache:', error, 'for URL:', request.url);
     
-    const cachedResponse = await caches.match(request);
-    
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // If the request is for an API endpoint, return an offline JSON response
-    if (request.url.includes('/api/')) {
-      return new Response(
-        JSON.stringify({ 
-          error: true, 
-          message: 'You are currently offline', 
-          offline: true 
-        }),
-        { 
-          status: 503,
-          headers: { 'Content-Type': 'application/json' } 
-        }
-      );
+    try {
+      const cachedResponse = await caches.match(request);
+      
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      
+      // If the request is for an API endpoint, return an offline JSON response
+      if (request.url.includes('/api/')) {
+        return new Response(
+          JSON.stringify({ 
+            error: true, 
+            message: 'You are currently offline', 
+            offline: true 
+          }),
+          { 
+            status: 503,
+            headers: { 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+    } catch (cacheError) {
+      console.error('[Service Worker] Cache match error:', cacheError);
     }
     
     // For other requests, return nothing
