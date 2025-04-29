@@ -733,4 +733,13 @@ defmodule AppWeb.CoreComponents do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
+  def assign_form(socket, %Ecto.Changeset{} = changeset, key) do
+    assign(socket, key, to_form(changeset))
+  end
+
+  def assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
+  end
+
 end

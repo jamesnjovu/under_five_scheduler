@@ -151,7 +151,7 @@ defmodule AppWeb.UserRegistrationLive do
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
-      |> assign_form(changeset)
+      |> assign_form1(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}
   end
@@ -166,20 +166,20 @@ defmodule AppWeb.UserRegistrationLive do
           )
 
         changeset = Accounts.change_user_registration(user)
-        {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+        {:noreply, socket |> assign(trigger_submit: true) |> assign_form1(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+        {:noreply, socket |> assign(check_errors: true) |> assign_form1(changeset)}
     end
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do
     changeset = Accounts.change_user_registration(%User{}, user_params)
     IO.inspect(changeset)
-    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+    {:noreply, assign_form1(socket, Map.put(changeset, :action, :validate))}
   end
 
-  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+  defp assign_form1(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "user")
 
     if changeset.valid? do

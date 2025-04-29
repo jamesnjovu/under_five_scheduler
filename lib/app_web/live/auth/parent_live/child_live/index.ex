@@ -3,7 +3,6 @@ defmodule AppWeb.ChildLive.Index do
 
   alias App.Accounts
   alias App.Accounts.Child
-  alias App.Scheduling
 
   @impl true
   def mount(_params, session, socket) do
@@ -18,7 +17,7 @@ defmodule AppWeb.ChildLive.Index do
         |> assign(:page_title, "My Children")
         |> assign(:children, children)
         |> assign(:child, %Child{})
-        |> assign(:changeset, Accounts.change_child(%Child{}))
+        |> assign_form(Accounts.change_child(%Child{}))
         |> assign(:show_sidebar, false)
         |> assign(:show_modal, false)
 

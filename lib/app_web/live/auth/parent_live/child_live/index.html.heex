@@ -270,20 +270,19 @@
                   {if @live_action == :new, do: "Add New Child", else: "Edit Child"}
                 </h3>
                 <div class="mt-6">
-                  <.form for={@changeset} id="child-form" phx-change="validate" phx-submit="save">
+                  <.form for={@form} id="child-form" phx-change="validate" phx-submit="save">
                     <div class="space-y-6">
                       <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">
                           Child's Name
                         </label>
                         <div class="mt-1">
-                          <%!-- {#text_input(@changeset, :name,
-                            class:
-                              "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
-                            placeholder: "Enter child's full name",
-                            required: true
-                          )}
-                          {#error_tag(@changeset, :name)} --%>
+                          <.input
+                            field={@form[:name]}
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Enter child's full name"
+                            required
+                          />
                         </div>
                       </div>
 
@@ -292,12 +291,12 @@
                           Date of Birth
                         </label>
                         <div class="mt-1">
-                          <%!-- {#date_input(@changeset, :date_of_birth,
-                            class:
-                              "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
-                            required: true
-                          )}
-                          {#error_tag(@changeset, :date_of_birth)} --%>
+                          <.input
+                            field={@form[:date_of_birth]}
+                            type="date"
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            required
+                          />
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Child must be under 5 years old</p>
                       </div>

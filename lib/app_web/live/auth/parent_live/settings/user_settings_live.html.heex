@@ -1,0 +1,214 @@
+<div class="flex h-screen bg-gray-50">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Provider Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@user.name}</span>
+      </div>
+    </div>
+  </.side_nav_res>
+  
+<!-- Main content area -->
+  <div class="flex-1 overflow-auto md:pl-0">
+    <header class="bg-white shadow pl-4 md:pl-0">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Settings</h1>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Settings Tabs -->
+      <div class="mb-8">
+        <div class="sm:hidden">
+          <label for="tabs" class="sr-only">Select a tab</label>
+          <select
+            id="tabs"
+            name="tabs"
+            phx-change="change_tab"
+            class="block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="profile" selected={@active_tab == "profile"}>Profile Settings</option>
+            <option value="professional" selected={@active_tab == "professional"}>
+              Professional Info
+            </option>
+            <option value="notifications" selected={@active_tab == "notifications"}>
+              Notification Settings
+            </option>
+            <option value="security" selected={@active_tab == "security"}>Security</option>
+          </select>
+        </div>
+      </div>
+      <div class="hidden sm:block">
+        <div class="border-b border-gray-200">
+          <nav class="flex -mb-px space-x-8" aria-label="Tabs">
+            <button
+              phx-click="change_tab"
+              phx-value-tab="profile"
+              class={
+                  "py-4 px-1 border-b-2 font-medium text-sm " <> 
+                  if(@active_tab == "profile", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                }
+            >
+              Profile Settings
+            </button>
+            <button
+              phx-click="change_tab"
+              phx-value-tab="security"
+              class={
+                  "py-4 px-1 border-b-2 font-medium text-sm " <> 
+                  if(@active_tab == "security", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                }
+            >
+              Security
+            </button>
+          </nav>
+        </div>
+      </div>
+      
+<!-- Tab content -->
+      <div class="bg-white shadow rounded-lg">
+        <%= case @active_tab do %>
+          <% "profile" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Profile Information
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Update your personal information and contact details
+                </p>
+              </div>
+
+              <.form
+                for={@email_form}
+                id="profile_form"
+                phx-submit="update_profile"
+                class="mt-6 space-y-6"
+              >
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div>
+                    <.input field={@email_form[:name]} type="text" label="Full Name" required />
+                  </div>
+
+                  <div>
+                    <.input
+                      field={@email_form[:email]}
+                      type="email"
+                      label="Email Address"
+                      required
+                      phx-debounce="blur"
+                    />
+                  </div>
+
+                  <div>
+                    <.input field={@email_form[:phone]} type="tel" label="Phone Number" required />
+                  </div>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </.form>
+            </div>
+          <% "security" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Security Settings
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Change your password and security preferences
+                </p>
+              </div>
+
+              <.form
+                for={@password_form}
+                id="password_form"
+                action={~p"/users/log_in?_action=password_updated"}
+                method="post"
+                phx-change="validate_password"
+                phx-submit="update_password"
+                phx-trigger-action={@trigger_submit}
+                class="mt-6 space-y-6"
+              >
+                <input
+                  name={@password_form[:email].name}
+                  type="hidden"
+                  id="hidden_user_email"
+                  value={@user.email}
+                />
+
+                <div>
+                  <.input
+                    field={@password_form[:current_password]}
+                    name="current_password"
+                    type="password"
+                    label="Current Password"
+                    placeholder="Enter Current Password"
+                    id="current_password"
+                    value={@current_password}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <.input
+                    field={@password_form[:password]}
+                    type="password"
+                    label="New Password"
+                    placeholder="Enter New Password"
+                    required
+                  />
+                  <p class="mt-1 text-sm text-gray-500">
+                    Password must be at least 8 characters long
+                  </p>
+                </div>
+
+                <div>
+                  <.input
+                    field={@password_form[:password_confirmation]}
+                    type="password"
+                    label="Confirm New Password"
+                    placeholder="Enter Confirm New Password"
+                    required
+                  />
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Change Password
+                    </button>
+                  </div>
+                </div>
+              </.form>
+
+              <div class="mt-10 pt-8 border-t border-gray-200">
+                <h4 class="text-lg font-medium text-gray-900">Two-Factor Authentication</h4>
+                <p class="mt-1 text-sm text-gray-500">
+                  Add an extra layer of security to your account
+                </p>
+                <div class="mt-4">
+                  <button class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Enable Two-Factor Authentication
+                  </button>
+                </div>
+              </div>
+            </div>
+        <% end %>
+      </div>
+      <!-- Desktop Tabs -->
+    </main>
+  </div>
+</div>

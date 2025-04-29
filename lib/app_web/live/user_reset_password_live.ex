@@ -50,7 +50,7 @@ defmodule AppWeb.UserResetPasswordLive do
           %{}
       end
 
-    {:ok, assign_form(socket, form_source), temporary_assigns: [form: nil]}
+    {:ok, assign_form1(socket, form_source), temporary_assigns: [form: nil]}
   end
 
   # Do not log in the user after reset password to avoid a
@@ -70,7 +70,7 @@ defmodule AppWeb.UserResetPasswordLive do
 
   def handle_event("validate", %{"user" => user_params}, socket) do
     changeset = Accounts.change_user_password(socket.assigns.user, user_params)
-    {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+    {:noreply, assign_form1(socket, Map.put(changeset, :action, :validate))}
   end
 
   defp assign_user_and_token(socket, %{"token" => token}) do
@@ -83,7 +83,7 @@ defmodule AppWeb.UserResetPasswordLive do
     end
   end
 
-  defp assign_form(socket, %{} = source) do
+  defp assign_form1(socket, %{} = source) do
     assign(socket, :form, to_form(source, as: "user"))
   end
 end
