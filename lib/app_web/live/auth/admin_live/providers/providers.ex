@@ -42,6 +42,11 @@ defmodule AppWeb.AdminLive.Providers do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
   defp apply_action(socket, :index, _params) do
     socket
   end

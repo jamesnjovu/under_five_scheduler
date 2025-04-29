@@ -28,13 +28,16 @@ defmodule AppWeb.AdminLive.Dashboard do
 
       appointments = Scheduling.list_appointments()
 
-      upcoming_appointments = Enum.filter(appointments, fn appt ->
-        Date.compare(appt.scheduled_date, today) in [:eq, :gt] && appt.status in ["scheduled", "confirmed"]
-      end)
+      upcoming_appointments =
+        Enum.filter(appointments, fn appt ->
+          Date.compare(appt.scheduled_date, today) in [:eq, :gt] &&
+            appt.status in ["scheduled", "confirmed"]
+        end)
 
-      monthly_appointments = Enum.filter(appointments, fn appt ->
-        Date.compare(appt.scheduled_date, start_of_month) in [:eq, :gt]
-      end)
+      monthly_appointments =
+        Enum.filter(appointments, fn appt ->
+          Date.compare(appt.scheduled_date, start_of_month) in [:eq, :gt]
+        end)
 
       # Calculate statistics
       stats = %{
@@ -50,8 +53,10 @@ defmodule AppWeb.AdminLive.Dashboard do
 
         # Monthly statistics
         monthly_appointments: length(monthly_appointments),
-        monthly_completed: Enum.count(monthly_appointments, fn appt -> appt.status == "completed" end),
-        monthly_cancelled: Enum.count(monthly_appointments, fn appt -> appt.status == "cancelled" end),
+        monthly_completed:
+          Enum.count(monthly_appointments, fn appt -> appt.status == "completed" end),
+        monthly_cancelled:
+          Enum.count(monthly_appointments, fn appt -> appt.status == "cancelled" end),
         monthly_no_show: Enum.count(monthly_appointments, fn appt -> appt.status == "no_show" end)
       }
 
@@ -80,6 +85,11 @@ defmodule AppWeb.AdminLive.Dashboard do
   @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
   end
 
   defp apply_action(socket, :index, _params) do
@@ -117,7 +127,8 @@ defmodule AppWeb.AdminLive.Dashboard do
       }
     end)
     |> Enum.sort_by(fn %{total_appointments: count} -> count end, :desc)
-    |> Enum.take(5)  # Top 5 providers
+    # Top 5 providers
+    |> Enum.take(5)
   end
 
   # Get chart data for appointments by month
@@ -126,21 +137,23 @@ defmodule AppWeb.AdminLive.Dashboard do
     today = Date.utc_today()
 
     # Get last 6 months
-    months = for n <- 5..0 do
-      Date.add(today, -n * 30)
-      |> Date.beginning_of_month()
-    end
+    months =
+      for n <- 5..0 do
+        Date.add(today, -n * 30)
+        |> Date.beginning_of_month()
+      end
 
     Enum.map(months, fn month ->
       month_str = Calendar.strftime(month, "%b")
       next_month = Date.add(month, 31) |> Date.beginning_of_month()
 
       # Get appointments for this month
-      appointments = Scheduling.list_appointments()
-      |> Enum.filter(fn appt ->
-        Date.compare(appt.scheduled_date, month) in [:eq, :gt] &&
-        Date.compare(appt.scheduled_date, next_month) == :lt
-      end)
+      appointments =
+        Scheduling.list_appointments()
+        |> Enum.filter(fn appt ->
+          Date.compare(appt.scheduled_date, month) in [:eq, :gt] &&
+            Date.compare(appt.scheduled_date, next_month) == :lt
+        end)
 
       # Count by status
       scheduled = Enum.count(appointments, fn a -> a.status in ["scheduled", "confirmed"] end)

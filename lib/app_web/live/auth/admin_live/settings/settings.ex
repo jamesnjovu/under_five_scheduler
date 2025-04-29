@@ -71,6 +71,11 @@ defmodule AppWeb.AdminLive.Settings do
   end
 
   @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
+  @impl true
   def handle_event("update_appointment_settings", %{"appointment" => params}, socket) do
     # In a real app, this would update the database
     updated_settings = %{

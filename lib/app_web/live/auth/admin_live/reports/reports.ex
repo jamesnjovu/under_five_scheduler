@@ -40,6 +40,11 @@ defmodule AppWeb.AdminLive.Reports do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
   defp apply_action(socket, :index, _params) do
     socket
   end
@@ -192,7 +197,7 @@ defmodule AppWeb.AdminLive.Reports do
 
   # Helper functions for displaying data
   defp percentage_format(value) do
-    :erlang.float_to_binary((value/1), decimals: 1) <> "%"
+    :erlang.float_to_binary(value / 1, decimals: 1) <> "%"
   end
 
   defp date_format(date) do

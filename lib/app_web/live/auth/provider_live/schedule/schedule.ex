@@ -39,6 +39,11 @@ defmodule AppWeb.ProviderLive.Schedule do
   end
 
   @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
+  @impl true
   def handle_event("edit_schedule", %{"day" => day}, socket) do
     day_num = String.to_integer(day)
     schedule = Enum.find(socket.assigns.schedules, fn s -> s.day_of_week == day_num end)

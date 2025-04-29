@@ -51,6 +51,11 @@ defmodule AppWeb.ProviderLive.Appointments do
   end
 
   @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
+  @impl true
   def handle_event("change_date", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string) do
       {:noreply,

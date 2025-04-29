@@ -49,6 +49,11 @@ defmodule AppWeb.AdminLive.Parents do
   end
 
   @impl true
+  def handle_event("toggle_sidebar", _, socket) do
+    {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
+  @impl true
   def handle_event("search", %{"search" => search}, socket) do
     {:noreply, assign(socket, :search, search)}
   end

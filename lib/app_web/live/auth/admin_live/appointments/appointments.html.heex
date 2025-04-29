@@ -1,12 +1,12 @@
 <div class="flex h-screen bg-gray-50">
   <!-- Sidebar navigation - same as dashboard -->
-  <div class="w-64 bg-indigo-800 text-white">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
     <div class="p-4">
-      <h2 class="text-xl font-bold text-center">Admin Portal</h2>
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Admin Portal</span>
+      </div>
     </div>
-
-    {live_render(@socket, AppWeb.Auth.Navigation, sticky: true, id: "Nav")}
-  </div>
+  </.side_nav_res>
   
 <!-- Main content area -->
   <div class="flex-1 overflow-auto">

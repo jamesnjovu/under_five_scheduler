@@ -56,6 +56,9 @@ defmodule AppWeb.USSDController do
       :select_child ->
         handle_select_child(session, current_input)
 
+      :select_provider ->
+        handle_select_provider(session, current_input)
+
       :select_date ->
         handle_select_date(session, current_input)
 
@@ -74,11 +77,12 @@ defmodule AppWeb.USSDController do
       _ ->
         "END An error occurred. Please restart your session."
     end
-  # rescue
-  #   e ->
-  #     # Log error but provide user-friendly response
-  #     IO.inspect(e, label: "USSD Error")
-  #     "END An error occurred. Please try again later."
+
+    # rescue
+    #   e ->
+    #     # Log error but provide user-friendly response
+    #     IO.inspect(e, label: "USSD Error")
+    #     "END An error occurred. Please try again later."
   end
 
   @doc """
@@ -87,18 +91,23 @@ defmodule AppWeb.USSDController do
   defp handle_initial_menu(session, phone_number) do
     user = Accounts.get_user_by_phone(phone_number)
 
-    if user do
-      USSDSession.update_state(session, :main_menu, %{user_id: user.id, user_name: user.name})
+    cond do
+      user == nil ->
+        "END Phone number not registered. Please register on our website or app first."
 
-      """
-      CON Welcome to Under Five Health Check-Up
-      1. Book Appointment
-      2. Check Appointments
-      3. Cancel Appointment
-      4. Update Preferences
-      """
-    else
-      "END Phone number not registered. Please register on our website or app first."
+      user.role != "parent" ->
+        "END This service is only available for parents. Please use the web or mobile app instead."
+
+      true ->
+        USSDSession.update_state(session, :main_menu, %{user_id: user.id, user_name: user.name})
+
+        """
+        CON Welcome to Under Five Health Check-Up
+        1. Book Appointment
+        2. Check Appointments
+        3. Cancel Appointment
+        4. Update Preferences
+        """
     end
   end
 
@@ -169,11 +178,11 @@ defmodule AppWeb.USSDController do
           updated_session =
             USSDSession.update_state(
               session,
-              :select_date,
+              :select_provider,
               Map.put(session.data, :child_id, child.id)
             )
 
-          handle_select_date(updated_session, "")
+          handle_select_provider(updated_session, "")
         else
           "CON Invalid selection. Please try again:\n" <> handle_select_child(session, "")
         end
@@ -184,32 +193,80 @@ defmodule AppWeb.USSDController do
   end
 
   @doc """
+  Displays and handles provider selection for appointment booking.
+  """
+  defp handle_select_provider(session, input) do
+    providers = Scheduling.list_providers()
+
+    if Enum.empty?(providers) do
+      "END No healthcare providers are currently available. Please try again later."
+    else
+      if input == "" do
+        # Display providers list
+        provider_options =
+          providers
+          |> Enum.with_index(1)
+          |> Enum.map(fn {provider, index} ->
+            "#{index}. #{provider.name} (#{format_specialization(provider.specialization)})"
+          end)
+          |> Enum.join("\n")
+
+        "CON Select healthcare provider:\n#{provider_options}"
+      else
+        # Process selection
+        index = String.to_integer(input) - 1
+
+        if provider = Enum.at(providers, index) do
+          updated_session =
+            USSDSession.update_state(
+              session,
+              :select_date,
+              Map.put(session.data, :provider_id, provider.id)
+            )
+
+          handle_select_date(updated_session, "")
+        else
+          "CON Invalid selection. Please try again:\n" <> handle_select_provider(session, "")
+        end
+      end
+    end
+  rescue
+    _ -> "CON Invalid input. Please enter a number:\n" <> handle_select_provider(session, "")
+  end
+
+  @doc """
   Displays and handles date selection for appointment booking.
   """
   defp handle_select_date(session, input) do
-    if input == "" do
-      # Show available dates (next 5 working days)
-      dates = get_next_available_dates(5)
+    provider_id = session.data.provider_id
 
-      date_options =
-        dates
-        |> Enum.with_index(1)
-        |> Enum.map(fn {date, index} -> "#{index}. #{format_date(date)}" end)
-        |> Enum.join("\n")
+    # Get dates with available slots
+    available_dates = get_dates_with_available_slots(provider_id, 14)
 
-      "CON Select appointment date:\n#{date_options}"
+    if Enum.empty?(available_dates) do
+      "END No available appointment dates for the selected provider in the next two weeks. Please try again later or select a different provider."
     else
-      # Process date selection
-      index = String.to_integer(input) - 1
-      dates = get_next_available_dates(5)
+      if input == "" do
+        # Show available dates
+        date_options =
+          available_dates
+          |> Enum.with_index(1)
+          |> Enum.map(fn {date, index} -> "#{index}. #{format_date(date)}" end)
+          |> Enum.join("\n")
 
-      if date = Enum.at(dates, index) do
-        updated_session =
-          USSDSession.update_state(session, :select_time, Map.put(session.data, :date, date))
-
-        handle_select_time(updated_session, "")
+        "CON Select appointment date:\n#{date_options}"
       else
-        "CON Invalid selection. Please try again:\n" <> handle_select_date(session, "")
+        # Process date selection
+        index = String.to_integer(input) - 1
+
+        if date = Enum.at(available_dates, index) do
+          updated_session =
+            USSDSession.update_state(session, :select_time, Map.put(session.data, :date, date))
+
+          handle_select_time(updated_session, "")
+        else
+          "CON Invalid selection. Please try again:\n" <> handle_select_date(session, "")
+        end
       end
     end
   rescue
@@ -220,17 +277,16 @@ defmodule AppWeb.USSDController do
   Displays and handles time slot selection for appointment booking.
   """
   defp handle_select_time(session, input) do
-    if input == "" do
-      # Get available provider (in real app, this would have more complex logic)
-      provider = get_available_provider()
-      date = session.data.date
+    provider_id = session.data.provider_id
+    date = session.data.date
 
-      # Get available slots from the scheduling system
-      slots = get_time_slots(provider.id, date)
+    # Get available slots from the scheduling system
+    slots = get_available_time_slots(provider_id, date)
 
-      if Enum.empty?(slots) do
-        "END No available time slots for the selected date. Please try another date."
-      else
+    if Enum.empty?(slots) do
+      "END No available time slots for the selected date. Please try another date."
+    else
+      if input == "" do
         time_options =
           slots
           |> Enum.with_index(1)
@@ -238,29 +294,27 @@ defmodule AppWeb.USSDController do
           |> Enum.join("\n")
 
         "CON Select appointment time:\n#{time_options}"
-      end
-    else
-      # Process time selection
-      index = String.to_integer(input) - 1
-      provider = get_available_provider()
-      date = session.data.date
-      slots = get_time_slots(provider.id, date)
-
-      if time_slot = Enum.at(slots, index) do
-        updated_session =
-          USSDSession.update_state(
-            session,
-            :confirm_booking,
-            Map.merge(session.data, %{
-              time: time_slot,
-              provider_id: provider.id,
-              provider_name: provider.name
-            })
-          )
-
-        handle_confirm_booking(updated_session, "")
       else
-        "CON Invalid selection. Please try again:\n" <> handle_select_time(session, "")
+        # Process time selection
+        index = String.to_integer(input) - 1
+
+        if time_slot = Enum.at(slots, index) do
+          provider = Scheduling.get_provider!(session.data.provider_id)
+
+          updated_session =
+            USSDSession.update_state(
+              session,
+              :confirm_booking,
+              Map.merge(session.data, %{
+                time: time_slot,
+                provider_name: provider.name
+              })
+            )
+
+          handle_confirm_booking(updated_session, "")
+        else
+          "CON Invalid selection. Please try again:\n" <> handle_select_time(session, "")
+        end
       end
     end
   rescue
@@ -291,7 +345,6 @@ defmodule AppWeb.USSDController do
       case input do
         "1" ->
           # Create the appointment
-          IO.inspect session
           case Scheduling.create_appointment(%{
                  child_id: session.data.child_id,
                  provider_id: session.data.provider_id,
@@ -346,7 +399,6 @@ defmodule AppWeb.USSDController do
         appointment_list =
           appointments
           |> Enum.map(fn appt ->
-            IO.inspect appt
             "#{appt.child.name} - #{format_date(appt.scheduled_date)} at #{format_time(appt.scheduled_time)} with #{appt.provider.name}"
           end)
           |> Enum.join("\n")
@@ -354,10 +406,6 @@ defmodule AppWeb.USSDController do
         "END Upcoming appointments:\n#{appointment_list}"
       end
     end
-  # rescue
-  #   e ->
-  #     IO.inspect(e, label: "Error checking appointments")
-  #     "END An error occurred while retrieving appointments. Please try again later."
   end
 
   @doc """
@@ -482,63 +530,81 @@ defmodule AppWeb.USSDController do
   # ==========================
 
   @doc """
-  Gets the next available dates for appointments, excluding weekends.
+  Gets dates that have available slots for a provider within the given days range.
+  Returns only dates that have at least one available time slot.
   """
-  defp get_next_available_dates(count) do
+  defp get_dates_with_available_slots(provider_id, days_to_check) do
     today = Date.utc_today()
 
-    1..30
+    1..days_to_check
     |> Enum.map(fn days -> Date.add(today, days) end)
     |> Enum.filter(fn date ->
       # Only weekdays
       day_of_week = Date.day_of_week(date)
       day_of_week >= 1 && day_of_week <= 5
     end)
-    |> Enum.take(count)
+    |> Enum.filter(fn date ->
+      # Check if there are available slots on this date
+      slots = get_available_time_slots(provider_id, date)
+      !Enum.empty?(slots)
+    end)
   end
 
   @doc """
   Gets available time slots for a provider on a specific date.
-  In a real application, this would check the database for available slots.
+  Filters out slots that are already booked.
   """
-  defp get_time_slots(provider_id, date) do
-    # First try to get actual available slots
-    slots = Scheduling.get_available_slots(provider_id, date)
+  defp get_available_time_slots(provider_id, date) do
+    # First get all possible slots for this provider and date
+    day_of_week = Date.day_of_week(date)
+    schedule = Scheduling.get_provider_schedule(provider_id, day_of_week)
 
-    if Enum.empty?(slots) do
-      # For testing/demo purposes, generate some dummy slots if none are returned
-      [
-        ~T[09:00:00],
-        ~T[10:00:00],
-        ~T[11:30:00],
-        ~T[14:00:00],
-        ~T[15:30:00]
-      ]
-    else
-      slots
+    case schedule do
+      nil ->
+        []
+
+      schedule ->
+        # Get all appointments for this provider and date
+        existing_appointments = Scheduling.provider_appointments_for_date(provider_id, date)
+        booked_times = Enum.map(existing_appointments, & &1.scheduled_time)
+
+        # Generate all possible 30-minute slots between start and end time
+        all_slots = generate_time_slots(schedule.start_time, schedule.end_time, 30)
+
+        # Filter out booked slots
+        Enum.filter(all_slots, fn slot -> !Enum.member?(booked_times, slot) end)
     end
   end
 
   @doc """
-  Gets an available provider for appointment booking.
-  In a real application, this would use more complex logic based on
-  specialization, location, availability, etc.
+  Generates time slots of specified minutes between start and end time.
   """
-  defp get_available_provider do
-    # For simplicity, get the first available provider
-    # In a real app, this would be more sophisticated
-    providers = Scheduling.list_providers()
+  defp generate_time_slots(start_time, end_time, interval_minutes) do
+    # Convert times to minutes since midnight for easier calculation
+    start_minutes = time_to_minutes(start_time)
+    end_minutes = time_to_minutes(end_time)
 
-    if Enum.empty?(providers) do
-      # Create a mock provider for testing if none exist
-      %{
-        id: 1,
-        name: "Dr. Smith",
-        specialization: "pediatrician"
-      }
-    else
-      List.first(providers)
-    end
+    # Generate slots
+    start_minutes
+    |> Stream.iterate(&(&1 + interval_minutes))
+    |> Enum.take_while(&(&1 < end_minutes))
+    |> Enum.map(&minutes_to_time/1)
+  end
+
+  @doc """
+  Converts Time struct to minutes since midnight.
+  """
+  defp time_to_minutes(time) do
+    time.hour * 60 + time.minute
+  end
+
+  @doc """
+  Converts minutes since midnight to Time struct.
+  """
+  defp minutes_to_time(minutes) do
+    hours = div(minutes, 60)
+    mins = rem(minutes, 60)
+    ~T[00:00:00] |> Time.add(hours * 3600 + mins * 60)
   end
 
   @doc """
@@ -553,6 +619,18 @@ defmodule AppWeb.USSDController do
   """
   defp format_time(time) do
     Calendar.strftime(time, "%I:%M %p")
+  end
+
+  @doc """
+  Formats provider specialization for display.
+  """
+  defp format_specialization(specialization) do
+    case specialization do
+      "pediatrician" -> "Pediatrician"
+      "nurse" -> "Nurse"
+      "general_practitioner" -> "General Practitioner"
+      _ -> specialization
+    end
   end
 
   @doc """
