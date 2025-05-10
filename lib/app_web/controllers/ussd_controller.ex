@@ -539,8 +539,10 @@ defmodule AppWeb.USSDController do
     1..days_to_check
     |> Enum.map(fn days -> Date.add(today, days) end)
     |> Enum.filter(fn date ->
-      # Only weekdays
+      # Get the day of week
       day_of_week = Date.day_of_week(date)
+
+      # Check if the provider has a schedule for this day
       day_of_week >= 1 && day_of_week <= 5
     end)
     |> Enum.filter(fn date ->
@@ -555,12 +557,13 @@ defmodule AppWeb.USSDController do
   Filters out slots that are already booked.
   """
   defp get_available_time_slots(provider_id, date) do
-    # First get all possible slots for this provider and date
+    # Get the day of week and provider's schedule
     day_of_week = Date.day_of_week(date)
     schedule = Scheduling.get_provider_schedule(provider_id, day_of_week)
 
     case schedule do
       nil ->
+        # Provider doesn't work on this day
         []
 
       schedule ->

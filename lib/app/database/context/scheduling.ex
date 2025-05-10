@@ -377,10 +377,38 @@ defmodule App.Scheduling do
     start_time = schedule.start_time
     end_time = schedule.end_time
 
-    # This would generate all possible 30-minute slots and filter out
-    # those that already have appointments
-    # Placeholder - implement actual slot generation logic
-    []
+    # Get existing appointment times
+    booked_times = Enum.map(existing_appointments, &(&1.scheduled_time))
+
+    # Calculate slot interval in minutes
+    slot_interval = 30
+
+    # Convert times to minutes for easier calculation
+    start_minutes = time_to_minutes(start_time)
+    end_minutes = time_to_minutes(end_time)
+
+    # Generate possible slots
+    start_minutes
+    start_minutes
+    |> Stream.iterate(&(&1 + slot_interval))
+    |> Enum.take_while(&(&1 < end_minutes - slot_interval)) # Ensure slots fit within schedule
+    |> Enum.map(&minutes_to_time/1)
+    |> Enum.filter(fn slot_time ->
+      # Only include slots that aren't already booked
+      not Enum.member?(booked_times, slot_time)
+    end)
+  end
+
+  # Helper to convert Time to minutes since midnight
+  defp time_to_minutes(time) do
+    time.hour * 60 + time.minute
+  end
+
+  # Helper to convert minutes since midnight to Time
+  defp minutes_to_time(minutes) do
+    hours = div(minutes, 60)
+    mins = rem(minutes, 60)
+    Time.new!(hours, mins, 0)
   end
 
   @doc """

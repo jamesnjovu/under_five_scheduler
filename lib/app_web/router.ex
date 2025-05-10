@@ -28,7 +28,6 @@ defmodule AppWeb.Router do
   end
 
   ## Authentication routes
-
   scope "/", AppWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 

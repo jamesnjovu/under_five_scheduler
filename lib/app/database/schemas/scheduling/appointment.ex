@@ -24,7 +24,7 @@ defmodule App.Scheduling.Appointment do
   def changeset(appointment, attrs) do
     appointment
     |> cast(attrs, [:scheduled_date, :scheduled_time, :status, :notes, :child_id, :provider_id])
-    |> validate_required([:scheduled_date, :scheduled_time, :status, :notes, :child_id, :provider_id])
+    |> validate_required([:scheduled_date, :scheduled_time, :status, :child_id, :provider_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_appointment_time()
     |> validate_no_double_booking()
@@ -54,7 +54,7 @@ defmodule App.Scheduling.Appointment do
 
   defp validate_no_double_booking(changeset) do
     case {get_change(changeset, :scheduled_date), get_change(changeset, :scheduled_time),
-          get_field(changeset, :provider_id)} do
+      get_field(changeset, :provider_id)} do
       {nil, _, _} ->
         changeset
 
@@ -64,10 +64,13 @@ defmodule App.Scheduling.Appointment do
       {_, _, nil} ->
         changeset
 
-      {_date, _time, _provider_id} ->
-        # This would need to be implemented with a custom validation query
-        # to check for existing appointments at the same time
-        changeset
+      {date, time, provider_id} ->
+        # Call a context function to check for conflicts
+        if App.Scheduling.check_appointment_conflicts(provider_id, date, time) do
+          add_error(changeset, :scheduled_time, "appointment time is already booked")
+        else
+          changeset
+        end
     end
   end
 
