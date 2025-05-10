@@ -4,6 +4,7 @@ defmodule App.Repo.Migrations.CreateChildren do
   def change do
     create table(:children) do
       add :name, :string
+      add :status, :string, default: "active"
       add :date_of_birth, :date
       add :medical_record_number, :string
       add :user_id, references(:users, on_delete: :nothing)

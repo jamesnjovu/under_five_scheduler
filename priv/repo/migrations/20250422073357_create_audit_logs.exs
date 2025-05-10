@@ -1,4 +1,4 @@
-defmodule App.Repo.Migrations.CreateAppointmentLogs do
+defmodule App.Repo.Migrations.CreateAuditLogs do
   use Ecto.Migration
 
   def change do

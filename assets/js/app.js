@@ -25,13 +25,23 @@ import topbar from "../vendor/topbar"
 import AOS from "../vendor/aos";
 
 import hooks from "./hooks"
+import Alpine from "../vendor/alpine"
 
 // Initialize AOS (Animate On Scroll) library
+window.Alpine = Alpine
+Alpine.start()
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   hooks: hooks,
   longPollFallbackMs: 2500,
+  dom: {
+    onBeforeElUpdated(from, to) {
+      if (from._x_dataStack) {
+        window.Alpine.clone(from, to)
+      }
+    },
+  },
   params: { _csrf_token: csrfToken }
 })
 

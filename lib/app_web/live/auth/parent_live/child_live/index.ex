@@ -10,6 +10,7 @@ defmodule AppWeb.ChildLive.Index do
 
     if user && Accounts.is_parent?(user) do
       children = Accounts.list_children(user.id)
+      |> IO.inspect
 
       socket =
         socket
@@ -73,7 +74,7 @@ defmodule AppWeb.ChildLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     child = Accounts.get_child!(id)
-    {:ok, _} = Accounts.delete_child(child)
+    {:ok, _} = Accounts.update_user(child, %{"status" => "deleted"})
 
     {:noreply,
      socket

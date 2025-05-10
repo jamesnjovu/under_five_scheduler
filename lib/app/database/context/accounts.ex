@@ -475,7 +475,7 @@ defmodule App.Accounts do
 
   def list_children(user_id) do
     Child
-    |> where(user_id: ^user_id)
+    |> where([a], a.user_id == ^user_id and a.status in ["active"])
     |> order_by(asc: :name)
     |> Repo.all()
   end

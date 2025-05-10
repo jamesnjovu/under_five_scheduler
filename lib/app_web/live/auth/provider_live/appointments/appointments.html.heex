@@ -107,7 +107,33 @@
           </div>
         </div>
       </div>
-      
+
+      <!-- Provider schedule information for the selected date -->
+      <div class="bg-white shadow rounded-lg mb-6 p-4">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Schedule Information</h3>
+
+        <%= if @schedule do %>
+          <div class="flex items-center text-sm text-gray-600">
+            <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>
+              You are scheduled to work from {format_time(@schedule.start_time)} to {format_time(@schedule.end_time)} on this day.
+            </span>
+          </div>
+        <% else %>
+          <div class="flex items-center text-sm text-yellow-600">
+            <svg class="h-5 w-5 text-yellow-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span>
+              You don't have a schedule set up for this day.
+              <a href="/provider/schedule" class="text-indigo-600 hover:text-indigo-900">Manage your schedule.</a>
+            </span>
+          </div>
+        <% end %>
+      </div>
+
 <!-- Search and filter section -->
       <div class="bg-white shadow rounded-lg mb-6 p-4">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
@@ -162,12 +188,11 @@
       </div>
       
 <!-- Appointment listing -->
+      <!-- Appointment listing -->
       <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-200">
           <h3 class="text-lg font-medium leading-6 text-gray-900">
-            {length(filtered_appointments(@appointments, @filter, @search))} Appointments for {format_date(
-              @current_date
-            )}
+            {length(filtered_appointments(@appointments, @filter, @search))} Appointments for {format_date(@current_date)}
           </h3>
         </div>
 
@@ -186,7 +211,12 @@
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">No appointments</h3>
-            <p class="mt-1 text-sm text-gray-500">No appointments scheduled for this date.</p>
+
+            <%= if @schedule do %>
+              <p class="mt-1 text-sm text-gray-500">No appointments scheduled for this date.</p>
+            <% else %>
+              <p class="mt-1 text-sm text-gray-500">You don't have a schedule set up for this date.</p>
+            <% end %>
           </div>
         <% else %>
           <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
@@ -195,7 +225,7 @@
                 <div class="flex flex-col md:flex-row md:items-start space-y-4 md:space-y-0">
                   <div class="flex-1">
                     <div class="flex items-center">
-                      <span class={"flex h-10 w-10 rounded-full items-center justify-center 
+                      <span class={"flex h-10 w-10 rounded-full items-center justify-center
                         #{case appointment.status do
                           "scheduled" -> "bg-blue-100 text-blue-800"
                           "confirmed" -> "bg-green-100 text-green-800"
@@ -239,7 +269,7 @@
                   </div>
 
                   <div class="flex flex-col items-center md:items-end space-y-4">
-                    <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                       #{case appointment.status do
                         "scheduled" -> "bg-blue-100 text-blue-800"
                         "confirmed" -> "bg-green-100 text-green-800"

@@ -29,15 +29,17 @@ defmodule AppWeb.ProviderLive.Appointments do
         |> assign(:appointments, get_appointments_for_date(provider.id, today))
         |> assign(:filter, "all")
         |> assign(:search, "")
-        # For responsive sidebar toggle
+          # Add available schedule information
+        |> assign(:schedule, get_provider_schedule_for_date(provider.id, today))
+          # For responsive sidebar toggle
         |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else
       {:ok,
-       socket
-       |> put_flash(:error, "You don't have access to this page.")
-       |> redirect(to: ~p"/dashboard")}
+        socket
+        |> put_flash(:error, "You don't have access to this page.")
+        |> redirect(to: ~p"/dashboard")}
     end
   end
 
@@ -58,10 +60,13 @@ defmodule AppWeb.ProviderLive.Appointments do
   @impl true
   def handle_event("change_date", %{"date" => date_string}, socket) do
     with {:ok, date} <- Date.from_iso8601(date_string) do
+      provider_id = socket.assigns.provider.id
+
       {:noreply,
-       socket
-       |> assign(:current_date, date)
-       |> assign(:appointments, get_appointments_for_date(socket.assigns.provider.id, date))}
+        socket
+        |> assign(:current_date, date)
+        |> assign(:appointments, get_appointments_for_date(provider_id, date))
+        |> assign(:schedule, get_provider_schedule_for_date(provider_id, date))}
     else
       _ -> {:noreply, socket}
     end
@@ -70,21 +75,25 @@ defmodule AppWeb.ProviderLive.Appointments do
   @impl true
   def handle_event("previous_day", _, socket) do
     new_date = Date.add(socket.assigns.current_date, -1)
+    provider_id = socket.assigns.provider.id
 
     {:noreply,
-     socket
-     |> assign(:current_date, new_date)
-     |> assign(:appointments, get_appointments_for_date(socket.assigns.provider.id, new_date))}
+      socket
+      |> assign(:current_date, new_date)
+      |> assign(:appointments, get_appointments_for_date(provider_id, new_date))
+      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))}
   end
 
   @impl true
   def handle_event("next_day", _, socket) do
     new_date = Date.add(socket.assigns.current_date, 1)
+    provider_id = socket.assigns.provider.id
 
     {:noreply,
-     socket
-     |> assign(:current_date, new_date)
-     |> assign(:appointments, get_appointments_for_date(socket.assigns.provider.id, new_date))}
+      socket
+      |> assign(:current_date, new_date)
+      |> assign(:appointments, get_appointments_for_date(provider_id, new_date))
+      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))}
   end
 
   @impl true
@@ -106,33 +115,33 @@ defmodule AppWeb.ProviderLive.Appointments do
   @impl true
   def handle_event("update_status", %{"id" => id, "status" => status}, socket)
       when status in [
-             "scheduled",
-             "confirmed",
-             "cancelled",
-             "completed",
-             "no_show",
-             "rescheduled"
-           ] do
+    "scheduled",
+    "confirmed",
+    "cancelled",
+    "completed",
+    "no_show",
+    "rescheduled"
+  ] do
     appointment = Scheduling.get_appointment!(id)
 
     case Scheduling.update_appointment(appointment, %{status: status}) do
-      {:ok, updated_appointment} ->
+      {:ok, _updated_appointment} ->
         {:noreply,
-         socket
-         |> put_flash(:info, "Appointment status updated to #{status}.")
-         |> assign(
-           :appointments,
-           get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-         )}
+          socket
+          |> put_flash(:info, "Appointment status updated to #{status}.")
+          |> assign(
+               :appointments,
+               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
+             )}
 
       {:error, _} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Could not update appointment status.")
-         |> assign(
-           :appointments,
-           get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-         )}
+          socket
+          |> put_flash(:error, "Could not update appointment status.")
+          |> assign(
+               :appointments,
+               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
+             )}
     end
   end
 
@@ -143,21 +152,21 @@ defmodule AppWeb.ProviderLive.Appointments do
     case Scheduling.update_appointment(appointment, %{notes: notes}) do
       {:ok, _} ->
         {:noreply,
-         socket
-         |> put_flash(:info, "Notes updated successfully.")
-         |> assign(
-           :appointments,
-           get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-         )}
+          socket
+          |> put_flash(:info, "Notes updated successfully.")
+          |> assign(
+               :appointments,
+               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
+             )}
 
       {:error, _} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Could not update notes.")
-         |> assign(
-           :appointments,
-           get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-         )}
+          socket
+          |> put_flash(:error, "Could not update notes.")
+          |> assign(
+               :appointments,
+               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
+             )}
     end
   end
 
@@ -166,11 +175,11 @@ defmodule AppWeb.ProviderLive.Appointments do
   def handle_info({:appointment_updated, _}, socket) do
     # Refresh appointments when changes occur elsewhere in the system
     {:noreply,
-     assign(
-       socket,
-       :appointments,
-       get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-     )}
+      assign(
+        socket,
+        :appointments,
+        get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
+      )}
   end
 
   defp get_user_from_session(session) do
@@ -196,6 +205,12 @@ defmodule AppWeb.ProviderLive.Appointments do
       }
     end)
     |> Enum.sort_by(fn a -> a.scheduled_time end)
+  end
+
+  # Get provider's schedule for a specific date
+  defp get_provider_schedule_for_date(provider_id, date) do
+    day_of_week = Date.day_of_week(date)
+    Scheduling.get_provider_schedule(provider_id, day_of_week)
   end
 
   defp filtered_appointments(appointments, filter, search) do

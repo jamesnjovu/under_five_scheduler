@@ -4,10 +4,13 @@ defmodule App.Accounts.Child do
   alias App.Accounts.User
   alias App.Scheduling.Appointment
 
+  @statuses ~w(deleted active grown)
+
   schema "children" do
     field :date_of_birth, :date
     field :medical_record_number, :string
     field :name, :string
+    field :status, :string
 
     belongs_to :user, User
     has_many :appointments, Appointment
@@ -20,6 +23,7 @@ defmodule App.Accounts.Child do
     child
     |> cast(attrs, [:name, :date_of_birth, :medical_record_number, :user_id])
     |> validate_required([:name, :date_of_birth, :user_id])
+    |> validate_inclusion(:status, @statuses)
     |> validate_date_of_birth()
     |> generate_medical_record_number()
     |> unique_constraint(:medical_record_number)
