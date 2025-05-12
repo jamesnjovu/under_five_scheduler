@@ -1,0 +1,292 @@
+<div class="flex h-screen bg-gray-50">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Provider Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@provider.name}</span>
+      </div>
+    </div>
+  </.side_nav_res>
+  <div class="flex-1 overflow-auto md:pl-0">
+    <header class="bg-white shadow pl-4 md:pl-0">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-gray-900">Child Health</h1>
+      </div>
+    </header>
+    <div>
+      <div class="bg-blue-50 rounded-lg p-3">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
+            <svg
+              class="h-5 w-5 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">Scheduled</h3>
+            <p class="text-xl font-bold text-blue-600">{@coverage.scheduled_vaccines}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-red-50 rounded-lg p-3">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 bg-red-100 rounded-md p-2">
+            <svg
+              class="h-5 w-5 text-red-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Missed</h3>
+            <p class="text-xl font-bold text-red-600">{@coverage.missed_vaccines}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Immunization Records Table -->
+    <div class="overflow-x-auto border-t border-gray-200">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Vaccine
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Due Date
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Administered Date
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Administered By
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Notes
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <%= if Enum.empty?(@immunization_records) do %>
+            <tr>
+              <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                No immunization records available. Click "Generate Schedule" to create a recommended schedule based on the child's age.
+              </td>
+            </tr>
+          <% else %>
+            <%= for record <- @immunization_records do %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {record.vaccine_name}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{format_status_class(record.status)}"}>
+                    {String.capitalize(record.status)}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {(record.due_date && format_date(record.due_date)) || "-"}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {(record.administered_date && format_date(record.administered_date)) || "-"}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {record.administered_by || "-"}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                  {record.notes || "-"}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <%= if record.status == "scheduled" do %>
+                    <div class="flex justify-end space-x-2">
+                      <button
+                        phx-click="update_immunization_status"
+                        phx-value-id={record.id}
+                        phx-value-status="administered"
+                        class="text-green-600 hover:text-green-900"
+                      >
+                        Administer
+                      </button>
+                      <button
+                        phx-click="update_immunization_status"
+                        phx-value-id={record.id}
+                        phx-value-status="missed"
+                        class="text-yellow-600 hover:text-yellow-900"
+                      >
+                        Mark Missed
+                      </button>
+                    </div>
+                  <% else %>
+                    <div class="flex justify-end space-x-2">
+                      <button
+                        phx-click="delete_immunization_record"
+                        phx-value-id={record.id}
+                        data-confirm="Are you sure you want to delete this record?"
+                        class="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    
+<!-- Add Immunization Form (Modal) -->
+    <%= if @show_immunization_form do %>
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Add Immunization Record</h3>
+            <button
+              phx-click="hide_immunization_form"
+              class="text-gray-400 hover:text-gray-500"
+              aria-label="Close"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <.form
+            for={@immunization_form}
+            id="immunization_form"
+            phx-submit="save_immunization"
+            class="space-y-4"
+          >
+            <div>
+              <.input
+                field={@immunization_form[:vaccine_name]}
+                type="select"
+                label="Vaccine"
+                prompt="Select a vaccine..."
+                options={Enum.map(@vaccine_schedules, &{&1.vaccine_name, &1.vaccine_name})}
+                required
+              />
+            </div>
+
+            <div>
+              <.input
+                field={@immunization_form[:status]}
+                type="select"
+                label="Status"
+                options={[
+                  {"Scheduled", "scheduled"},
+                  {"Administered", "administered"},
+                  {"Missed", "missed"}
+                ]}
+                required
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <.input field={@immunization_form[:due_date]} type="date" label="Due Date" />
+              </div>
+              <div>
+                <.input
+                  field={@immunization_form[:administered_date]}
+                  type="date"
+                  label="Administered Date"
+                />
+              </div>
+            </div>
+
+            <div>
+              <.input
+                field={@immunization_form[:administered_by]}
+                type="text"
+                label="Administered By"
+                placeholder="Healthcare provider name"
+              />
+            </div>
+
+            <div>
+              <.input
+                field={@immunization_form[:notes]}
+                type="textarea"
+                label="Notes"
+                placeholder="Any additional observations..."
+              />
+            </div>
+
+            <div class="pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                phx-click="hide_immunization_form"
+                class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Save Record
+              </button>
+            </div>
+          </.form>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

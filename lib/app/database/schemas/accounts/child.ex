@@ -32,7 +32,9 @@ defmodule App.Accounts.Child do
 
   defp validate_date_of_birth(changeset) do
     case get_change(changeset, :date_of_birth) do
-      nil -> changeset
+      nil ->
+        changeset
+
       date ->
         today = Date.utc_today()
         years_ago = Date.add(today, -5 * 365)
@@ -76,12 +78,42 @@ defmodule App.Accounts.Child do
   end
 
   def next_checkup_age(%__MODULE__{} = child) do
-    age = age(child)
+    age_months = age_in_months(child)
 
     cond do
-      age < 1 -> "#{(age + 1) * 2} months"
-      age < 2 -> "#{age + 1} year"
-      true -> "#{age + 1} years"
+      # Under 12 months: checkups at 2, 4, 6, 9, 12 months
+      age_months < 2 -> "2 months"
+      age_months < 4 -> "4 months"
+      age_months < 6 -> "6 months"
+      age_months < 9 -> "9 months"
+      age_months < 12 -> "12 months"
+      # 12-24 months: checkups at 15, 18, 24 months
+      age_months < 15 -> "15 months"
+      age_months < 18 -> "18 months"
+      age_months < 24 -> "24 months"
+      # 2-5 years: annual checkups
+      age_months < 36 -> "3 years"
+      age_months < 48 -> "4 years"
+      age_months < 60 -> "5 years"
+      true -> "yearly checkup"
     end
+  end
+
+  # Helper function to calculate age in months
+  def age_in_months(%__MODULE__{date_of_birth: dob}) do
+    today = Date.utc_today()
+
+    # Calculate years and months difference
+    years_diff = today.year - dob.year
+    months_diff = today.month - dob.month
+
+    # Adjust for day of month
+    months_diff = if today.day < dob.day, do: months_diff - 1, else: months_diff
+
+    # Convert years to months and add remaining months
+    total_months = years_diff * 12 + months_diff
+
+    # Ensure we don't return negative months
+    max(0, total_months)
   end
 end

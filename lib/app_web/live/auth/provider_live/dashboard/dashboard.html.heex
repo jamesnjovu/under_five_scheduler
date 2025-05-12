@@ -380,12 +380,12 @@
                       end}"}>
                       {String.capitalize(appointment.status)}
                     </span>
-                    <a
-                      href={~p"/appointments/#{appointment.id}"}
+                    <.link
+                      navigate={~p"/provider/appointments/#{appointment.id}"}
                       class="text-xs text-indigo-600 hover:text-indigo-900"
                     >
                       View Details
-                    </a>
+                    </.link>
                   </div>
                 </div>
               <% end %>

@@ -194,6 +194,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {Time.to_string(appointment.scheduled_time)}
                         </td>
+                       
                         <td class="px-6 py-4 whitespace-nowrap">
                           <span class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             #{case appointment.status do
@@ -330,13 +331,19 @@
                         {patient.appointments_count}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          phx-click="view_patient"
-                          phx-value-id={patient.id}
-                          class="text-indigo-600 hover:text-indigo-900"
-                        >
-                          View Details
-                        </button>
+                          <button
+                            phx-click="view_patient"
+                            phx-value-id={patient.id}
+                            class="text-indigo-600 hover:text-indigo-900"
+                          >
+                            View Details
+                          </button>
+                          <.link
+                            navigate={~p"/provider/patients/#{patient.id}/health"}
+                            class="ml-4 text-indigo-600 hover:text-indigo-900"
+                          >
+                            Health Records
+                          </.link>
                       </td>
                     </tr>
                   <% end %>

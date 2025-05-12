@@ -27,7 +27,9 @@ defmodule AppWeb.UserSettingsLive do
 
       email_changeset = Accounts.change_user_email(user)
       password_changeset = Accounts.change_user_password(user)
-      notification_changeset = App.Notifications.change_notification_preference(notification_preference)
+
+      notification_changeset =
+        App.Notifications.change_notification_preference(notification_preference)
 
       socket =
         socket
@@ -58,12 +60,59 @@ defmodule AppWeb.UserSettingsLive do
   end
 
   @impl true
+  def handle_event("enable_two_factor", _params, socket) do
+    # For now, we'll just show a notification that this feature is coming soon
+    # In a real implementation, you would generate a 2FA QR code, etc.
+
+    {:noreply,
+     socket
+     |> put_flash(
+       :info,
+       "Two-Factor Authentication will be available in a future update. Stay tuned!"
+     )}
+
+    # Alternatively, if you want to implement basic 2FA functionality:
+    # user = socket.assigns.current_user
+    # {:ok, secret} = generate_2fa_secret()
+    # {:ok, qr_code_uri} = generate_qr_code(user.email, secret)
+    #
+    # {:noreply,
+    #  socket
+    #  |> assign(:show_2fa_setup, true)
+    #  |> assign(:tfa_secret, secret)
+    #  |> assign(:tfa_qr_code, qr_code_uri)}
+  end
+
+  @impl true
+  def handle_event("update_profile", %{"user" => user_params}, socket) do
+    user = socket.assigns.current_user
+
+    case Accounts.update_user(user, user_params) do
+      {:ok, updated_user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Profile updated successfully.")
+         |> assign(:user, updated_user)}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Failed to update profile. Please check the errors below.")
+         |> assign(:email_form, to_form(changeset))}
+    end
+  end
+
+  @impl true
   def handle_event("toggle_sidebar", _, socket) do
     {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
   end
 
   @impl true
-  def handle_event("update_notification_preferences", %{"notification_preference" => params}, socket) do
+  def handle_event(
+        "update_notification_preferences",
+        %{"notification_preference" => params},
+        socket
+      ) do
     user = socket.assigns.current_user
 
     # Fetch the user's notification preference
@@ -73,9 +122,8 @@ defmodule AppWeb.UserSettingsLive do
     case App.Notifications.update_notification_preference(notification_preference, params) do
       {:ok, _preference} ->
         {:noreply,
-          socket
-          |> put_flash(:info, "Notification preferences updated successfully.")
-          |> push_navigate(to: ~p"/users/settings")}
+         socket
+         |> put_flash(:info, "Notification preferences updated successfully.")}
 
       {:error, changeset} ->
         {:noreply, assign(socket, notification_form: to_form(changeset))}

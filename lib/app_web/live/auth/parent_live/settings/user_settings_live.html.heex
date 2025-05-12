@@ -10,7 +10,7 @@
     </div>
   </.side_nav_res>
   
-    <!-- Main content area -->
+<!-- Main content area -->
   <div class="flex-1 overflow-auto md:pl-0">
     <header class="bg-white shadow pl-4 md:pl-0">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -118,94 +118,92 @@
                 </div>
               </.form>
             </div>
+          <% "notifications" -> %>
+            <div class="p-6">
+              <div class="pb-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  Notification Settings
+                </h3>
+                <p class="mt-2 max-w-4xl text-sm text-gray-500">
+                  Configure how and when you receive notifications
+                </p>
+              </div>
 
-            <% "notifications" -> %>
-                        <div class="p-6">
-                          <div class="pb-5 border-b border-gray-200">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                              Notification Settings
-                            </h3>
-                            <p class="mt-2 max-w-4xl text-sm text-gray-500">
-                              Configure how and when you receive notifications
-                            </p>
-                          </div>
-
-                          <.form
-                            for={@notification_form}
-                            id="notification_form"
-                            phx-submit="update_notification_settings"
-                            class="mt-6 space-y-6"
-                          >
-                            <div>
-                              <fieldset>
-                                <legend class="text-base font-medium text-gray-900">
-                                  Notification Methods
-                                </legend>
-                                <div class="mt-4 space-y-4">
-                                  <div class="flex items-start">
-                                    <div class="flex items-center h-5">
-                                      <.input
-                                        field={@notification_form[:email_enabled]}
-                                        type="checkbox"
-                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                                      />
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                      <label class="font-medium text-gray-700">
-                                        Email Notifications
-                                      </label>
-                                      <p class="text-gray-500">Receive notifications via email</p>
-                                    </div>
-                                  </div>
-                                  <div class="flex items-start">
-                                    <div class="flex items-center h-5">
-                                      <.input
-                                        field={@notification_form[:sms_enabled]}
-                                        type="checkbox"
-                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                                      />
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                      <label class="font-medium text-gray-700">
-                                        SMS Notifications
-                                      </label>
-                                      <p class="text-gray-500">Receive notifications via SMS</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </fieldset>
-                            </div>
-
-                            <div>
-                              <.input
-                                field={@notification_form[:reminder_hours]}
-                                type="select"
-                                label="Appointment Reminder Time"
-                                options={[
-                                  {"12 hours before", "12"},
-                                  {"24 hours before", "24"},
-                                  {"48 hours before", "48"},
-                                  {"72 hours before", "72"}
-                                ]}
-                              />
-                              <p class="mt-1 text-sm text-gray-500">
-                                How far in advance you'd like to receive reminders for upcoming appointments
-                              </p>
-                            </div>
-
-                            <div class="pt-5">
-                              <div class="flex justify-end">
-                                <button
-                                  type="submit"
-                                  class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                  Save Settings
-                                </button>
-                              </div>
-                            </div>
-                          </.form>
+              <.form
+                for={@notification_form}
+                id="notification_form"
+                phx-submit="update_notification_settings"
+                class="mt-6 space-y-6"
+              >
+                <div>
+                  <fieldset>
+                    <legend class="text-base font-medium text-gray-900">
+                      Notification Methods
+                    </legend>
+                    <div class="mt-4 space-y-4">
+                      <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                          <.input
+                            field={@notification_form[:email_enabled]}
+                            type="checkbox"
+                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
                         </div>
+                        <div class="ml-3 text-sm">
+                          <label class="font-medium text-gray-700">
+                            Email Notifications
+                          </label>
+                          <p class="text-gray-500">Receive notifications via email</p>
+                        </div>
+                      </div>
+                      <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                          <.input
+                            field={@notification_form[:sms_enabled]}
+                            type="checkbox"
+                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
+                        </div>
+                        <div class="ml-3 text-sm">
+                          <label class="font-medium text-gray-700">
+                            SMS Notifications
+                          </label>
+                          <p class="text-gray-500">Receive notifications via SMS</p>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
 
+                <div>
+                  <.input
+                    field={@notification_form[:reminder_hours]}
+                    type="select"
+                    label="Appointment Reminder Time"
+                    options={[
+                      {"12 hours before", "12"},
+                      {"24 hours before", "24"},
+                      {"48 hours before", "48"},
+                      {"72 hours before", "72"}
+                    ]}
+                  />
+                  <p class="mt-1 text-sm text-gray-500">
+                    How far in advance you'd like to receive reminders for upcoming appointments
+                  </p>
+                </div>
+
+                <div class="pt-5">
+                  <div class="flex justify-end">
+                    <button
+                      type="submit"
+                      class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
+                </div>
+              </.form>
+            </div>
           <% "security" -> %>
             <div class="p-6">
               <div class="pb-5 border-b border-gray-200">
@@ -288,7 +286,10 @@
                   Add an extra layer of security to your account
                 </p>
                 <div class="mt-4">
-                  <button class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                  <button
+                    phx-click="enable_two_factor"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
                     Enable Two-Factor Authentication
                   </button>
                 </div>
