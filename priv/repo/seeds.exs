@@ -16,7 +16,7 @@ alias App.Scheduling
 alias App.Notifications
 
 # Create admin user
-{:ok, admin} =
+{:ok, _admin} =
   Accounts.register_user(%{
     "name" => "Admin User",
     "email" => "admin@example.com",
