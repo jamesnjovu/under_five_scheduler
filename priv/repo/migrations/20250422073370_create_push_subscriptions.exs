@@ -1,24 +1,17 @@
-defmodule App.Notifications.PushSubscription do
-  use Ecto.Schema
-  import Ecto.Changeset
-  alias App.Accounts.User
+defmodule App.Repo.Migrations.CreatePushSubscriptions do
+  use Ecto.Migration
 
-  schema "push_subscriptions" do
-    field :endpoint, :string
-    field :p256dh, :string
-    field :auth, :string
+  def change do
+    create table(:push_subscriptions) do
+      add :endpoint, :string, null: false
+      add :p256dh, :string, null: false
+      add :auth, :string, null: false
+      add :user_id, references(:users, on_delete: :delete_all), null: false
 
-    belongs_to :user, User
+      timestamps(type: :utc_datetime)
+    end
 
-    timestamps(type: :utc_datetime)
-  end
-
-  @doc false
-  def changeset(push_subscription, attrs) do
-    push_subscription
-    |> cast(attrs, [:endpoint, :p256dh, :auth, :user_id])
-    |> validate_required([:endpoint, :p256dh, :auth, :user_id])
-    |> unique_constraint(:endpoint)
-    |> foreign_key_constraint(:user_id)
+    create index(:push_subscriptions, [:user_id])
+    create unique_index(:push_subscriptions, [:endpoint])
   end
 end
