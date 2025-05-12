@@ -8,9 +8,9 @@ defmodule App.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"App", "contact@example.com"})
+      |> from({"Under Five Health Check-Up", "notifications@underfive.example.com"})
       |> subject(subject)
-      |> text_body(body)
+      |> html_body(body)
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}
@@ -18,62 +18,61 @@ defmodule App.Accounts.UserNotifier do
   end
 
   @doc """
+  Build an email with the given recipient, subject, and body.
+  """
+  def build_email(recipient, subject, body) do
+    new()
+    |> to(recipient)
+    |> from({"Under Five Health Check-Up", "notifications@underfive.example.com"})
+    |> subject(subject)
+    |> html_body(body)
+  end
+
+  @doc """
   Deliver instructions to confirm account.
   """
   def deliver_confirmation_instructions(user, url) do
-    deliver(user.email, "Confirmation instructions", """
+    body = """
+    <h1>Account Confirmation</h1>
+    <p>Hi #{user.name},</p>
+    <p>You can confirm your account by visiting the URL below:</p>
+    <p><a href="#{url}">#{url}</a></p>
+    <p>If you didn't create an account with us, please ignore this.</p>
+    <p>Thank you,<br>Under Five Health Check-Up Team</p>
+    """
 
-    ==============================
-
-    Hi #{user.email},
-
-    You can confirm your account by visiting the URL below:
-
-    #{url}
-
-    If you didn't create an account with us, please ignore this.
-
-    ==============================
-    """)
+    deliver(user.email, "Confirmation instructions", body)
   end
 
   @doc """
   Deliver instructions to reset a user password.
   """
   def deliver_reset_password_instructions(user, url) do
-    deliver(user.email, "Reset password instructions", """
+    body = """
+    <h1>Reset Password Instructions</h1>
+    <p>Hi #{user.name},</p>
+    <p>You can reset your password by visiting the URL below:</p>
+    <p><a href="#{url}">#{url}</a></p>
+    <p>If you didn't request this change, please ignore this.</p>
+    <p>Thank you,<br>Under Five Health Check-Up Team</p>
+    """
 
-    ==============================
-
-    Hi #{user.email},
-
-    You can reset your password by visiting the URL below:
-
-    #{url}
-
-    If you didn't request this change, please ignore this.
-
-    ==============================
-    """)
+    deliver(user.email, "Reset password instructions", body)
   end
 
   @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
-    deliver(user.email, "Update email instructions", """
+    body = """
+    <h1>Update Email Instructions</h1>
+    <p>Hi #{user.name},</p>
+    <p>You can change your email by visiting the URL below:</p>
+    <p><a href="#{url}">#{url}</a></p>
+    <p>If you didn't request this change, please ignore this.</p>
+    <p>Thank you,<br>Under Five Health Check-Up Team</p>
+    """
 
-    ==============================
-
-    Hi #{user.email},
-
-    You can change your email by visiting the URL below:
-
-    #{url}
-
-    If you didn't request this change, please ignore this.
-
-    ==============================
-    """)
+    deliver(user.email, "Update email instructions", body)
   end
 end

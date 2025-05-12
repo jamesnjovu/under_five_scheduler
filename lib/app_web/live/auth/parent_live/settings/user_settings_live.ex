@@ -21,8 +21,13 @@ defmodule AppWeb.UserSettingsLive do
 
     if user && Accounts.is_parent?(user) do
       user = socket.assigns.current_user
+
+      # Fetch user's notification preferences
+      notification_preference = App.Notifications.get_user_preference(user.id)
+
       email_changeset = Accounts.change_user_email(user)
       password_changeset = Accounts.change_user_password(user)
+      notification_changeset = App.Notifications.change_notification_preference(notification_preference)
 
       socket =
         socket
@@ -34,6 +39,7 @@ defmodule AppWeb.UserSettingsLive do
         |> assign(:current_email, user.email)
         |> assign(:email_form, to_form(email_changeset))
         |> assign(:password_form, to_form(password_changeset))
+        |> assign(:notification_form, to_form(notification_changeset))
         |> assign(:trigger_submit, false)
         |> assign(:show_sidebar, false)
 
@@ -54,6 +60,26 @@ defmodule AppWeb.UserSettingsLive do
   @impl true
   def handle_event("toggle_sidebar", _, socket) do
     {:noreply, assign(socket, :show_sidebar, !socket.assigns.show_sidebar)}
+  end
+
+  @impl true
+  def handle_event("update_notification_preferences", %{"notification_preference" => params}, socket) do
+    user = socket.assigns.current_user
+
+    # Fetch the user's notification preference
+    notification_preference = App.Notifications.get_user_preference(user.id)
+
+    # Update notification preferences
+    case App.Notifications.update_notification_preference(notification_preference, params) do
+      {:ok, _preference} ->
+        {:noreply,
+          socket
+          |> put_flash(:info, "Notification preferences updated successfully.")
+          |> push_navigate(to: ~p"/users/settings")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, notification_form: to_form(changeset))}
+    end
   end
 
   @impl true

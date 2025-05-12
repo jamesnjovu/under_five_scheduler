@@ -93,6 +93,9 @@ defmodule AppWeb do
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 
+#      alias AppWeb.Components.SideNav
+#      import AppWeb.Components.SideNav
+
       def noreply(socket), do: {:noreply, socket}
 
       def ok(socket), do: {:ok, socket}

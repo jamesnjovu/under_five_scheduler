@@ -290,15 +290,25 @@ defmodule App.Scheduling do
     |> Appointment.changeset(attrs)
     |> Repo.insert()
     |> case do
-      {:ok, appointment} ->
-        appointment = Repo.preload(appointment, [:child, :provider])
-        log_appointment_action(appointment, "created")
-        schedule_appointment_notifications(appointment)
-        {:ok, appointment}
+         {:ok, appointment} ->
+           # Preload associations needed for notifications
+           appointment = Repo.preload(appointment, [child: :user, provider: []])
 
-      error ->
-        error
-    end
+           # Log the creation action
+           log_appointment_action(appointment, "created")
+
+           # Send confirmation notification to the parent
+           App.Notifications.send_confirmation_notification(appointment)
+
+           # Schedule appointment reminders based on user preferences
+           user = appointment.child.user
+           App.Notifications.schedule_appointment_reminders(appointment, user)
+
+           {:ok, appointment}
+
+         error ->
+           error
+       end
   end
 
   @doc """
@@ -314,40 +324,84 @@ defmodule App.Scheduling do
 
   """
   def update_appointment(%Appointment{} = appointment, attrs) do
+    # Store the original appointment data before updating
+    original_date = appointment.scheduled_date
+    original_time = appointment.scheduled_time
+    original_status = appointment.status
+
     appointment
     |> Appointment.changeset(attrs)
     |> Repo.update()
     |> case do
-      {:ok, updated_appointment} ->
-        log_appointment_action(updated_appointment, "updated")
+         {:ok, updated_appointment} ->
+           # Preload associations needed for notifications
+           updated_appointment = Repo.preload(updated_appointment, [child: :user, provider: []])
 
-        if updated_appointment.status != appointment.status do
-          handle_status_change(updated_appointment, appointment.status)
-        end
+           # Log the update action
+           log_appointment_action(updated_appointment, "updated")
 
-        # Broadcast to all subscribers
-        Phoenix.PubSub.broadcast(
-          App.PubSub,
-          "appointments:updates",
-          {:appointment_updated, updated_appointment}
-        )
+           # Handle status changes
+           if updated_appointment.status != original_status do
+             handle_status_change(updated_appointment, original_status)
+           end
 
-        # Also broadcast to dashboard for metric updates
-        Phoenix.PubSub.broadcast(App.PubSub, "dashboard:updates", {:stats_updated})
-        {:ok, updated_appointment}
+           # Handle date/time changes (rescheduling)
+           if updated_appointment.scheduled_date != original_date ||
+                updated_appointment.scheduled_time != original_time do
+             # Notify about reschedule
+             user = updated_appointment.child.user
+             App.Notifications.send_reschedule_notification(updated_appointment, original_date, original_time)
 
-      error ->
-        error
+             # Re-schedule reminders based on new date/time
+             App.Notifications.schedule_appointment_reminders(updated_appointment, user)
+           end
+
+           # Broadcast to all subscribers
+           Phoenix.PubSub.broadcast(
+             App.PubSub,
+             "appointments:updates",
+             {:appointment_updated, updated_appointment}
+           )
+
+           # Also broadcast to dashboard for metric updates
+           Phoenix.PubSub.broadcast(App.PubSub, "dashboard:updates", {:stats_updated})
+           {:ok, updated_appointment}
+
+         error ->
+           error
     end
   end
 
   defp handle_status_change(appointment, old_status) do
+    appointment = Repo.preload(appointment, [child: :user, provider: []])
+    user = appointment.child.user
+
     case {old_status, appointment.status} do
       {_, "cancelled"} ->
-        Notifications.send_cancellation_notification(appointment)
+        App.Notifications.send_cancellation_notification(appointment)
+
+        # Send push notification if enabled
+        preference = App.Notifications.get_user_preference(user.id)
+        if preference.push_enabled do
+          App.Notifications.send_push_notification(
+            user.id,
+            "Appointment Cancelled",
+            "Your appointment for #{appointment.child.name} on #{format_date_time(appointment)} has been cancelled."
+          )
+        end
 
       {"scheduled", "confirmed"} ->
-        Notifications.send_confirmation_notification(appointment)
+        App.Notifications.send_confirmation_notification(appointment)
+
+        # Send push notification if enabled
+        preference = App.Notifications.get_user_preference(user.id)
+        if preference.push_enabled do
+          App.Notifications.send_push_notification(
+            user.id,
+            "Appointment Confirmed",
+            "Your appointment for #{appointment.child.name} on #{format_date_time(appointment)} has been confirmed."
+          )
+        end
 
       {_, "rescheduled"} ->
         schedule_appointment_notifications(appointment)
@@ -543,5 +597,23 @@ defmodule App.Scheduling do
     else
       0.0
     end
+  end
+
+  defp format_date_time(appointment) do
+    "#{format_date(appointment.scheduled_date)} at #{format_time(appointment.scheduled_time)}"
+  end
+
+  defp format_date(date) do
+    Calendar.strftime(date, "%A, %B %d, %Y")
+  end
+
+  defp format_time(time) do
+    hour = time.hour
+    minute = time.minute
+
+    am_pm = if hour >= 12, do: "PM", else: "AM"
+    hour = if hour > 12, do: hour - 12, else: if(hour == 0, do: 12, else: hour)
+
+    "#{hour}:#{String.pad_leading("#{minute}", 2, "0")} #{am_pm}"
   end
 end

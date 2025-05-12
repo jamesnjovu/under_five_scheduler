@@ -13,7 +13,7 @@ config :app,
 
   # Configures Oban for background jobs
 config :app, Oban,
-  repo: UnderFiveScheduler.Repo,
+  repo: App.Repo,
   plugins: [Oban.Plugins.Pruner],
   queues: [default: 10, notifications: 20]
 

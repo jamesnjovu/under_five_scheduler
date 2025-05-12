@@ -57,4 +57,32 @@ defmodule AppWeb.PWAController do
   def connectivity_check(conn, _params) do
     json(conn, %{online: true, timestamp: DateTime.utc_now()})
   end
+
+  @doc """
+  Handles Web Push subscription submission from the client
+  """
+  def subscribe_push(conn, %{"subscription" => subscription}) do
+    if conn.assigns[:current_user] do
+      # Save the push subscription for the current user
+      params = %{
+        "endpoint" => subscription["endpoint"],
+        "p256dh" => subscription["keys"]["p256dh"],
+        "auth" => subscription["keys"]["auth"]
+      }
+
+      case App.Notifications.save_push_subscription(conn.assigns.current_user, params) do
+        {:ok, _} ->
+          json(conn, %{success: true, message: "Push subscription saved"})
+
+        {:error, _changeset} ->
+          conn
+          |> put_status(400)
+          |> json(%{success: false, message: "Failed to save push subscription"})
+      end
+    else
+      conn
+      |> put_status(401)
+      |> json(%{success: false, message: "User not authenticated"})
+    end
+  end
 end

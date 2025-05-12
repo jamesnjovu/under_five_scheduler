@@ -16,57 +16,13 @@ defmodule AppWeb.AdminLive.Dashboard do
         Phoenix.PubSub.subscribe(App.PubSub, "analytics:dashboard")
       end
 
-      # Get statistics data
-      total_users = length(Accounts.list_users())
-      total_parents = length(Accounts.list_users_by_role("parent"))
-      total_providers = length(Accounts.list_users_by_role("provider"))
-      total_children = length(Accounts.list_children())
-
-      # Get appointment statistics
-      today = Date.utc_today()
-      start_of_month = Date.beginning_of_month(today)
-
-      appointments = Scheduling.list_appointments()
-
-      upcoming_appointments =
-        Enum.filter(appointments, fn appt ->
-          Date.compare(appt.scheduled_date, today) in [:eq, :gt] &&
-            appt.status in ["scheduled", "confirmed"]
-        end)
-
-      monthly_appointments =
-        Enum.filter(appointments, fn appt ->
-          Date.compare(appt.scheduled_date, start_of_month) in [:eq, :gt]
-        end)
-
-      # Calculate statistics
-      stats = %{
-        total_users: total_users,
-        total_parents: total_parents,
-        total_providers: total_providers,
-        total_children: total_children,
-
-        # Appointment statistics
-        total_appointments: length(appointments),
-        upcoming_appointments: length(upcoming_appointments),
-        today_appointments: Enum.count(appointments, fn appt -> appt.scheduled_date == today end),
-
-        # Monthly statistics
-        monthly_appointments: length(monthly_appointments),
-        monthly_completed:
-          Enum.count(monthly_appointments, fn appt -> appt.status == "completed" end),
-        monthly_cancelled:
-          Enum.count(monthly_appointments, fn appt -> appt.status == "cancelled" end),
-        monthly_no_show: Enum.count(monthly_appointments, fn appt -> appt.status == "no_show" end)
-      }
-
       # Get provider performance (providers with most appointments)
       providers_with_appointments = get_provider_performance()
 
       socket =
         socket
         |> assign(:user, user)
-        |> assign(:stats, stats)
+        |> assign(:stats, get_system_stats())
         |> assign(:providers, providers_with_appointments)
         |> assign(:appointment_chart_data, get_appointment_chart_data())
         |> assign(:page_title, "Admin Dashboard")
@@ -170,5 +126,53 @@ defmodule AppWeb.AdminLive.Dashboard do
         total: length(appointments)
       }
     end)
+  end
+
+  defp get_system_stats() do
+    # Get statistics data
+    total_providers = length(Accounts.list_users_by_role("provider"))
+    total_children = length(Accounts.list_children())
+
+    # Get appointment statistics
+    today = Date.utc_today()
+    start_of_month = Date.beginning_of_month(today)
+
+    appointments = Scheduling.list_appointments()
+
+    upcoming_appointments =
+      Enum.filter(appointments, fn appt ->
+        Date.compare(appt.scheduled_date, today) in [:eq, :gt] &&
+          appt.status in ["scheduled", "confirmed"]
+      end)
+
+    monthly_appointments =
+      Enum.filter(appointments, fn appt ->
+        Date.compare(appt.scheduled_date, start_of_month) in [:eq, :gt]
+      end)
+
+    # Calculate statistics
+    stats = %{
+      users: %{
+        total: length(Accounts.list_users()),
+        parents: length(Accounts.list_users_by_role("parent")),
+        providers: length(Accounts.list_users_by_role("provider")),
+        admins: length(Accounts.list_users_by_role("admin"))
+      },
+      total_children: total_children,
+
+      # Appointment statistics
+      total_appointments: length(appointments),
+      upcoming_appointments: length(upcoming_appointments),
+      today_appointments: Enum.count(appointments, fn appt -> appt.scheduled_date == today end),
+
+      # Monthly statistics
+      monthly_appointments: length(monthly_appointments),
+      monthly_completed:
+        Enum.count(monthly_appointments, fn appt -> appt.status == "completed" end),
+      monthly_cancelled:
+        Enum.count(monthly_appointments, fn appt -> appt.status == "cancelled" end),
+      monthly_no_show: Enum.count(monthly_appointments, fn appt -> appt.status == "no_show" end)
+    }
+
   end
 end
