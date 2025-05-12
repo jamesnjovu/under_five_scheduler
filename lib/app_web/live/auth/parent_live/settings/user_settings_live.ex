@@ -23,7 +23,7 @@ defmodule AppWeb.UserSettingsLive do
       user = socket.assigns.current_user
 
       # Fetch user's notification preferences
-      notification_preference = App.Notifications.get_user_preference(user.id)
+      notification_preference = App.Notifications.get_notification_preference(user.id)
 
       email_changeset = Accounts.change_user_email(user)
       password_changeset = Accounts.change_user_password(user)
@@ -67,7 +67,7 @@ defmodule AppWeb.UserSettingsLive do
     user = socket.assigns.current_user
 
     # Fetch the user's notification preference
-    notification_preference = App.Notifications.get_user_preference(user.id)
+    notification_preference = App.Notifications.get_notification_preference(user.id)
 
     # Update notification preferences
     case App.Notifications.update_notification_preference(notification_preference, params) do

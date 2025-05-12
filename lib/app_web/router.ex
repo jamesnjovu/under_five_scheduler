@@ -59,6 +59,7 @@ defmodule AppWeb.Router do
       live "/appointments", Appointments, :index
       live "/reports", Reports, :index
       live "/settings", Settings, :index
+      live "/sms_messages", SMSMessages, :index
     end
   end
 

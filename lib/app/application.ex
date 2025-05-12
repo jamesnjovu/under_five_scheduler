@@ -16,10 +16,6 @@ defmodule App.Application do
       {Finch, name: App.Finch},
       # Add Oban to the supervision tree
       {Oban, Application.fetch_env!(:app, Oban)},
-      {Oban.Plugins.Cron,
-        crontab: [
-          {"0 0 * * *", App.Workers.ReminderSchedulerWorker}
-        ]},
       # Other workers...
       AppWeb.Endpoint,
       App.USSDSession

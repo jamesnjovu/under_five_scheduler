@@ -20,7 +20,7 @@ defmodule App.Notifications do
   """
   def schedule_appointment_reminders(appointment, user) do
     # Get user notification preferences
-    preference = get_user_preference(user.id)
+    preference = get_notification_preference(user.id)
 
     # Only proceed if the appointment status is appropriate for reminders
     if appointment.status in ["scheduled", "confirmed"] do
@@ -84,7 +84,7 @@ defmodule App.Notifications do
     user = appointment.child.user
 
     # Get user notification preferences
-    preference = get_user_preference(user.id)
+    preference = get_notification_preference(user.id)
 
     # Send SMS if enabled
     if preference.sms_enabled do
@@ -108,7 +108,7 @@ defmodule App.Notifications do
     user = appointment.child.user
 
     # Get user notification preferences
-    preference = get_user_preference(user.id)
+    preference = get_notification_preference(user.id)
 
     # Send SMS if enabled
     if preference.sms_enabled do
@@ -132,7 +132,7 @@ defmodule App.Notifications do
     user = appointment.child.user
 
     # Get user notification preferences
-    preference = get_user_preference(user.id)
+    preference = get_notification_preference(user.id)
 
     # Send SMS if enabled
     if preference.sms_enabled do
@@ -201,11 +201,8 @@ defmodule App.Notifications do
       IO.puts("SMS to #{phone_number}: #{message}")
       {:ok, :sent}
     else
-      # In production, integrate with SMS gateway provider
-      # Example with a hypothetical SMS service:
-      # SMSProvider.send_message(phone_number, message)
-
-      # For now, we'll just return a success response
+      # In production or when explicitly configured, send real SMS
+      App.Services.ProbaseSMS.send_sms(phone_number, message)
       {:ok, :sent}
     end
   end
@@ -350,16 +347,6 @@ defmodule App.Notifications do
 
   # Helper functions
 
-  defp get_user_preference(user_id) do
-    Repo.get_by(NotificationPreference, user_id: user_id) ||
-      %NotificationPreference{
-        sms_enabled: true,
-        email_enabled: true,
-        reminder_hours: 24,
-        user_id: user_id
-      }
-  end
-
   defp calculate_reminder_time(appointment, hours_before) do
     # Convert appointment date and time to a DateTime
     {:ok, datetime} = NaiveDateTime.new(
@@ -441,6 +428,17 @@ defmodule App.Notifications do
   """
   def get_notification_preference!(id), do: Repo.get!(NotificationPreference, id)
 
+  def get_notification_preference(user_id) do
+    Repo.get_by(NotificationPreference, user_id: user_id) ||
+      %NotificationPreference{
+        sms_enabled: true,
+        email_enabled: true,
+        push_enabled: false,  # Make sure push_enabled field exists
+        reminder_hours: 24,
+        user_id: user_id
+      }
+  end
+
   @doc """
   Creates a notification_preference.
   """
@@ -472,4 +470,59 @@ defmodule App.Notifications do
   def change_notification_preference(%NotificationPreference{} = notification_preference, attrs \\ %{}) do
     NotificationPreference.changeset(notification_preference, attrs)
   end
+
+  alias App.Notifications.SMSMessage
+
+  def create_sms_message(attrs) do
+    %SMSMessage{}
+    |> SMSMessage.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_sms_status(id, status, error_message \\ nil, message_id \\ nil) do
+    case Repo.get_by(SMSMessage, id: id) do
+      nil ->
+        {:error, :not_found}
+
+      sms_message ->
+        sms_message
+        |> SMSMessage.changeset(%{status: status, error_message: error_message, message_id: message_id})
+        |> Repo.update()
+    end
+  end
+
+  # Now let's modify the send_sms function to record the message
+  defp send_sms(phone_number, message, user_id \\ nil, appointment_id \\ nil) do
+    # First, create a record in the database
+    {:ok, sms_record} = create_sms_message(%{
+      phone_number: phone_number,
+      message: message,
+      user_id: user_id,
+      appointment_id: appointment_id
+    })
+
+    # Then send the actual SMS
+    result = if Mix.env() == :dev && !Application.get_env(:app, :send_real_sms_in_dev, false) do
+      # In development, just log the message
+      IO.puts("SMS to #{phone_number}: #{message}")
+      {:ok, %{"messageId" => "dev-mode-#{:rand.uniform(10000)}"}}
+    else
+      # In production, send real SMS
+      App.Services.ProbaseSMS.send_sms(phone_number, message)
+    end
+
+    # Update the record based on the result
+    case result do
+      {:ok, [%{message_id: message_id, status: "SUCCESS"} | _]} ->
+#        Update our record with the message ID
+        update_sms_status(sms_record.id, "sent", nil, message_id)
+
+        {:ok, message_id}
+
+      {:error, reason} ->
+        update_sms_status(sms_record.id, "failed", to_string(reason))
+        {:error, reason}
+    end
+  end
+
 end

@@ -13,9 +13,20 @@ config :app,
 
   # Configures Oban for background jobs
 config :app, Oban,
-  repo: App.Repo,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [default: 10, notifications: 20]
+   repo: App.Repo,
+   plugins: [
+     {Oban.Plugins.Pruner, []},
+     {
+       Oban.Plugins.Cron, crontab: [
+       {"0 0 * * *", App.Workers.ReminderSchedulerWorker}
+     ]}
+   ],
+   queues: [default: 10, notifications: 20]
+
+config :app, :probase_sms,
+   username: "your_test_username",  # Replace with your test credentials
+   password: "your_test_password",
+   sender_id: "U5Health" # Default sender ID
 
 # Configures the endpoint
 config :app, AppWeb.Endpoint,

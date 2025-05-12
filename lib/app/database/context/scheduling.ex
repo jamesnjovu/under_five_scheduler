@@ -381,7 +381,7 @@ defmodule App.Scheduling do
         App.Notifications.send_cancellation_notification(appointment)
 
         # Send push notification if enabled
-        preference = App.Notifications.get_user_preference(user.id)
+        preference = App.Notifications.get_notification_preference(user.id)
         if preference.push_enabled do
           App.Notifications.send_push_notification(
             user.id,
@@ -394,7 +394,7 @@ defmodule App.Scheduling do
         App.Notifications.send_confirmation_notification(appointment)
 
         # Send push notification if enabled
-        preference = App.Notifications.get_user_preference(user.id)
+        preference = App.Notifications.get_notification_preference(user.id)
         if preference.push_enabled do
           App.Notifications.send_push_notification(
             user.id,

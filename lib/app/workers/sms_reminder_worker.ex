@@ -39,11 +39,8 @@ defmodule App.Workers.SMSReminderWorker do
       IO.puts("SMS Reminder to #{phone_number}: #{message}")
       {:ok, :sent}
     else
-      # In production, integrate with SMS gateway provider
-      # Example with a hypothetical SMS service:
-      # SMSProvider.send_message(phone_number, message)
-
-      # For now, we'll just return a success response
+      # In production or when explicitly configured, send real SMS
+      App.Services.ProbaseSMS.send_sms(phone_number, message)
       {:ok, :sent}
     end
   end
