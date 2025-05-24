@@ -43,16 +43,8 @@ defmodule AppWeb.ProviderLive.Settings do
           :notification_form,
           to_form(Accounts.change_notification_preference(notification_preference))
         )
-        |> assign(
-          :password_form,
-          to_form(%{
-            "email" => user.email,
-            "current_password" => nil,
-            "password" => nil,
-            "password_confirmation" => nil
-          })
-        )
-        |> assign(:current_password, nil)
+        |> assign(:password_form, to_form(Accounts.change_user_password(user, %{})))
+        |> assign(:current_password, "")
         |> assign(:trigger_submit, false)
 
       {:ok, socket}
@@ -87,7 +79,10 @@ defmodule AppWeb.ProviderLive.Settings do
   def handle_event("update_profile", %{"user" => user_params}, socket) do
     user = socket.assigns.user
 
-    case Accounts.update_user(user, user_params) do
+    # Format phone number to handle country codes
+    formatted_params = format_phone_number(user_params)
+
+    case Accounts.update_user(user, formatted_params) do
       {:ok, updated_user} ->
         {:noreply,
          socket
@@ -138,8 +133,8 @@ defmodule AppWeb.ProviderLive.Settings do
   end
 
   @impl true
-  def handle_event("validate_password", params, socket) do
-    %{"current_password" => password, "user" => user_params} = params
+  def handle_event("validate_password", %{"user" => user_params} = params, socket) do
+    current_password = params["current_password"] || ""
 
     password_form =
       socket.assigns.user
@@ -147,28 +142,75 @@ defmodule AppWeb.ProviderLive.Settings do
       |> Map.put(:action, :validate)
       |> to_form()
 
-    {:noreply, assign(socket, password_form: password_form, current_password: password)}
+    {:noreply, assign(socket, password_form: password_form, current_password: current_password)}
   end
 
   @impl true
-  def handle_event("update_password", params, socket) do
-    %{"current_password" => password, "user" => user_params} = params
+  def handle_event("update_password", %{"user" => user_params} = params, socket) do
+    current_password = params["current_password"] || socket.assigns.current_password
     user = socket.assigns.user
 
-    case Accounts.update_user_password(user, password, user_params) do
+    case Accounts.update_user_password(user, current_password, user_params) do
       {:ok, user} ->
         password_form =
           user
-          |> Accounts.change_user_password(user_params)
+          |> Accounts.change_user_password(%{})
           |> to_form()
 
         {:noreply,
          socket
          |> put_flash(:info, "Password updated successfully.")
-         |> assign(trigger_submit: true, password_form: password_form)}
+         |> assign(trigger_submit: true, password_form: password_form, current_password: "")}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, password_form: to_form(changeset))}
+        {:noreply,
+         socket
+         |> put_flash(:error, "Failed to update password. Please check your current password.")
+         |> assign(password_form: to_form(changeset))}
+    end
+  end
+
+  # Helper function to format phone numbers
+  defp format_phone_number(%{"phone" => phone} = params) when is_binary(phone) do
+    formatted_phone =
+      phone
+      |> String.trim()
+      |> normalize_phone_number()
+
+    Map.put(params, "phone", formatted_phone)
+  end
+
+  defp format_phone_number(params), do: params
+
+  # Normalize phone number to handle different formats
+  defp normalize_phone_number(phone) do
+    # Remove all non-digit characters except +
+    cleaned = Regex.replace(~r/[^\d+]/, phone, "")
+
+    cond do
+      # Already has country code with +
+      String.starts_with?(cleaned, "+") ->
+        cleaned
+
+      # Has country code without +
+      String.starts_with?(cleaned, "260") and String.length(cleaned) == 12 ->
+        "+" <> cleaned
+
+      # Zambian number starting with 0 (remove 0, add +260)
+      String.starts_with?(cleaned, "0") and String.length(cleaned) == 10 ->
+        "+260" <> String.slice(cleaned, 1..-1)
+
+      # 9-digit Zambian number (add +260)
+      String.length(cleaned) == 9 ->
+        "+260" <> cleaned
+
+      # Default: add +260 if it looks like a Zambian number
+      String.length(cleaned) >= 9 and String.length(cleaned) <= 10 ->
+        "+260" <> String.replace_leading(cleaned, "0", "")
+
+      # Otherwise, keep as is
+      true ->
+        if String.starts_with?(cleaned, "+"), do: cleaned, else: "+" <> cleaned
     end
   end
 

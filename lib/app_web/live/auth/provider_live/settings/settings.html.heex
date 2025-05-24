@@ -10,7 +10,7 @@
     </div>
   </.side_nav_res>
   
-<!-- Main content area -->
+  <!-- Main content area -->
   <div class="flex-1 overflow-auto md:pl-0">
     <header class="bg-white shadow pl-4 md:pl-0">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -87,7 +87,7 @@
         </div>
       </div>
       
-<!-- Tab content -->
+      <!-- Tab content -->
       <div class="bg-white shadow rounded-lg">
         <%= case @active_tab do %>
           <% "profile" -> %>
@@ -122,13 +122,26 @@
                     />
                   </div>
 
-                  <div>
-                    <.input
-                      field={@profile_form[:phone]}
-                      type="tel"
-                      label="Phone Number"
-                      required
-                    />
+                  <div class="sm:col-span-2">
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <div class="mt-1">
+                      <.input
+                        field={@profile_form[:phone]}
+                        type="tel"
+                        placeholder="0977123456 or +260977123456"
+                        class="block w-full"
+                      />
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">
+                      <span class="font-medium">Supported formats:</span> 
+                      0977123456, 977123456, +260977123456, or international format like +1234567890
+                    </p>
+                    <div class="mt-2 flex items-center text-xs text-gray-400">
+                      <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Zambian numbers will automatically get +260 country code
+                    </div>
                   </div>
                 </div>
 
@@ -144,6 +157,7 @@
                 </div>
               </.form>
             </div>
+
           <% "professional" -> %>
             <div class="p-6">
               <div class="pb-5 border-b border-gray-200">
@@ -187,21 +201,6 @@
                       required
                     />
                   </div>
-
-                  <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Professional Qualifications
-                    </label>
-                    <div class="mt-1">
-                      <textarea
-                        id="qualifications"
-                        name="provider[qualifications]"
-                        rows="3"
-                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        placeholder="List your relevant qualifications and certifications"
-                      ></textarea>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="pt-5">
@@ -216,6 +215,7 @@
                 </div>
               </.form>
             </div>
+
           <% "notifications" -> %>
             <div class="p-6">
               <div class="pb-5 border-b border-gray-200">
@@ -302,6 +302,7 @@
                 </div>
               </.form>
             </div>
+
           <% "security" -> %>
             <div class="p-6">
               <div class="pb-5 border-b border-gray-200">
@@ -331,16 +332,20 @@
                 />
 
                 <div>
-                  <.input
-                    field={@password_form[:current_password]}
-                    name="current_password"
-                    type="password"
-                    placeholder="Enter Current Password"
-                    label="Current Password"
-                    id="current_password"
-                    value={@current_password}
-                    required
-                  />
+                  <label for="current_password" class="block text-sm font-medium text-gray-700">
+                    Current Password
+                  </label>
+                  <div class="mt-1">
+                    <input
+                      type="password"
+                      name="current_password"
+                      id="current_password"
+                      value={@current_password}
+                      required
+                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      placeholder="Enter your current password"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -348,7 +353,7 @@
                     field={@password_form[:password]}
                     type="password"
                     label="New Password"
-                    placeholder="Enter New Password"
+                    placeholder="Enter new password"
                     required
                   />
                   <p class="mt-1 text-sm text-gray-500">
@@ -361,7 +366,7 @@
                     field={@password_form[:password_confirmation]}
                     type="password"
                     label="Confirm New Password"
-                    placeholder="Enter Confirm New Password"
+                    placeholder="Confirm new password"
                     required
                   />
                 </div>
@@ -379,14 +384,20 @@
               </.form>
 
               <div class="mt-10 pt-8 border-t border-gray-200">
-                <h4 class="text-lg font-medium text-gray-900">Two-Factor Authentication</h4>
+                <h4 class="text-lg font-medium text-gray-900">Account Security</h4>
                 <p class="mt-1 text-sm text-gray-500">
-                  Add an extra layer of security to your account
+                  Additional security features for your account
                 </p>
                 <div class="mt-4">
-                  <button class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Enable Two-Factor Authentication
-                  </button>
+                  <div class="flex items-center justify-between py-3">
+                    <div>
+                      <h5 class="text-sm font-medium text-gray-900">Two-Factor Authentication</h5>
+                      <p class="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                    </div>
+                    <button class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                      Enable 2FA
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
