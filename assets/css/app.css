@@ -1,7 +1,25 @@
-
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "./aos.css";
 
-/* This file is for your main application CSS */
+@media print {
+    @page {
+        margin: 0.5in;
+        size: A4;
+    }
+
+    /* Hide interactive elements when printing */
+    button,
+    .hover\:shadow-xl,
+    .hover\:bg-gray-50 {
+        display: none !important;
+    }
+
+    /* Optimize charts for printing */
+    .bg-gradient-to-t,
+    .bg-gradient-to-r,
+    .bg-gradient-to-br {
+        background: #6b7280 !important;
+    }
+}

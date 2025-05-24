@@ -25,6 +25,7 @@ import topbar from "../vendor/topbar"
 import AOS from "../vendor/aos";
 
 import hooks from "./hooks"
+
 import Alpine from "../vendor/alpine"
 
 // Initialize AOS (Animate On Scroll) library

@@ -5,6 +5,11 @@ defmodule AppWeb.ProviderLive.Reports do
   alias App.Scheduling
 
   @impl true
+  def handle_event("change_export_format", %{"value" => format}, socket) do
+    {:noreply, assign(socket, :export_format, format)}
+  end
+
+  @impl true
   def mount(_params, session, socket) do
     user = get_user_from_session(session)
 
@@ -31,13 +36,15 @@ defmodule AppWeb.ProviderLive.Reports do
         |> assign(:report_type, "overview")
         |> assign(:show_sidebar, false)
         |> assign(:report_data, generate_report_data(provider.id, start_date, today))
+        |> assign(:export_format, "csv")
+        |> assign(:is_exporting, false)
 
       {:ok, socket}
     else
       {:ok,
-       socket
-       |> put_flash(:error, "You don't have access to this page.")
-       |> redirect(to: ~p"/dashboard")}
+        socket
+        |> put_flash(:error, "You don't have access to this page.")
+        |> redirect(to: ~p"/dashboard")}
     end
   end
 
@@ -62,10 +69,10 @@ defmodule AppWeb.ProviderLive.Reports do
     start_date = get_start_date(today, period)
 
     {:noreply,
-     socket
-     |> assign(:period, period)
-     |> assign(:date_range, %{start_date: start_date, end_date: today})
-     |> assign(:report_data, generate_report_data(socket.assigns.provider.id, start_date, today))}
+      socket
+      |> assign(:period, period)
+      |> assign(:date_range, %{start_date: start_date, end_date: today})
+      |> assign(:report_data, generate_report_data(socket.assigns.provider.id, start_date, today))}
   end
 
   @impl true
@@ -84,20 +91,35 @@ defmodule AppWeb.ProviderLive.Reports do
       # Ensure end_date is not before start_date
       {start_date, end_date} =
         if Date.compare(start_date, end_date) == :gt,
-          do: {end_date, start_date},
-          else: {start_date, end_date}
+           do: {end_date, start_date},
+           else: {start_date, end_date}
 
       {:noreply,
-       socket
-       |> assign(:period, "custom")
-       |> assign(:date_range, %{start_date: start_date, end_date: end_date})
-       |> assign(
-         :report_data,
-         generate_report_data(socket.assigns.provider.id, start_date, end_date)
-       )}
+        socket
+        |> assign(:period, "custom")
+        |> assign(:date_range, %{start_date: start_date, end_date: end_date})
+        |> assign(
+             :report_data,
+             generate_report_data(socket.assigns.provider.id, start_date, end_date)
+           )}
     else
       _ -> {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_event("export_report", %{"format" => format}, socket) do
+    {:noreply,
+      socket
+      |> assign(:export_format, format)
+      |> assign(:is_exporting, true)
+      |> export_report(format)}
+  end
+
+  @impl true
+  def handle_event("print_report", _, socket) do
+    # Add print styles and trigger browser print
+    {:noreply, push_event(socket, "print_report", %{})}
   end
 
   # Handle real-time updates
@@ -125,6 +147,94 @@ defmodule AppWeb.ProviderLive.Reports do
       )
 
     {:noreply, assign(socket, :report_data, report_data)}
+  end
+
+  # Export functionality
+  defp export_report(socket, format) do
+    report_data = socket.assigns.report_data
+    provider = socket.assigns.provider
+    date_range = socket.assigns.date_range
+
+    case format do
+      "csv" ->
+        csv_data = generate_csv_export(report_data, provider, date_range)
+        filename = "provider_report_#{Date.to_string(date_range.start_date)}_to_#{Date.to_string(date_range.end_date)}.csv"
+
+        IO.inspect "kkkkk"
+        socket
+        |> push_event("download_file", %{
+          data: csv_data,
+          filename: filename,
+          mime_type: "text/csv"
+        })
+        |> assign(:is_exporting, false)
+
+      "pdf" ->
+        # For PDF export, we'll generate HTML and use browser's print to PDF
+        socket
+        |> push_event("export_pdf", %{
+          title: "Provider Report - #{provider.name}",
+          date_range: "#{format_date(date_range.start_date)} to #{format_date(date_range.end_date)}"
+        })
+        |> assign(:is_exporting, false)
+
+      "excel" ->
+        excel_data = generate_excel_export(report_data, provider, date_range)
+        filename = "provider_report_#{Date.to_string(date_range.start_date)}_to_#{Date.to_string(date_range.end_date)}.xlsx"
+
+        socket
+        |> push_event("download_file", %{
+          data: excel_data,
+          filename: filename,
+          mime_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        })
+        |> assign(:is_exporting, false)
+
+      _ ->
+        socket |> assign(:is_exporting, false)
+    end
+  end
+
+  defp generate_csv_export(report_data, provider, date_range) do
+    headers = ["Metric", "Value", "Percentage"]
+
+    rows = [
+      ["Provider", provider.name, ""],
+      ["Report Period", "#{format_date(date_range.start_date)} to #{format_date(date_range.end_date)}", ""],
+      ["", "", ""],
+      ["SUMMARY STATISTICS", "", ""],
+      ["Total Appointments", report_data.total_appointments, ""],
+      ["Completed Appointments", report_data.status_counts.completed, format_percentage(report_data.rates.completion_rate)],
+      ["Cancelled Appointments", report_data.status_counts.cancelled, format_percentage(report_data.rates.cancellation_rate)],
+      ["No-show Appointments", report_data.status_counts.no_show, format_percentage(report_data.rates.no_show_rate)],
+      ["Scheduled Appointments", report_data.status_counts.scheduled, ""],
+      ["Confirmed Appointments", report_data.status_counts.confirmed, ""],
+      ["Unique Patients", report_data.children_count, ""],
+      ["Average Appointments per Day", Float.round(report_data.avg_appointments_per_day, 1), ""],
+      ["", "", ""],
+      ["DAILY BREAKDOWN", "", ""]
+    ]
+
+    daily_rows = Enum.map(report_data.daily_data, fn day ->
+      completion_rate = if day.total > 0, do: format_percentage(day.completed / day.total * 100), else: "0%"
+      [
+        format_date(day.date),
+        day.total,
+        "#{day.completed} completed, #{day.no_show} no-show, #{day.cancelled} cancelled",
+        completion_rate
+      ]
+    end)
+
+    all_rows = [headers] ++ rows ++ [["Date", "Total", "Breakdown", "Completion Rate"]] ++ daily_rows
+
+    all_rows
+    |> Enum.map(&Enum.join(&1, ","))
+    |> Enum.join("\n")
+  end
+
+  defp generate_excel_export(report_data, provider, date_range) do
+    # This is a simplified Excel export - in production, you'd use a proper Excel library
+    generate_csv_export(report_data, provider, date_range)
   end
 
   defp get_user_from_session(session) do
@@ -169,10 +279,7 @@ defmodule AppWeb.ProviderLive.Reports do
 
     # Calculate rates
     completion_rate = if total_count > 0, do: status_counts.completed / total_count * 100, else: 0
-
-    cancellation_rate =
-      if total_count > 0, do: status_counts.cancelled / total_count * 100, else: 0
-
+    cancellation_rate = if total_count > 0, do: status_counts.cancelled / total_count * 100, else: 0
     no_show_rate = if total_count > 0, do: status_counts.no_show / total_count * 100, else: 0
 
     # Daily distribution
@@ -191,16 +298,13 @@ defmodule AppWeb.ProviderLive.Reports do
       |> Enum.sort_by(fn %{date: date} -> date end)
 
     # Weekly distribution
-    weekly_data =
-      group_by_week(appointments, start_date, end_date)
+    weekly_data = group_by_week(appointments, start_date, end_date)
 
     # Monthly distribution
-    monthly_data =
-      group_by_month(appointments, start_date, end_date)
+    monthly_data = group_by_month(appointments, start_date, end_date)
 
     # Child age distribution
     children_ids = appointments |> Enum.map(& &1.child_id) |> Enum.uniq()
-
     children = Enum.map(children_ids, fn id -> Accounts.get_child!(id) end)
 
     age_distribution =
@@ -359,4 +463,24 @@ defmodule AppWeb.ProviderLive.Reports do
     {year, week} = :calendar.iso_week_number({date.year, date.month, date.day})
     "#{year}-W#{String.pad_leading(Integer.to_string(week), 2, "0")}"
   end
+
+  # Performance indicators helpers
+  defp get_performance_indicator(current, previous) when is_number(current) and is_number(previous) do
+    if previous == 0 do
+      %{change: 0, trend: :stable, percentage: 0}
+    else
+      change = current - previous
+      percentage = (change / previous) * 100
+
+      trend = cond do
+        percentage > 5 -> :up
+        percentage < -5 -> :down
+        true -> :stable
+      end
+
+      %{change: change, trend: trend, percentage: percentage}
+    end
+  end
+
+  defp get_performance_indicator(_, _), do: %{change: 0, trend: :stable, percentage: 0}
 end

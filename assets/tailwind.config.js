@@ -32,6 +32,25 @@ module.exports = {
     // Embeds Heroicons (https://heroicons.com) into your app.css bundle
     // See your `CoreComponents.icon/1` for more information.
     //
+    plugin(function({ addBase, addUtilities }) {
+      // Add @page styles
+      addBase({
+        '@media print': {
+          '@page': {
+            margin: '0.5in',
+            size: 'A4',
+          },
+          // Hide interactive elements
+          'button, .hover\\:shadow-xl, .hover\\:bg-gray-50': {
+            display: 'none !important',
+          },
+          // Optimize gradients for printing
+          '.bg-gradient-to-t, .bg-gradient-to-r, .bg-gradient-to-br': {
+            background: '#6b7280 !important',
+          },
+        }
+      });
+    }),
     plugin(function({matchComponents, theme}) {
       let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
       let values = {}
