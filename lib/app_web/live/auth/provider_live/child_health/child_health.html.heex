@@ -1,14 +1,10 @@
 <div class="flex h-screen bg-gray-50">
-  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
-    <div class="p-4">
-      <div class="flex items-center justify-center">
-        <span class="text-xl font-bold">Provider Portal</span>
-      </div>
-      <div class="mt-2 text-center text-sm">
-        <span>{@provider.name}</span>
-      </div>
-    </div>
-  </.side_nav_res>
+  <.side_nav_res
+    show_sidebar={@show_sidebar}
+    socket={@socket}
+    current_user={@current_user}
+    provider={@provider}
+  />
 
   <div class="flex-1 overflow-auto md:pl-0">
     <!-- Header -->
