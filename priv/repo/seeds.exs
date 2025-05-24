@@ -105,7 +105,7 @@ end)
 # Create children for the parent
 children_data = [
   %{
-    "name" => "Emma Doe",
+    "name" => "Emma Hara",
     "date_of_birth" => ~D[2021-06-15]
   },
   %{
