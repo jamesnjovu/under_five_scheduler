@@ -136,3 +136,5 @@ Enum.each(children, fn child ->
     notes: "Regular check-up"
   })
 end)
+
+App.HealthRecords.initialize_standard_vaccine_schedules()

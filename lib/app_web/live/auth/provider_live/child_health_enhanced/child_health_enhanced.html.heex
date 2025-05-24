@@ -652,31 +652,31 @@
 
         <% "notes" -> %>
           <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex justify-between items-center mb-4">
-              <div>
-                <h3 class="text-lg font-medium text-gray-900">Appointment Notes</h3>
-                <p class="text-sm text-gray-500">Record observations and treatment notes</p>
-              </div>
-              <%= if @can_edit do %>
-                <button
-                  phx-click="show_appointment_notes"
-                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  Edit Notes
-                </button>
-              <% end %>
-            </div>
-
-            <div class="prose max-w-none">
-              <%= if @appointment.notes and @appointment.notes != "" do %>
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <pre class="whitespace-pre-wrap text-sm text-gray-700">{@appointment.notes}</pre>
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900">Appointment Notes</h3>
+                  <p class="text-sm text-gray-500">Record observations and treatment notes</p>
                 </div>
-              <% else %>
-                <p class="text-sm text-gray-500 italic">No notes recorded for this appointment yet.</p>
-              <% end %>
+                <%= if @can_edit do %>
+                  <button
+                    phx-click="show_appointment_notes"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Edit Notes
+                  </button>
+                <% end %>
+              </div>
+
+              <div class="prose max-w-none">
+                <%= if @appointment.notes != nil and @appointment.notes != "" do %>
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <pre class="whitespace-pre-wrap text-sm text-gray-700">{@appointment.notes}</pre>
+                  </div>
+                <% else %>
+                  <p class="text-sm text-gray-500 italic">No notes recorded for this appointment yet.</p>
+                <% end %>
+              </div>
             </div>
-          </div>
       <% end %>
     </main>
   </div>
