@@ -475,7 +475,8 @@ defmodule App.HealthRecords do
       administered_count =
         Enum.count(all_records, fn record -> record.status == "administered" end)
 
-      coverage_percentage = administered_count / total_count * 100
+      # Ensure we always return a float
+      coverage_percentage = (administered_count / total_count * 100) |> Float.round(1)
 
       %{
         total_vaccines: total_count,
@@ -488,10 +489,353 @@ defmodule App.HealthRecords do
       %{
         total_vaccines: 0,
         administered_vaccines: 0,
-        coverage_percentage: 0,
+        coverage_percentage: 0.0, # Explicitly return float
         missed_vaccines: 0,
         scheduled_vaccines: 0
       }
     end
+  end
+
+  @doc """
+  Creates a comprehensive health summary for a child during an appointment.
+  This includes growth trends, immunization status, and recommendations.
+  """
+  def create_appointment_health_summary(child_id, appointment_date \\ nil) do
+    appointment_date = appointment_date || Date.utc_today()
+    child = App.Accounts.get_child!(child_id)
+
+    # Get all health records
+    growth_records = list_growth_records(child_id)
+    immunization_records = list_immunization_records(child_id)
+
+    # Calculate current metrics
+    percentiles = calculate_growth_percentiles(child_id)
+    coverage = calculate_immunization_coverage(child_id)
+
+    # Get upcoming and overdue items
+    upcoming_immunizations = get_upcoming_immunizations(child_id)
+    missed_immunizations = get_missed_immunizations(child_id)
+
+    # Calculate health trends
+    growth_trends = calculate_growth_trends(growth_records)
+
+    # Generate recommendations
+    recommendations = generate_health_recommendations(child, growth_records, immunization_records, appointment_date)
+
+    %{
+      child: child,
+      appointment_date: appointment_date,
+      growth: %{
+        records: growth_records,
+        percentiles: percentiles,
+        trends: growth_trends
+      },
+      immunizations: %{
+        records: immunization_records,
+        coverage: coverage,
+        upcoming: upcoming_immunizations,
+        missed: missed_immunizations
+      },
+      recommendations: recommendations,
+      next_checkup: calculate_next_checkup_date(child, appointment_date)
+    }
+  end
+
+  @doc """
+  Calculates growth trends over time for better health monitoring.
+  """
+  def calculate_growth_trends(growth_records) when length(growth_records) >= 2 do
+    sorted_records = Enum.sort_by(growth_records, & &1.measurement_date, :asc)
+
+    weight_trend = calculate_metric_trend(sorted_records, :weight)
+    height_trend = calculate_metric_trend(sorted_records, :height)
+    head_circumference_trend = calculate_metric_trend(sorted_records, :head_circumference)
+
+    %{
+      weight: weight_trend,
+      height: height_trend,
+      head_circumference: head_circumference_trend,
+      total_measurements: length(sorted_records),
+      date_range: {
+        List.first(sorted_records).measurement_date,
+        List.last(sorted_records).measurement_date
+      }
+    }
+  end
+
+  def calculate_growth_trends(_), do: %{insufficient_data: true}
+
+  defp calculate_metric_trend(records, metric) do
+    values =
+      records
+      |> Enum.map(fn record -> {record.measurement_date, Map.get(record, metric)} end)
+      |> Enum.filter(fn {_, value} -> value != nil end)
+
+    if length(values) >= 2 do
+      [{first_date, first_value} | _] = values
+      {last_date, last_value} = List.last(values)
+
+      # Calculate rate of change per month
+      days_diff = Date.diff(last_date, first_date)
+      months_diff = max(days_diff / 30, 1)
+
+      rate_of_change =
+        Decimal.sub(last_value, first_value)
+        |> Decimal.div(Decimal.from_float(months_diff))
+        |> Decimal.round(2)
+
+      %{
+        current_value: last_value,
+        previous_value: first_value,
+        rate_per_month: rate_of_change,
+        trend_direction: determine_trend_direction(rate_of_change),
+        data_points: length(values)
+      }
+    else
+      %{insufficient_data: true}
+    end
+  end
+
+  defp determine_trend_direction(rate) do
+    cond do
+      Decimal.compare(rate, Decimal.new("0.1")) == :gt -> :increasing
+      Decimal.compare(rate, Decimal.new("-0.1")) == :lt -> :decreasing
+      true -> :stable
+    end
+  end
+
+  @doc """
+  Generates personalized health recommendations based on child's records.
+  """
+  def generate_health_recommendations(child, growth_records, immunization_records, appointment_date) do
+    age_months = App.Accounts.Child.age_in_months(child)
+    recommendations = []
+
+    # Growth-based recommendations
+    recommendations =
+      if length(growth_records) >= 2 do
+        growth_trends = calculate_growth_trends(growth_records)
+        recommendations ++ generate_growth_recommendations(growth_trends, age_months)
+      else
+        recommendations ++ [%{
+          type: :growth,
+          priority: :medium,
+          message: "Establish baseline growth measurements with regular monitoring"
+        }]
+      end
+
+    # Immunization recommendations
+    missed_count = Enum.count(immunization_records, &(&1.status == "missed"))
+    upcoming_count = Enum.count(get_upcoming_immunizations(child.id))
+
+    recommendations =
+      cond do
+        missed_count > 0 ->
+          recommendations ++ [%{
+            type: :immunization,
+            priority: :high,
+            message: "#{missed_count} missed vaccination(s) need immediate attention"
+          }]
+
+        upcoming_count > 0 ->
+          recommendations ++ [%{
+            type: :immunization,
+            priority: :medium,
+            message: "#{upcoming_count} vaccination(s) due soon"
+          }]
+
+        true ->
+          recommendations ++ [%{
+            type: :immunization,
+            priority: :low,
+            message: "Immunization schedule is up to date"
+          }]
+      end
+
+    # Age-specific recommendations
+    recommendations = recommendations ++ generate_age_specific_recommendations(age_months)
+
+    recommendations
+  end
+
+  defp generate_growth_recommendations(trends, age_months) do
+    recommendations = []
+
+    # Weight trend analysis
+    recommendations =
+      case trends.weight.trend_direction do
+        :decreasing when age_months < 24 ->
+          recommendations ++ [%{
+            type: :growth,
+            priority: :high,
+            message: "Weight loss detected in infant - requires immediate evaluation"
+          }]
+
+        :decreasing ->
+          recommendations ++ [%{
+            type: :growth,
+            priority: :medium,
+            message: "Declining weight trend - monitor nutrition and feeding patterns"
+          }]
+
+        _ -> recommendations
+      end
+
+    # Height trend analysis
+    recommendations =
+      case trends.height.trend_direction do
+        :decreasing ->
+          recommendations ++ [%{
+            type: :growth,
+            priority: :medium,
+            message: "Height growth appears to be slowing - consider nutritional assessment"
+          }]
+
+        _ -> recommendations
+      end
+
+    recommendations
+  end
+
+  defp generate_age_specific_recommendations(age_months) do
+    cond do
+      age_months < 6 ->
+        [%{
+          type: :developmental,
+          priority: :medium,
+          message: "Monitor feeding patterns, sleep schedule, and developmental milestones"
+        }]
+
+      age_months < 12 ->
+        [%{
+          type: :developmental,
+          priority: :medium,
+          message: "Introduce solid foods if not started, continue breastfeeding"
+        }]
+
+      age_months < 24 ->
+        [%{
+          type: :developmental,
+          priority: :medium,
+          message: "Monitor speech development, mobility, and social interactions"
+        }]
+
+      age_months < 60 ->
+        [%{
+          type: :developmental,
+          priority: :medium,
+          message: "Assess school readiness, social skills, and physical coordination"
+        }]
+
+      true ->
+        [%{
+          type: :general,
+          priority: :low,
+          message: "Continue regular health monitoring and preventive care"
+        }]
+    end
+  end
+
+  @doc """
+  Calculates the recommended date for next checkup based on WHO guidelines.
+  """
+  def calculate_next_checkup_date(child, current_date \\ nil) do
+    current_date = current_date || Date.utc_today()
+    age_months = App.Accounts.Child.age_in_months(child)
+
+    months_until_next = case age_months do
+      months when months < 2 -> 2 - months
+      months when months < 4 -> 4 - months
+      months when months < 6 -> 6 - months
+      months when months < 9 -> 9 - months
+      months when months < 12 -> 12 - months
+      months when months < 15 -> 15 - months
+      months when months < 18 -> 18 - months
+      months when months < 24 -> 24 - months
+      months when months < 36 -> 36 - months
+      months when months < 48 -> 48 - months
+      months when months < 60 -> 60 - months
+      _ -> 12 # Annual checkups after age 5
+    end
+
+    Date.add(current_date, trunc(months_until_next * 30))
+  end
+
+  @doc """
+  Creates a health record entry for the appointment visit.
+  This can be used to track what was done during each visit.
+  """
+  def create_visit_record(appointment_id, provider_id, child_id, visit_data) do
+    # This would create a comprehensive visit record
+    # Including all health activities performed during the appointment
+
+    visit_record = %{
+      appointment_id: appointment_id,
+      provider_id: provider_id,
+      child_id: child_id,
+      visit_date: Date.utc_today(),
+      activities: visit_data.activities || [],
+      assessments: visit_data.assessments || [],
+      growth_recorded: visit_data.growth_recorded || false,
+      immunizations_given: visit_data.immunizations_given || [],
+      recommendations: visit_data.recommendations || [],
+      next_visit_due: calculate_next_checkup_date(App.Accounts.get_child!(child_id))
+    }
+
+    # In a real implementation, you might want to store this in a separate table
+    # For now, we'll return the structured data
+    {:ok, visit_record}
+  end
+
+  @doc """
+  Gets health alerts for a child that need provider attention.
+  """
+  def get_health_alerts(child_id) do
+    child = App.Accounts.get_child!(child_id)
+    age_months = App.Accounts.Child.age_in_months(child)
+
+    alerts = []
+
+    # Check for overdue immunizations
+    missed_immunizations = get_missed_immunizations(child_id)
+    alerts =
+      if length(missed_immunizations) > 0 do
+        alerts ++ [%{
+          type: :immunization,
+          severity: :high,
+          message: "#{length(missed_immunizations)} overdue immunization(s)",
+          action_required: "Schedule immediate catch-up vaccinations"
+        }]
+      else
+        alerts
+      end
+
+    # Check for growth concerns
+    latest_growth = get_latest_growth_record(child_id)
+    if latest_growth do
+      days_since_measurement = Date.diff(Date.utc_today(), latest_growth.measurement_date)
+      expected_interval = if age_months < 12, do: 90, else: 180  # 3 or 6 months
+
+      alerts =
+        if days_since_measurement > expected_interval do
+          alerts ++ [%{
+            type: :growth,
+            severity: :medium,
+            message: "Growth measurements overdue",
+            action_required: "Record current weight and height measurements"
+          }]
+        else
+          alerts
+        end
+    else
+      alerts = alerts ++ [%{
+        type: :growth,
+        severity: :medium,
+        message: "No growth records available",
+        action_required: "Establish baseline growth measurements"
+      }]
+    end
+
+    alerts
   end
 end

@@ -78,6 +78,7 @@ defmodule AppWeb.Router do
       live "/reports", Reports, :index
       live "/patients/:id/health", ChildHealth, :index
       live "/settings", Settings, :index
+      live "/appointments/:appointment_id/health", ChildHealthEnhanced, :index
     end
   end
 

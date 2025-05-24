@@ -92,7 +92,7 @@
                   </dt>
                   <dd class="flex items-baseline">
                     <div class="text-2xl font-semibold text-gray-900">
-                      {Float.round(@statistics.rates.completion_rate, 1)}%
+                      {if @statistics.rates.completion_rate, do: Float.round(@statistics.rates.completion_rate * 1.0, 1), else: 0.0}%
                     </div>
                   </dd>
                 </dl>

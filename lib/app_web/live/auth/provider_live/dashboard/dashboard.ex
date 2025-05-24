@@ -100,13 +100,25 @@ defmodule AppWeb.ProviderLive.Dashboard do
 
     # Calculate rates
     completion_rate =
-      if appointment_count > 0, do: status_counts.completed / appointment_count * 100, else: 0
+      if appointment_count > 0 do
+        (status_counts.completed / appointment_count * 100) |> Float.round(1)
+      else
+        0.0
+      end
 
     cancellation_rate =
-      if appointment_count > 0, do: status_counts.cancelled / appointment_count * 100, else: 0
+      if appointment_count > 0 do
+        (status_counts.cancelled / appointment_count * 100) |> Float.round(1)
+      else
+        0.0
+      end
 
     no_show_rate =
-      if appointment_count > 0, do: status_counts.no_show / appointment_count * 100, else: 0
+      if appointment_count > 0 do
+        (status_counts.no_show / appointment_count * 100) |> Float.round(1)
+      else
+        0.0
+      end
 
     # Calculate monthly distribution
     months =
@@ -157,9 +169,9 @@ defmodule AppWeb.ProviderLive.Dashboard do
       total_appointments: appointment_count,
       status_counts: status_counts,
       rates: %{
-        completion_rate: completion_rate / 1,
-        cancellation_rate: cancellation_rate / 1,
-        no_show_rate: no_show_rate / 1
+        completion_rate: completion_rate,
+        cancellation_rate: cancellation_rate,
+        no_show_rate: no_show_rate
       },
       monthly_counts: monthly_counts,
       daily_counts: daily_counts,

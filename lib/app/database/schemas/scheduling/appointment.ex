@@ -5,7 +5,7 @@ defmodule App.Scheduling.Appointment do
   alias App.Scheduling.Provider
   alias App.Analytics.AppointmentLog
 
-  @statuses ~w(scheduled confirmed cancelled completed no_show rescheduled)
+  @statuses ~w(scheduled confirmed cancelled completed no_show rescheduled in_progress)
 
   schema "appointments" do
     field :notes, :string

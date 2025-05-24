@@ -67,9 +67,9 @@ defmodule AppWeb.ProviderLive.ChildHealth do
       {:ok, socket}
     else
       {:ok,
-       socket
-       |> put_flash(:error, "You don't have access to this page.")
-       |> redirect(to: ~p"/dashboard")}
+        socket
+        |> put_flash(:error, "You don't have access to this page.")
+        |> redirect(to: ~p"/dashboard")}
     end
   end
 
@@ -112,12 +112,12 @@ defmodule AppWeb.ProviderLive.ChildHealth do
           })
 
         {:noreply,
-         socket
-         |> put_flash(:info, "Growth record created successfully.")
-         |> assign(:growth_records, growth_records)
-         |> assign(:percentiles, percentiles)
-         |> assign(:growth_form, to_form(growth_changeset))
-         |> assign(:show_growth_form, false)}
+          socket
+          |> put_flash(:info, "Growth record created successfully.")
+          |> assign(:growth_records, growth_records)
+          |> assign(:percentiles, percentiles)
+          |> assign(:growth_form, to_form(growth_changeset))
+          |> assign(:show_growth_form, false)}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :growth_form, to_form(changeset))}
@@ -154,12 +154,12 @@ defmodule AppWeb.ProviderLive.ChildHealth do
           })
 
         {:noreply,
-         socket
-         |> put_flash(:info, "Immunization record created successfully.")
-         |> assign(:immunization_records, immunization_records)
-         |> assign(:coverage, coverage)
-         |> assign(:immunization_form, to_form(immunization_changeset))
-         |> assign(:show_immunization_form, false)}
+          socket
+          |> put_flash(:info, "Immunization record created successfully.")
+          |> assign(:immunization_records, immunization_records)
+          |> assign(:coverage, coverage)
+          |> assign(:immunization_form, to_form(immunization_changeset))
+          |> assign(:show_immunization_form, false)}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :immunization_form, to_form(changeset))}
@@ -185,15 +185,15 @@ defmodule AppWeb.ProviderLive.ChildHealth do
         coverage = HealthRecords.calculate_immunization_coverage(child_id)
 
         {:noreply,
-         socket
-         |> put_flash(:info, "Immunization status updated successfully.")
-         |> assign(:immunization_records, immunization_records)
-         |> assign(:coverage, coverage)}
+          socket
+          |> put_flash(:info, "Immunization status updated successfully.")
+          |> assign(:immunization_records, immunization_records)
+          |> assign(:coverage, coverage)}
 
       {:error, _changeset} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Failed to update immunization status.")}
+          socket
+          |> put_flash(:error, "Failed to update immunization status.")}
     end
   end
 
@@ -209,10 +209,10 @@ defmodule AppWeb.ProviderLive.ChildHealth do
     coverage = HealthRecords.calculate_immunization_coverage(child_id)
 
     {:noreply,
-     socket
-     |> put_flash(:info, "Immunization schedule generated successfully.")
-     |> assign(:immunization_records, immunization_records)
-     |> assign(:coverage, coverage)}
+      socket
+      |> put_flash(:info, "Immunization schedule generated successfully.")
+      |> assign(:immunization_records, immunization_records)
+      |> assign(:coverage, coverage)}
   end
 
   @impl true
@@ -227,15 +227,15 @@ defmodule AppWeb.ProviderLive.ChildHealth do
         percentiles = HealthRecords.calculate_growth_percentiles(child_id)
 
         {:noreply,
-         socket
-         |> put_flash(:info, "Growth record deleted successfully.")
-         |> assign(:growth_records, growth_records)
-         |> assign(:percentiles, percentiles)}
+          socket
+          |> put_flash(:info, "Growth record deleted successfully.")
+          |> assign(:growth_records, growth_records)
+          |> assign(:percentiles, percentiles)}
 
       {:error, _} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Failed to delete growth record.")}
+          socket
+          |> put_flash(:error, "Failed to delete growth record.")}
     end
   end
 
@@ -251,15 +251,15 @@ defmodule AppWeb.ProviderLive.ChildHealth do
         coverage = HealthRecords.calculate_immunization_coverage(child_id)
 
         {:noreply,
-         socket
-         |> put_flash(:info, "Immunization record deleted successfully.")
-         |> assign(:immunization_records, immunization_records)
-         |> assign(:coverage, coverage)}
+          socket
+          |> put_flash(:info, "Immunization record deleted successfully.")
+          |> assign(:immunization_records, immunization_records)
+          |> assign(:coverage, coverage)}
 
       {:error, _} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Failed to delete immunization record.")}
+          socket
+          |> put_flash(:error, "Failed to delete immunization record.")}
     end
   end
 

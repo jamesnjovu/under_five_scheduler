@@ -616,4 +616,279 @@ defmodule App.Scheduling do
 
     "#{hour}:#{String.pad_leading("#{minute}", 2, "0")} #{am_pm}"
   end
+
+  @doc """
+  Checks if a provider can access and modify health records for a specific appointment.
+  Returns true if:
+  - The appointment belongs to the provider
+  - The appointment is scheduled for today
+  - The appointment status allows modifications (scheduled, confirmed, in_progress)
+  """
+  def can_provider_modify_health_records?(provider_id, appointment_id) do
+    case get_appointment!(appointment_id) do
+      %Appointment{provider_id: ^provider_id, scheduled_date: scheduled_date, status: status} ->
+        today = Date.utc_today()
+        Date.compare(scheduled_date, today) == :eq and
+        status in ["scheduled", "confirmed", "in_progress"]
+
+      _ ->
+        false
+    end
+  rescue
+    Ecto.NoResultsError -> false
+  end
+
+  @doc """
+  Gets all appointments for a provider that are eligible for health record updates.
+  These are appointments that are:
+  - Scheduled for today
+  - Have status of scheduled, confirmed, or in_progress
+  """
+  def list_provider_active_appointments(provider_id) do
+    today = Date.utc_today()
+
+    from(a in Appointment,
+      where: a.provider_id == ^provider_id,
+      where: a.scheduled_date == ^today,
+      where: a.status in ["scheduled", "confirmed", "in_progress"],
+      order_by: [asc: a.scheduled_time]
+    )
+    |> Repo.all()
+    |> Repo.preload([:child, :provider])
+  end
+
+  @doc """
+  Updates appointment status to "in_progress" when provider starts the health check.
+  Also logs the action for audit purposes.
+  """
+  def start_appointment(appointment) do
+    with {:ok, updated_appointment} <-
+           update_appointment(appointment, %{status: "in_progress"}) do
+
+      # Log the action
+      log_appointment_action(updated_appointment, "started")
+
+      # Broadcast update
+      Phoenix.PubSub.broadcast(
+        App.PubSub,
+        "appointments:updates",
+        {:appointment_started, updated_appointment}
+      )
+
+      {:ok, updated_appointment}
+    end
+  end
+
+  @doc """
+  Completes an appointment and finalizes health records.
+  Sets status to "completed" and ensures all records are properly saved.
+  """
+  def complete_appointment(appointment, final_notes \\ nil) do
+    attrs = %{status: "completed"}
+    attrs = if final_notes, do: Map.put(attrs, :notes, final_notes), else: attrs
+
+    with {:ok, updated_appointment} <- update_appointment(appointment, attrs) do
+      # Log the completion
+      log_appointment_action(updated_appointment, "completed")
+
+      # Broadcast completion
+      Phoenix.PubSub.broadcast(
+        App.PubSub,
+        "appointments:updates",
+        {:appointment_completed, updated_appointment}
+      )
+
+      # Trigger any post-appointment workflows (e.g., follow-up scheduling)
+      schedule_follow_up_if_needed(updated_appointment)
+
+      {:ok, updated_appointment}
+    end
+  end
+
+  @doc """
+  Gets appointment with full health context including growth and immunization records.
+  """
+  def get_appointment_with_health_context!(id) do
+    appointment = get_appointment!(id)
+    child = App.Accounts.get_child!(appointment.child_id)
+
+    # Preload all health-related data
+    child_with_health =
+      child
+      |> Repo.preload([
+        :growth_records,
+        :immunization_records
+      ])
+
+    # Attach health data to appointment
+    Map.put(appointment, :child_health_data, child_with_health)
+  end
+
+  @doc """
+  Determines if follow-up appointment should be scheduled based on child's age and last visit.
+  """
+  defp schedule_follow_up_if_needed(appointment) do
+    child = App.Accounts.get_child!(appointment.child_id)
+    age_months = App.Accounts.Child.age_in_months(child)
+
+    # Follow-up scheduling logic based on WHO guidelines
+    follow_up_months = case age_months do
+      months when months < 6 -> 2   # Every 2 months for under 6 months
+      months when months < 12 -> 3  # Every 3 months for 6-12 months
+      months when months < 24 -> 6  # Every 6 months for 1-2 years
+      _ -> 12                       # Yearly for 2-5 years
+    end
+
+    # Create a reminder or suggestion for the next appointment
+    suggested_date = Date.add(appointment.scheduled_date, follow_up_months * 30)
+
+    # You could implement automatic scheduling or just create a reminder
+    create_follow_up_reminder(appointment, suggested_date)
+  end
+
+  defp create_follow_up_reminder(appointment, suggested_date) do
+    # This could be implemented to create a follow-up reminder
+    # For now, we'll just log it
+    require Logger
+    Logger.info("Follow-up recommended for child #{appointment.child_id} on #{suggested_date}")
+  end
+
+  @doc """
+  Gets statistics for completed appointments with health record updates.
+  Useful for provider dashboard and reporting.
+  """
+  def get_provider_health_activity_stats(provider_id, date_range \\ nil) do
+    {start_date, end_date} = date_range || {Date.add(Date.utc_today(), -30), Date.utc_today()}
+
+    # Get completed appointments in date range
+    completed_appointments =
+      from(a in Appointment,
+        where: a.provider_id == ^provider_id,
+        where: a.status == "completed",
+        where: a.scheduled_date >= ^start_date and a.scheduled_date <= ^end_date,
+        select: a.child_id
+      )
+      |> Repo.all()
+      |> Enum.uniq()
+
+    # Count health records created during this period
+    growth_records_count =
+      from(g in App.HealthRecords.Growth,
+        where: g.child_id in ^completed_appointments,
+        where: g.measurement_date >= ^start_date and g.measurement_date <= ^end_date
+      )
+      |> Repo.aggregate(:count, :id)
+
+    immunizations_administered =
+      from(i in App.HealthRecords.Immunization,
+        where: i.child_id in ^completed_appointments,
+        where: i.status == "administered",
+        where: i.administered_date >= ^start_date and i.administered_date <= ^end_date
+      )
+      |> Repo.aggregate(:count, :id)
+
+    %{
+      completed_appointments: length(completed_appointments),
+      unique_children_seen: length(completed_appointments),
+      growth_records_added: growth_records_count,
+      immunizations_administered: immunizations_administered,
+      period: {start_date, end_date}
+    }
+  end
+
+  @doc """
+  Validates that an appointment can be modified based on current status and timing.
+  """
+  def validate_appointment_modification(appointment) do
+    cond do
+      appointment.status not in ["scheduled", "confirmed", "in_progress"] ->
+        {:error, "Appointment cannot be modified in current status: #{appointment.status}"}
+
+      Date.compare(appointment.scheduled_date, Date.utc_today()) == :lt ->
+        {:error, "Cannot modify past appointments"}
+
+      appointment.status == "completed" ->
+        {:error, "Completed appointments cannot be modified"}
+
+      true ->
+        {:ok, appointment}
+    end
+  end
+
+  @doc """
+  Gets appointment summary for health record context.
+  Includes previous visits and health trends.
+  """
+  def get_appointment_health_summary(appointment_id) do
+    appointment = get_appointment!(appointment_id)
+    child_id = appointment.child_id
+
+    # Get previous appointments for this child
+    previous_appointments =
+      from(a in Appointment,
+        where: a.child_id == ^child_id,
+        where: a.id != ^appointment_id,
+        where: a.status == "completed",
+        order_by: [desc: a.scheduled_date],
+        limit: 5
+      )
+      |> Repo.all()
+      |> Repo.preload([:provider])
+
+    # Get recent health records
+    recent_growth = App.HealthRecords.list_growth_records(child_id) |> Enum.take(3)
+    recent_immunizations =
+      from(i in App.HealthRecords.Immunization,
+        where: i.child_id == ^child_id,
+        where: i.status == "administered",
+        order_by: [desc: i.administered_date],
+        limit: 5
+      )
+      |> Repo.all()
+
+    %{
+      current_appointment: appointment,
+      previous_appointments: previous_appointments,
+      recent_growth_records: recent_growth,
+      recent_immunizations: recent_immunizations,
+      health_trends: calculate_health_trends(recent_growth)
+    }
+  end
+
+  defp calculate_health_trends(growth_records) when length(growth_records) >= 2 do
+    [latest, previous | _] = growth_records
+
+    weight_trend =
+      if latest.weight && previous.weight do
+        calculate_percentage_change(previous.weight, latest.weight)
+      else
+        nil
+      end
+
+    height_trend =
+      if latest.height && previous.height do
+        calculate_percentage_change(previous.height, latest.height)
+      else
+        nil
+      end
+
+    %{
+      weight_trend: weight_trend,
+      height_trend: height_trend,
+      trend_period: Date.diff(latest.measurement_date, previous.measurement_date)
+    }
+  end
+
+  defp calculate_health_trends(_), do: %{weight_trend: nil, height_trend: nil, trend_period: nil}
+
+  defp calculate_percentage_change(old_value, new_value) do
+    if Decimal.compare(old_value, Decimal.new(0)) == :gt do
+      Decimal.sub(new_value, old_value)
+      |> Decimal.div(old_value)
+      |> Decimal.mult(Decimal.new(100))
+      |> Decimal.round(1)
+    else
+      nil
+    end
+  end
 end
