@@ -1,5 +1,3 @@
-# lib/app_web/live/auth/provider_live/appointments/appointments.ex
-
 defmodule AppWeb.ProviderLive.Appointments do
   use AppWeb, :live_view
 
@@ -35,6 +33,8 @@ defmodule AppWeb.ProviderLive.Appointments do
         |> assign(:search, "")
         |> assign(:schedule, get_provider_schedule_for_date(provider.id, today))
         |> assign(:show_sidebar, false)
+        |> assign(:daily_stats, get_daily_stats(provider.id, today))
+        |> assign(:week_dates, get_week_dates(today))
 
       {:ok, socket}
     else
@@ -68,7 +68,26 @@ defmodule AppWeb.ProviderLive.Appointments do
         socket
         |> assign(:current_date, date)
         |> assign(:appointments, get_appointments_for_date(provider_id, date))
-        |> assign(:schedule, get_provider_schedule_for_date(provider_id, date))}
+        |> assign(:schedule, get_provider_schedule_for_date(provider_id, date))
+        |> assign(:daily_stats, get_daily_stats(provider_id, date))
+        |> assign(:week_dates, get_week_dates(date))}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("quick_date_change", %{"date" => date_string}, socket) do
+    with {:ok, date} <- Date.from_iso8601(date_string) do
+      provider_id = socket.assigns.provider.id
+
+      {:noreply,
+        socket
+        |> assign(:current_date, date)
+        |> assign(:appointments, get_appointments_for_date(provider_id, date))
+        |> assign(:schedule, get_provider_schedule_for_date(provider_id, date))
+        |> assign(:daily_stats, get_daily_stats(provider_id, date))
+        |> assign(:week_dates, get_week_dates(date))}
     else
       _ -> {:noreply, socket}
     end
@@ -83,7 +102,9 @@ defmodule AppWeb.ProviderLive.Appointments do
       socket
       |> assign(:current_date, new_date)
       |> assign(:appointments, get_appointments_for_date(provider_id, new_date))
-      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))}
+      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))
+      |> assign(:daily_stats, get_daily_stats(provider_id, new_date))
+      |> assign(:week_dates, get_week_dates(new_date))}
   end
 
   @impl true
@@ -95,7 +116,23 @@ defmodule AppWeb.ProviderLive.Appointments do
       socket
       |> assign(:current_date, new_date)
       |> assign(:appointments, get_appointments_for_date(provider_id, new_date))
-      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))}
+      |> assign(:schedule, get_provider_schedule_for_date(provider_id, new_date))
+      |> assign(:daily_stats, get_daily_stats(provider_id, new_date))
+      |> assign(:week_dates, get_week_dates(new_date))}
+  end
+
+  @impl true
+  def handle_event("go_to_today", _, socket) do
+    today = Date.utc_today()
+    provider_id = socket.assigns.provider.id
+
+    {:noreply,
+      socket
+      |> assign(:current_date, today)
+      |> assign(:appointments, get_appointments_for_date(provider_id, today))
+      |> assign(:schedule, get_provider_schedule_for_date(provider_id, today))
+      |> assign(:daily_stats, get_daily_stats(provider_id, today))
+      |> assign(:week_dates, get_week_dates(today))}
   end
 
   @impl true
@@ -134,7 +171,8 @@ defmodule AppWeb.ProviderLive.Appointments do
           |> assign(
                :appointments,
                get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-             )}
+             )
+          |> assign(:daily_stats, get_daily_stats(socket.assigns.provider.id, socket.assigns.current_date))}
 
       {:error, _} ->
         {:noreply,
@@ -184,7 +222,8 @@ defmodule AppWeb.ProviderLive.Appointments do
         socket,
         :appointments,
         get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-      )}
+      )
+      |> assign(:daily_stats, get_daily_stats(socket.assigns.provider.id, socket.assigns.current_date))}
   end
 
   @impl true
@@ -196,7 +235,8 @@ defmodule AppWeb.ProviderLive.Appointments do
           socket,
           :appointments,
           get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-        )}
+        )
+        |> assign(:daily_stats, get_daily_stats(socket.assigns.provider.id, socket.assigns.current_date))}
     else
       {:noreply, socket}
     end
@@ -212,7 +252,8 @@ defmodule AppWeb.ProviderLive.Appointments do
         |> assign(
              :appointments,
              get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-           )}
+           )
+        |> assign(:daily_stats, get_daily_stats(socket.assigns.provider.id, socket.assigns.current_date))}
     else
       {:noreply, socket}
     end
@@ -221,7 +262,7 @@ defmodule AppWeb.ProviderLive.Appointments do
   @impl true
   def handle_info({:stats_updated}, socket) do
     # Dashboard stats updated, could refresh any summary data
-    {:noreply, socket}
+    {:noreply, assign(socket, :daily_stats, get_daily_stats(socket.assigns.provider.id, socket.assigns.current_date))}
   end
 
   # Private helper functions
@@ -258,6 +299,37 @@ defmodule AppWeb.ProviderLive.Appointments do
   defp get_provider_schedule_for_date(provider_id, date) do
     day_of_week = Date.day_of_week(date)
     Scheduling.get_provider_schedule(provider_id, day_of_week)
+  end
+
+  defp get_daily_stats(provider_id, date) do
+    appointments = get_appointments_for_date(provider_id, date)
+
+    %{
+      total: length(appointments),
+      scheduled: Enum.count(appointments, &(&1.status == "scheduled")),
+      confirmed: Enum.count(appointments, &(&1.status == "confirmed")),
+      completed: Enum.count(appointments, &(&1.status == "completed")),
+      cancelled: Enum.count(appointments, &(&1.status == "cancelled")),
+      no_show: Enum.count(appointments, &(&1.status == "no_show")),
+      in_progress: Enum.count(appointments, &(&1.status == "in_progress"))
+    }
+  end
+
+  defp get_week_dates(current_date) do
+    # Get Monday of the current week
+    days_from_monday = Date.day_of_week(current_date) - 1
+    monday = Date.add(current_date, -days_from_monday)
+
+    Enum.map(0..6, fn days ->
+      date = Date.add(monday, days)
+      %{
+        date: date,
+        day_name: Calendar.strftime(date, "%a"),
+        day_number: date.day,
+        is_today: date == Date.utc_today(),
+        is_current: date == current_date
+      }
+    end)
   end
 
   defp filtered_appointments(appointments, filter, search) do
@@ -298,6 +370,10 @@ defmodule AppWeb.ProviderLive.Appointments do
     Calendar.strftime(date, "%A, %B %d, %Y")
   end
 
+  defp format_short_date(date) do
+    Calendar.strftime(date, "%b %d")
+  end
+
   # Health-related helper functions
 
   defp get_health_alerts_for_appointment(child_id, appointment_date) do
@@ -320,91 +396,31 @@ defmodule AppWeb.ProviderLive.Appointments do
     true
   end
 
-  # Additional stats and metrics functions
-
-  defp get_daily_appointment_summary(provider_id, date) do
-    appointments = get_appointments_for_date(provider_id, date)
-
-    %{
-      total: length(appointments),
-      scheduled: Enum.count(appointments, &(&1.status == "scheduled")),
-      confirmed: Enum.count(appointments, &(&1.status == "confirmed")),
-      completed: Enum.count(appointments, &(&1.status == "completed")),
-      cancelled: Enum.count(appointments, &(&1.status == "cancelled")),
-      no_show: Enum.count(appointments, &(&1.status == "no_show")),
-      in_progress: Enum.count(appointments, &(&1.status == "in_progress"))
-    }
-  end
-
-  defp get_health_activity_summary(provider_id, date) do
-    # Get health-related activities for the day
-    appointments = get_appointments_for_date(provider_id, date)
-    child_ids = Enum.map(appointments, & &1.child_id)
-
-    if date == Date.utc_today() do
-      # Count health records created today
-      growth_records_today =
-        Enum.reduce(child_ids, 0, fn child_id, acc ->
-          records = HealthRecords.list_growth_records(child_id)
-          today_records = Enum.count(records, &(&1.measurement_date == date))
-          acc + today_records
-        end)
-
-      immunizations_today =
-        Enum.reduce(child_ids, 0, fn child_id, acc ->
-          records = HealthRecords.list_immunization_records(child_id)
-          today_records = Enum.count(records, fn record ->
-            record.administered_date == date and record.status == "administered"
-          end)
-          acc + today_records
-        end)
-
-      %{
-        growth_records: growth_records_today,
-        immunizations_administered: immunizations_today,
-        children_with_alerts: count_children_with_health_alerts(child_ids)
-      }
-    else
-      %{growth_records: 0, immunizations_administered: 0, children_with_alerts: 0}
+  defp appointment_status_color(status) do
+    case status do
+      "scheduled" -> "bg-blue-50 text-blue-700 border-blue-200"
+      "confirmed" -> "bg-green-50 text-green-700 border-green-200"
+      "completed" -> "bg-indigo-50 text-indigo-700 border-indigo-200"
+      "cancelled" -> "bg-red-50 text-red-700 border-red-200"
+      "no_show" -> "bg-yellow-50 text-yellow-700 border-yellow-200"
+      "in_progress" -> "bg-purple-50 text-purple-700 border-purple-200"
+      _ -> "bg-gray-50 text-gray-700 border-gray-200"
     end
   end
 
-  defp count_children_with_health_alerts(child_ids) do
-    Enum.count(child_ids, fn child_id ->
-      alerts = HealthRecords.get_health_alerts(child_id)
-      length(alerts) > 0
-    end)
-  end
-
-  # Validation functions
-
-  defp validate_appointment_access(appointment, provider_id) do
-    appointment.provider_id == provider_id
-  end
-
-  defp validate_date_access(date) do
-    # Providers can view appointments for any date, but health modifications
-    # are restricted to today's appointments
-    Date.compare(date, Date.add(Date.utc_today(), -365)) != :lt and
-    Date.compare(date, Date.add(Date.utc_today(), 365)) != :gt
-  end
-
-  # Error handling
-
-  defp handle_appointment_error(socket, error_type, appointment_id \\ nil) do
-    message = case error_type do
-      :not_found -> "Appointment not found."
-      :access_denied -> "You don't have access to this appointment."
-      :invalid_status -> "Cannot perform this action with current appointment status."
-      :invalid_date -> "Invalid date for appointment modification."
-      _ -> "An error occurred. Please try again."
+  defp appointment_icon(status) do
+    case status do
+      "scheduled" -> "clock"
+      "confirmed" -> "check-circle"
+      "completed" -> "check-circle"
+      "cancelled" -> "x-circle"
+      "no_show" -> "exclamation-triangle"
+      "in_progress" -> "play-circle"
+      _ -> "question-mark-circle"
     end
+  end
 
-    socket
-    |> put_flash(:error, message)
-    |> assign(
-         :appointments,
-         get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-       )
+  defp is_weekend?(date) do
+    Date.day_of_week(date) in [6, 7]  # Saturday or Sunday
   end
 end

@@ -17,7 +17,7 @@ defmodule App.HealthRecords.HealthAlert do
     field :auto_generated, :boolean, default: true
 
     belongs_to :child, Child
-    belongs_to :resolved_by, User
+    belongs_to :resolved, User, foreign_key: :resolved_by
 
     timestamps(type: :utc_datetime)
   end
@@ -27,7 +27,7 @@ defmodule App.HealthRecords.HealthAlert do
     health_alert
     |> cast(attrs, [
       :alert_type, :severity, :message, :action_required,
-      :is_resolved, :resolved_at, :auto_generated, :child_id, :resolved_by_id
+      :is_resolved, :resolved_at, :auto_generated, :child_id, :resolved_by
     ])
     |> validate_required([:alert_type, :severity, :message, :child_id])
     |> validate_inclusion(:alert_type, @alert_types)

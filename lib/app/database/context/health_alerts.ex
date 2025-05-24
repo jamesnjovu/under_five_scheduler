@@ -36,7 +36,7 @@ defmodule App.HealthAlerts do
     |> where([a], a.child_id == ^child_id)
     |> order_by([a], [desc: :inserted_at])
     |> Repo.all()
-    |> Repo.preload(:resolved_by)
+    |> Repo.preload([:child])
   end
 
   @doc """
@@ -56,7 +56,7 @@ defmodule App.HealthAlerts do
   """
   def generate_health_alerts(child_id) do
     child = Accounts.get_child!(child_id)
-    existing_alerts = get_active_alerts(child_id)
+    _existing_alerts = get_active_alerts(child_id)
 
     # Clear existing auto-generated alerts
     clear_auto_generated_alerts(child_id)

@@ -1,3 +1,5 @@
+# lib/app_web/live/auth/provider_live/health_dashboard/health_dashboard.ex
+
 defmodule AppWeb.ProviderLive.HealthDashboard do
   use AppWeb, :live_view
 
@@ -168,9 +170,9 @@ defmodule AppWeb.ProviderLive.HealthDashboard do
 
     activities = []
 
-    # Recent growth records
-    recent_growth = HealthRecords.list_growth_records()
-                    |> Enum.filter(&(&1.child_id in patient_ids))
+    # Recent growth records - get all for patients, then filter
+    recent_growth = patient_ids
+                    |> Enum.flat_map(&HealthRecords.list_growth_records/1)
                     |> Enum.sort_by(& &1.inserted_at, :desc)
                     |> Enum.take(limit)
                     |> Enum.map(fn record ->
@@ -184,9 +186,10 @@ defmodule AppWeb.ProviderLive.HealthDashboard do
       }
     end)
 
-    # Recent immunizations
-    recent_immunizations = HealthRecords.list_immunization_records()
-                           |> Enum.filter(&(&1.child_id in patient_ids and &1.status == "administered"))
+    # Recent immunizations - get all for patients, then filter
+    recent_immunizations = patient_ids
+                           |> Enum.flat_map(&HealthRecords.list_immunization_records/1)
+                           |> Enum.filter(&(&1.status == "administered"))
                            |> Enum.sort_by(& &1.inserted_at, :desc)
                            |> Enum.take(limit)
                            |> Enum.map(fn record ->
@@ -326,9 +329,9 @@ defmodule AppWeb.ProviderLive.HealthDashboard do
   end
 
   defp count_growth_records_in_range(child_ids, start_date, end_date) do
-    HealthRecords.list_growth_records()
+    child_ids
+    |> Enum.flat_map(&HealthRecords.list_growth_records/1)
     |> Enum.filter(fn record ->
-      record.child_id in child_ids and
       Date.compare(record.measurement_date, start_date) != :lt and
       Date.compare(record.measurement_date, end_date) != :gt
     end)
@@ -336,9 +339,9 @@ defmodule AppWeb.ProviderLive.HealthDashboard do
   end
 
   defp count_immunizations_in_range(child_ids, start_date, end_date) do
-    HealthRecords.list_immunization_records()
+    child_ids
+    |> Enum.flat_map(&HealthRecords.list_immunization_records/1)
     |> Enum.filter(fn record ->
-      record.child_id in child_ids and
       record.status == "administered" and
       record.administered_date != nil and
       Date.compare(record.administered_date, start_date) != :lt and
