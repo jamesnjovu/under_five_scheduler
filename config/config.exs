@@ -52,7 +52,8 @@ config :app, AppWeb.Endpoint,
   pubsub_server: App.PubSub,
   live_view: [signing_salt: "uxL3/K8A"],
   check_origin: [
-    "//66.42.87.179:4001"
+    "//66.42.87.179:4001",
+    "//under5scheduler.sms.probasegroup.com",
   ]
 
   # Configure timezone handling
