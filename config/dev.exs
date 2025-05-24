@@ -1,10 +1,17 @@
 import Config
 
+# DEV
+username = "postgres"
+password = "Qwerty12"
+hostname = "localhost"
+
+# UAT
+
 # Configure your database
 config :app, App.Repo,
-  username: "postgres",
-  password: "4df7c642b5a74fc8",
-  hostname: "66.42.87.179",
+  username: username,
+  password: password,
+  hostname: hostname,
   database: "under_five_scheduler_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

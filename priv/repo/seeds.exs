@@ -10,10 +10,8 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 # priv/repo/seeds.exs
-alias App.Repo
 alias App.Accounts
 alias App.Scheduling
-alias App.Notifications
 
 # Create admin user
 {:ok, _admin} =
