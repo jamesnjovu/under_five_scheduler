@@ -1,3 +1,5 @@
+# lib/app_web/live/auth/provider_live/appointments/appointments.ex
+
 defmodule AppWeb.ProviderLive.Appointments do
   use AppWeb, :live_view
 
@@ -138,31 +140,6 @@ defmodule AppWeb.ProviderLive.Appointments do
         {:noreply,
           socket
           |> put_flash(:error, "Could not update appointment status.")
-          |> assign(
-               :appointments,
-               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-             )}
-    end
-  end
-
-  @impl true
-  def handle_event("add_notes", %{"id" => id, "notes" => notes}, socket) do
-    appointment = Scheduling.get_appointment!(id)
-
-    case Scheduling.update_appointment(appointment, %{notes: notes}) do
-      {:ok, _} ->
-        {:noreply,
-          socket
-          |> put_flash(:info, "Notes updated successfully.")
-          |> assign(
-               :appointments,
-               get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)
-             )}
-
-      {:error, _} ->
-        {:noreply,
-          socket
-          |> put_flash(:error, "Could not update notes.")
           |> assign(
                :appointments,
                get_appointments_for_date(socket.assigns.provider.id, socket.assigns.current_date)

@@ -503,4 +503,66 @@ defmodule AppWeb.ProviderLive.ChildHealthEnhanced do
   end
 
   defp safe_percentage(_), do: 0.0
+
+  # Helper function to calculate age in months at time of measurement
+  defp calculate_age_at_measurement(birth_date, measurement_date) do
+    years = measurement_date.year - birth_date.year
+    months = measurement_date.month - birth_date.month
+    total_months = years * 12 + months
+
+    # Adjust if measurement date is before the day of birth in the final month
+    if measurement_date.day < birth_date.day and total_months > 0 do
+      total_months - 1
+    else
+      total_months
+    end
+  end
+
+  # Helper function to get the previous growth record for comparison
+  defp get_previous_growth_record(growth_records, current_record) do
+    sorted_records = Enum.sort_by(growth_records, & &1.measurement_date, :asc)
+    current_index = Enum.find_index(sorted_records, &(&1.id == current_record.id))
+
+    if current_index && current_index > 0 do
+      Enum.at(sorted_records, current_index - 1)
+    else
+      nil
+    end
+  end
+
+  # Helper functions to provide average measurements for age (simplified)
+  # In a real application, these would reference WHO growth charts
+  defp get_average_weight_for_age(age_months) do
+    case age_months do
+      months when months <= 3 -> "4.5-6.5"
+      months when months <= 6 -> "6.0-8.5"
+      months when months <= 12 -> "8.0-11.0"
+      months when months <= 24 -> "10.0-14.0"
+      months when months <= 36 -> "12.0-16.5"
+      months when months <= 48 -> "14.0-19.0"
+      _ -> "16.0-22.0"
+    end
+  end
+
+  defp get_average_height_for_age(age_months) do
+    case age_months do
+      months when months <= 3 -> "55-65"
+      months when months <= 6 -> "62-72"
+      months when months <= 12 -> "70-80"
+      months when months <= 24 -> "80-95"
+      months when months <= 36 -> "90-105"
+      months when months <= 48 -> "100-115"
+      _ -> "110-125"
+    end
+  end
+
+  defp get_average_head_circumference_for_age(age_months) do
+    case age_months do
+      months when months <= 3 -> "38-42"
+      months when months <= 6 -> "42-45"
+      months when months <= 12 -> "44-48"
+      months when months <= 24 -> "46-50"
+      _ -> "48-52"
+    end
+  end
 end

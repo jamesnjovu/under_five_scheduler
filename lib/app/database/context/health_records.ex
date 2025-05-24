@@ -577,11 +577,11 @@ defmodule App.HealthRecords do
 
       # Calculate rate of change per month
       days_diff = Date.diff(last_date, first_date)
-      months_diff = max(days_diff / 30, 1)
+      months_diff = max(days_diff / 30.0, 1.0)  # Ensure it's a float
 
       rate_of_change =
         Decimal.sub(last_value, first_value)
-        |> Decimal.div(Decimal.from_float(months_diff))
+        |> Decimal.div(Decimal.from_float(months_diff))  # Now it's guaranteed to be a float
         |> Decimal.round(2)
 
       %{

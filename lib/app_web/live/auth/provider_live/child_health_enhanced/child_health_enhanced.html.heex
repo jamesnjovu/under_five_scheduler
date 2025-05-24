@@ -369,67 +369,180 @@
           <% end %>
 
         <% "growth" -> %>
-          <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="text-lg font-medium text-gray-900">Growth Records</h3>
-                  <p class="text-sm text-gray-500">Track weight, height, and head circumference</p>
-                </div>
-                <%= if @can_edit do %>
-                  <button
-                    phx-click="show_growth_form"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    Add Measurement
-                  </button>
-                <% end %>
-              </div>
-            </div>
+                  <div class="bg-white shadow rounded-lg">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <h3 class="text-lg font-medium text-gray-900">Growth Records</h3>
+                          <p class="text-sm text-gray-500">Track weight, height, and head circumference measurements</p>
+                        </div>
+                        <%= if @can_edit do %>
+                          <button
+                            phx-click="show_growth_form"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                          >
+                            <svg class="h-4 w-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Growth Measurement
+                          </button>
+                        <% end %>
+                      </div>
+                    </div>
 
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight (kg)</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Head Circumference (cm)</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <%= if Enum.empty?(@growth_records) do %>
-                    <tr>
-                      <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                        No growth records available. Add the first measurement to start tracking growth.
-                      </td>
-                    </tr>
-                  <% else %>
-                    <%= for record <- @growth_records do %>
-                      <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {format_date(record.measurement_date)}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.weight}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.height}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.head_circumference || "—"}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                          {record.notes || "—"}
-                        </td>
-                      </tr>
+                    <!-- Growth Chart Summary -->
+                    <%= if @percentiles do %>
+                      <div class="px-6 py-4 bg-blue-50 border-b border-gray-200">
+                        <h4 class="text-md font-medium text-blue-900 mb-3">Latest Growth Percentiles</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">{@percentiles.weight_percentile}th</div>
+                            <div class="text-sm text-blue-800">Weight Percentile</div>
+                          </div>
+                          <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">{@percentiles.height_percentile}th</div>
+                            <div class="text-sm text-green-800">Height Percentile</div>
+                          </div>
+                          <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">{@percentiles.bmi}</div>
+                            <div class="text-sm text-purple-800">BMI</div>
+                          </div>
+                        </div>
+                      </div>
                     <% end %>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          </div>
+
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age (months)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight (kg)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Head Circumference (cm)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <%= if @can_edit do %>
+                              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <% end %>
+                          </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                          <%= if Enum.empty?(@growth_records) do %>
+                            <tr>
+                              <td colspan={if @can_edit, do: "7", else: "6"} class="px-6 py-4 text-center text-sm text-gray-500">
+                                No growth records available. Add the first measurement to start tracking growth trends.
+                              </td>
+                            </tr>
+                          <% else %>
+                            <%= for record <- @growth_records do %>
+                              <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {format_date(record.measurement_date)}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {calculate_age_at_measurement(@child.date_of_birth, record.measurement_date)}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  <span class="font-medium">{record.weight}</span>
+                                  <%= if length(@growth_records) > 1 do %>
+                                    <% previous_record = get_previous_growth_record(@growth_records, record) %>
+                                    <%= if previous_record && previous_record.weight do %>
+                                      <% weight_change = Decimal.sub(record.weight, previous_record.weight) %>
+                                      <span class={"ml-2 text-xs #{if Decimal.positive?(weight_change), do: "text-green-600", else: "text-red-600"}"}>
+                                        ({if Decimal.positive?(weight_change), do: "+", else: ""}{weight_change})
+                                      </span>
+                                    <% end %>
+                                  <% end %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  <span class="font-medium">{record.height}</span>
+                                  <%= if length(@growth_records) > 1 do %>
+                                    <% previous_record = get_previous_growth_record(@growth_records, record) %>
+                                    <%= if previous_record && previous_record.height do %>
+                                      <% height_change = Decimal.sub(record.height, previous_record.height) %>
+                                      <span class={"ml-2 text-xs #{if Decimal.positive?(height_change), do: "text-green-600", else: "text-red-600"}"}>
+                                        ({if Decimal.positive?(height_change), do: "+", else: ""}{height_change})
+                                      </span>
+                                    <% end %>
+                                  <% end %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {record.head_circumference || "—"}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                  {record.notes || "—"}
+                                </td>
+                                <%= if @can_edit do %>
+                                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button
+                                      phx-click="delete_growth_record"
+                                      phx-value-id={record.id}
+                                      data-confirm="Are you sure you want to delete this growth record?"
+                                      class="text-red-600 hover:text-red-900"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                <% end %>
+                              </tr>
+                            <% end %>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Growth Trends Analysis (if enough data) -->
+                    <%= if length(@growth_records) >= 2 do %>
+                      <% trends = HealthRecords.calculate_growth_trends(@growth_records) %>
+                      <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <h4 class="text-md font-medium text-gray-900 mb-3">Growth Trends</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div class="bg-white p-3 rounded-lg border">
+                            <div class="flex justify-between items-center">
+                              <span class="text-sm font-medium text-gray-700">Weight Trend</span>
+                              <span class={"text-sm font-bold #{
+                                case trends.weight.trend_direction do
+                                  :increasing -> "text-green-600"
+                                  :decreasing -> "text-red-600"
+                                  _ -> "text-gray-600"
+                                end
+                              }"}>
+                                {case trends.weight.trend_direction do
+                                  :increasing -> "Increasing"
+                                  :decreasing -> "Decreasing"
+                                  _ -> "Stable"
+                                end}
+                              </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                              Rate: {trends.weight.rate_per_month} kg/month
+                            </div>
+                          </div>
+                          <div class="bg-white p-3 rounded-lg border">
+                            <div class="flex justify-between items-center">
+                              <span class="text-sm font-medium text-gray-700">Height Trend</span>
+                              <span class={"text-sm font-bold #{
+                                case trends.height.trend_direction do
+                                  :increasing -> "text-green-600"
+                                  :decreasing -> "text-red-600"
+                                  _ -> "text-gray-600"
+                                end
+                              }"}>
+                                {case trends.height.trend_direction do
+                                  :increasing -> "Increasing"
+                                  :decreasing -> "Decreasing"
+                                  _ -> "Stable"
+                                end}
+                              </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                              Rate: {trends.height.rate_per_month} cm/month
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
 
         <% "immunizations" -> %>
           <div class="bg-white shadow rounded-lg">
