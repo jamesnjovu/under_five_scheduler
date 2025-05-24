@@ -18,7 +18,9 @@ defmodule App.Application do
       {Oban, Application.fetch_env!(:app, Oban)},
       # Other workers...
       AppWeb.Endpoint,
-      App.USSDSession
+      App.USSDSession,
+      # Add health monitoring scheduler
+      App.HealthMonitoring.Scheduler
     ]
 
     opts = [strategy: :one_for_one, name: App.Supervisor]

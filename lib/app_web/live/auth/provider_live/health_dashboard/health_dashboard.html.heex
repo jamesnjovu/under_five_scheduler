@@ -1,0 +1,480 @@
+<div class="flex h-screen bg-gray-50">
+  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
+    <div class="p-4">
+      <div class="flex items-center justify-center">
+        <span class="text-xl font-bold">Provider Portal</span>
+      </div>
+      <div class="mt-2 text-center text-sm">
+        <span>{@provider.name}</span>
+      </div>
+    </div>
+  </.side_nav_res>
+
+  <div class="flex-1 overflow-auto md:pl-0">
+    <header class="bg-white shadow pl-4 md:pl-0">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">Health Dashboard</h1>
+            <p class="text-gray-600">Comprehensive health monitoring and alerts</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <select
+              phx-change="change_date_range"
+              class="block border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="7_days">Last 7 days</option>
+              <option value="30_days" selected>Last 30 days</option>
+              <option value="90_days">Last 90 days</option>
+              <option value="6_months">Last 6 months</option>
+            </select>
+            <button
+              phx-click="refresh_data"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Health Metrics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Patients -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Patients</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@health_metrics.total_patients}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Growth Records -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Growth Records</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@health_metrics.growth_records}
+                    </div>
+                    <div class={"ml-2 flex items-baseline text-sm font-semibold #{trend_color(@health_metrics.growth_trend)}"}>
+                      {format_trend(@health_metrics.growth_trend)}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Immunizations Given -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Immunizations Given</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@health_metrics.immunizations_administered}
+                    </div>
+                    <div class={"ml-2 flex items-baseline text-sm font-semibold #{trend_color(@health_metrics.immunization_trend)}"}>
+                      {format_trend(@health_metrics.immunization_trend)}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Health Visits -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Health Visits</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {@health_metrics.health_visits}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="mb-6">
+        <div class="border-b border-gray-200">
+          <nav class="flex -mb-px space-x-8">
+            <button
+              phx-click="change_tab"
+              phx-value-tab="overview"
+              class={
+                "py-4 px-1 border-b-2 font-medium text-sm " <>
+                if(@active_tab == "overview", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+              }
+            >
+              Overview
+            </button>
+            <button
+              phx-click="change_tab"
+              phx-value-tab="alerts"
+              class={
+                "py-4 px-1 border-b-2 font-medium text-sm " <>
+                if(@active_tab == "alerts", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+              }
+            >
+              Active Alerts ({length(@active_alerts)})
+            </button>
+            <button
+              phx-click="change_tab"
+              phx-value-tab="immunizations"
+              class={
+                "py-4 px-1 border-b-2 font-medium text-sm " <>
+                if(@active_tab == "immunizations", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+              }
+            >
+              Immunization Coverage
+            </button>
+            <button
+              phx-click="change_tab"
+              phx-value-tab="growth"
+              class={
+                "py-4 px-1 border-b-2 font-medium text-sm " <>
+                if(@active_tab == "growth", do: "border-indigo-500 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+              }
+            >
+              Growth Monitoring
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <%= case @active_tab do %>
+        <% "overview" -> %>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Activities -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Health Activities</h3>
+              </div>
+              <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                <%= if Enum.empty?(@recent_activities) do %>
+                  <div class="p-6 text-center text-gray-500">
+                    No recent activities to display.
+                  </div>
+                <% else %>
+                  <%= for activity <- @recent_activities do %>
+                    <div class="p-4">
+                      <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                          <div class={"h-8 w-8 rounded-full flex items-center justify-center #{
+                            case activity.type do
+                              "growth_recorded" -> "bg-green-100"
+                              "immunization_given" -> "bg-blue-100"
+                              _ -> "bg-gray-100"
+                            end
+                          }"}>
+                            <svg class={"h-4 w-4 #{
+                              case activity.type do
+                                "growth_recorded" -> "text-green-600"
+                                "immunization_given" -> "text-blue-600"
+                                _ -> "text-gray-600"
+                              end
+                            }"} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <%= case activity.type do %>
+                                <% "growth_recorded" -> %>
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                <% "immunization_given" -> %>
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                <% _ -> %>
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              <% end %>
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium text-gray-900">{activity.message}</p>
+                          <p class="text-sm text-gray-500">{activity.details}</p>
+                          <p class="text-xs text-gray-400">{format_datetime(activity.timestamp)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Upcoming Checkups -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Upcoming Checkups</h3>
+              </div>
+              <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                <%= if Enum.empty?(@upcoming_checkups) do %>
+                  <div class="p-6 text-center text-gray-500">
+                    No upcoming checkups scheduled.
+                  </div>
+                <% else %>
+                  <%= for checkup <- @upcoming_checkups do %>
+                    <div class="p-4">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <p class="text-sm font-medium text-gray-900">{checkup.child_name}</p>
+                          <p class="text-sm text-gray-500">Due: {format_date(checkup.due_date)}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <span class={"px-2 py-1 text-xs font-medium rounded-full #{checkup_status_color(checkup.status)}"}>
+                            <%= case checkup.status do %>
+                              <% :overdue -> %>Overdue
+                              <% :due_soon -> %>Due Soon
+                              <% :upcoming -> %>Upcoming
+                            <% end %>
+                          </span>
+                          <span class="text-xs text-gray-500">
+                            <%= if checkup.days_until < 0 do %>
+                              {abs(checkup.days_until)} days overdue
+                            <% else %>
+                              {checkup.days_until} days
+                            <% end %>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+        <% "alerts" -> %>
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-5 border-b border-gray-200">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Active Health Alerts</h3>
+                <div class="flex items-center space-x-4">
+                  <div class="grid grid-cols-4 gap-2 text-xs">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                      <span>Critical ({@alert_statistics.critical})</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
+                      <span>High ({@alert_statistics.high})</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                      <span>Medium ({@alert_statistics.medium})</span>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
+                      <span>Low ({@alert_statistics.low})</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="divide-y divide-gray-200">
+              <%= if Enum.empty?(@active_alerts) do %>
+                <div class="p-6 text-center text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 class="mt-2 text-sm font-medium text-gray-900">No active alerts</h3>
+                  <p class="mt-1 text-sm text-gray-500">All your patients are up to date with their health care.</p>
+                </div>
+              <% else %>
+                <%= for alert <- @active_alerts do %>
+                  <div class={"p-6 border-l-4 #{
+                    case alert.severity do
+                      "critical" -> "border-red-500 bg-red-50"
+                      "high" -> "border-orange-500 bg-orange-50"
+                      "medium" -> "border-yellow-500 bg-yellow-50"
+                      "low" -> "border-blue-500 bg-blue-50"
+                      _ -> "border-gray-500 bg-gray-50"
+                    end
+                  }"}>
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <div class="flex items-center">
+                          <span class={"inline-flex px-2 py-1 text-xs font-medium rounded-full #{alert_severity_color(alert.severity)}"}>
+                            {String.capitalize(alert.severity)}
+                          </span>
+                          <span class="ml-2 text-sm font-medium text-gray-900">{alert.child.name}</span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-700">{alert.message}</p>
+                        <%= if alert.action_required do %>
+                          <p class="mt-1 text-sm font-medium text-gray-900">Action Required: {alert.action_required}</p>
+                        <% end %>
+                        <p class="mt-1 text-xs text-gray-500">Created: {format_datetime(alert.inserted_at)}</p>
+                      </div>
+                      <div class="ml-4">
+                        <button
+                          phx-click="resolve_alert"
+                          phx-value-alert_id={alert.id}
+                          class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700"
+                        >
+                          Resolve
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+        <% "immunizations" -> %>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Coverage Statistics -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Immunization Coverage Overview</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Average Coverage</span>
+                  <span class="text-2xl font-bold text-indigo-600">{@immunization_coverage.average_coverage}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Fully Covered Patients</span>
+                  <span class="text-lg font-semibold text-green-600">{@immunization_coverage.fully_covered_patients}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Patients Needing Attention</span>
+                  <span class="text-lg font-semibold text-red-600">{@immunization_coverage.patients_needing_attention}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coverage Distribution -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Coverage Distribution</h3>
+              <div class="space-y-3">
+                <%= for {range, count} <- @immunization_coverage.coverage_distribution do %>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">{range}</span>
+                    <div class="flex items-center space-x-2">
+                      <div class="w-24 bg-gray-200 rounded-full h-2">
+                        <div class={"bg-indigo-600 h-2 rounded-full #{
+                          case range do
+                            "100%" -> "bg-green-500"
+                            "80-99%" -> "bg-blue-500"
+                            "60-79%" -> "bg-yellow-500"
+                            "40-59%" -> "bg-orange-500"
+                            _ -> "bg-red-500"
+                          end
+                        }"} style={"width: #{if @immunization_coverage.total_patients > 0, do: count / @immunization_coverage.total_patients * 100, else: 0}%"}></div>
+                      </div>
+                      <span class="text-sm font-medium text-gray-900">{count}</span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+        <% "growth" -> %>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Growth Monitoring Summary -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">Growth Monitoring Summary</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Total Patients Monitored</span>
+                  <span class="text-2xl font-bold text-indigo-600">{@growth_trends.total_monitored}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Concerning Trends</span>
+                  <span class="text-lg font-semibold text-red-600">{length(@growth_trends.concerning_trends)}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Need Measurements</span>
+                  <span class="text-lg font-semibold text-yellow-600">{@growth_trends.children_needing_measurement}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Concerning Growth Trends -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Patients with Concerning Trends</h3>
+              </div>
+              <div class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                <%= if Enum.empty?(@growth_trends.concerning_trends) do %>
+                  <div class="p-6 text-center text-gray-500">
+                    <svg class="mx-auto h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-500">No concerning growth trends detected.</p>
+                  </div>
+                <% else %>
+                  <%= for trend <- @growth_trends.concerning_trends do %>
+                    <div class="p-4">
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <p class="text-sm font-medium text-gray-900">{trend.child_name}</p>
+                          <p class="text-sm text-red-600">{trend.concern}</p>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-sm text-gray-500">Rate: {trend.trend} kg/month</p>
+                          <.link
+                            navigate={~p"/provider/patients/#{trend.child_id}/health"}
+                            class="text-xs text-indigo-600 hover:text-indigo-900"
+                          >
+                            View Details
+                          </.link>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+      <% end %>
+    </main>
+  </div>
+</div>

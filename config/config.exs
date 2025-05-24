@@ -16,12 +16,25 @@ config :app, Oban,
    repo: App.Repo,
    plugins: [
      {Oban.Plugins.Pruner, []},
-     {
-       Oban.Plugins.Cron, crontab: [
-       {"0 0 * * *", App.Workers.ReminderSchedulerWorker}
+     {Oban.Plugins.Cron,
+       crontab: [
+         {"0 0 * * *", App.Workers.ReminderSchedulerWorker},
+         # Daily health alert generation at 6 AM
+         {"0 6 * * *", App.Workers.HealthAlertGeneratorWorker},
+         # Weekly follow-up reminders on Mondays at 9 AM
+         {"0 9 * * 1", App.Workers.FollowUpReminderWorker},
+         # Daily immunization reminders at 10 AM
+         {"0 10 * * *", App.Workers.ImmunizationReminderWorker, args: %{reminder_type: "upcoming"}},
+         # Weekly overdue immunization alerts on Fridays at 2 PM
+         {"0 14 * * 5", App.Workers.ImmunizationReminderWorker, args: %{reminder_type: "overdue"}}
      ]}
    ],
-   queues: [default: 10, notifications: 20]
+   queues: [
+     default: 10,
+     notifications: 20,
+     health_monitoring: 5,
+     analytics: 3
+   ]
 
 config :app, :probase_sms,
    username: "your_test_username",  # Replace with your test credentials
