@@ -32,7 +32,7 @@ providers_data = [
     user: %{
       "name" => "Dr. Sarah Johnson",
       "email" => "sarah.johnson@example.com",
-      "phone" => "+1234567891",
+      "phone" => "+260978921730",
       "password" => "providerpass123",
       "password_confirmation" => "providerpass123",
       "role" => "provider"
