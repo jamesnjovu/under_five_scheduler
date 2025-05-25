@@ -75,41 +75,29 @@ defmodule AppWeb.AdminLive.Providers do
     # Generate a random password
     password = generate_random_password()
 
-    # Get specialization_id from the specialization code
-    specialization = App.Config.Specializations.get_specialization_by_code(provider_params["specialization"])
+    # Prepare user params with auto-generated password
+    user_params = %{
+      "name" => provider_params["name"],
+      "email" => provider_params["email"],
+      "phone" => provider_params["phone"],
+      "password" => password,
+      "role" => "provider"
+    }
 
-    if specialization do
-      # Prepare user params with auto-generated password
-      user_params = %{
-        "name" => provider_params["name"],
-        "email" => provider_params["email"],
-        "phone" => provider_params["phone"],
-        "password" => password,
-        "role" => "provider"
-      }
+    # Create provider and user in a transaction
+    case create_provider_with_user(provider_params, user_params, password) do
+      {:ok, {provider, user}} ->
+        socket =
+          socket
+          |> put_flash(:info, "Provider created successfully. Login credentials have been sent via email and SMS.")
+          |> assign(:providers, list_providers_with_details())
+          |> assign(:show_form, false)
+          |> assign(:changeset, new_provider_changeset())
 
-      # Add specialization_id to provider params
-      provider_params = Map.put(provider_params, "specialization_id", specialization.id)
+        {:noreply, socket}
 
-      # Create provider and user in a transaction
-      case create_provider_with_user(provider_params, user_params, password) do
-        {:ok, {provider, user}} ->
-          socket =
-            socket
-            |> put_flash(:info, "Provider created successfully. Login credentials have been sent via email and SMS.")
-            |> assign(:providers, list_providers_with_details())
-            |> assign(:show_form, false)
-            |> assign(:changeset, new_provider_changeset())
-
-          {:noreply, socket}
-
-        {:error, changeset} ->
-          {:noreply, assign(socket, :changeset, changeset)}
-      end
-    else
-      changeset = new_provider_changeset()
-      changeset = %{changeset | errors: [specialization: {"is invalid", []}], valid?: false}
-      {:noreply, assign(socket, :changeset, changeset)}
+      {:error, changeset} ->
+        {:noreply, assign(socket, :changeset, changeset)}
     end
   end
 
@@ -125,8 +113,8 @@ defmodule AppWeb.AdminLive.Providers do
         action: "delete",
         entity_type: "provider",
         entity_id: id,
-        user_id: user.id,
-        ip_address: socket.assigns.client_ip,
+        user_id: socket.assigns.user.id,
+        ip_address: get_connect_ip(socket),
         details: %{
           provider_name: provider.name,
           specialization: provider.specialization
@@ -158,9 +146,6 @@ defmodule AppWeb.AdminLive.Providers do
     providers = Scheduling.list_providers()
 
     Enum.map(providers, fn provider ->
-      # Preload specialization_record if it exists
-      provider = App.Repo.preload(provider, :specialization_record)
-
       # Get counts of appointments
       appointments = Scheduling.list_appointments(provider_id: provider.id)
       total_appointments = length(appointments)
@@ -176,18 +161,62 @@ defmodule AppWeb.AdminLive.Providers do
       # Get user details
       user = Accounts.get_user!(provider.user_id)
 
+      # Get specialization information
+      specialization_info = get_specialization_info(provider.specialization)
+
       # Return map with all details
       %{
         id: provider.id,
         name: provider.name,
         specialization: provider.specialization, # Legacy field
-        specialization_record: provider.specialization_record, # New field
+        specialization_info: specialization_info, # Enhanced specialization data
         user: user,
         total_appointments: total_appointments,
-        upcoming_appointments: upcoming_appointments
+        upcoming_appointments: upcoming_appointments,
+        is_active: provider.is_active
       }
     end)
   end
+
+  defp get_specialization_info(specialization_code) when is_binary(specialization_code) do
+    # Try to get from database-backed specializations first
+    case App.Config.Specializations.get_specialization_by_code(specialization_code) do
+      %{} = spec ->
+        %{
+          name: spec.name,
+          description: spec.description,
+          can_prescribe: spec.can_prescribe,
+          requires_license: spec.requires_license,
+          category: spec.category,
+          icon: spec.icon
+        }
+      nil ->
+        # Fallback to configuration-based specializations
+        case App.Config.Specializations.get_by_code(specialization_code) do
+          %{} = spec ->
+            %{
+              name: spec.name,
+              description: spec.description,
+              can_prescribe: spec.can_prescribe,
+              requires_license: spec.requires_license,
+              category: spec.category,
+              icon: spec.icon
+            }
+          nil ->
+            # Default fallback
+            %{
+              name: String.replace(specialization_code, "_", " ") |> String.capitalize(),
+              description: "Healthcare Provider",
+              can_prescribe: false,
+              requires_license: true,
+              category: nil,
+              icon: "user-md"
+            }
+        end
+    end
+  end
+
+  defp get_specialization_info(_), do: nil
 
   defp new_provider_changeset do
     # Create a simple changeset structure that the form expects
@@ -287,19 +316,16 @@ defmodule AppWeb.AdminLive.Providers do
     # Handle category-based filtering
     case filter do
       "category:" <> category ->
-        category_specializations = App.Config.Specializations.specializations_by_category(category)
-                                   |> Enum.map(& &1.code)
+        category_specializations = get_category_specializations(category)
         Enum.filter(providers, fn p ->
-          # Check both new and legacy specialization fields
-          specialization_code = get_provider_specialization_code(p)
-          specialization_code in category_specializations
+          p.specialization in category_specializations
         end)
 
       # Handle individual specialization filtering
       specialization ->
-        if App.Config.Specializations.valid?(specialization) do
+        if is_valid_specialization?(specialization) do
           Enum.filter(providers, fn p ->
-            get_provider_specialization_code(p) == specialization
+            p.specialization == specialization
           end)
         else
           providers
@@ -307,13 +333,28 @@ defmodule AppWeb.AdminLive.Providers do
     end
   end
 
-  # Helper to get specialization code from either new or legacy field
-  defp get_provider_specialization_code(provider) do
-    cond do
-      provider.specialization_record -> provider.specialization_record.code
-      provider.specialization -> provider.specialization
-      true -> nil
+  defp get_category_specializations(category) do
+    # Try database-backed specializations first
+    case App.Config.Specializations.specializations_by_category(category) do
+      [] ->
+        # Fallback to configuration-based specializations
+        App.Config.Specializations.by_category(category)
+        |> Enum.map(& &1.code)
+      specializations ->
+        Enum.map(specializations, & &1.code)
     end
+  rescue
+    _ ->
+      # If there's an error, return empty list
+      []
+  end
+
+  defp is_valid_specialization?(code) do
+    # Check both database and configuration
+    App.Config.Specializations.valid?(code) or
+    (App.Config.Specializations.get_by_code(code) != nil)
+  rescue
+    _ -> false
   end
 
   defp search_providers(providers, ""), do: providers
@@ -326,4 +367,116 @@ defmodule AppWeb.AdminLive.Providers do
         String.contains?(String.downcase(p.user.email), search)
     end)
   end
+
+  # Helper function to safely get client IP
+  defp get_connect_ip(socket) do
+    case socket.assigns do
+      %{connect_params: %{"_csrf_token" => _}} -> "127.0.0.1"
+      _ -> "127.0.0.1"
+    end
+  end
+
+  # Template helper functions
+  defp get_grouped_specialization_options do
+    # Try to get from database first, fallback to configuration
+    try do
+      case App.Config.Specializations.grouped_select_options() do
+        empty when empty == %{} ->
+          # If database is empty, try configuration fallback
+          get_config_grouped_options()
+        options ->
+          options
+      end
+    rescue
+      _ ->
+        get_config_grouped_options()
+    end
+  end
+
+  defp get_config_grouped_options do
+    # Hardcoded fallback options if both database and config modules are not available
+    %{
+      "Medical Doctors" => [
+        {"Pediatrician", "pediatrician"},
+        {"General Practitioner", "general_practitioner"}
+      ],
+      "Nursing Professionals" => [
+        {"Registered Nurse", "nurse"},
+        {"Nurse Practitioner", "nurse_practitioner"}
+      ],
+      "Mid-level Providers" => [
+        {"Clinical Officer", "clinical_officer"}
+      ],
+      "Community Health" => [
+        {"Community Health Worker", "community_health_worker"}
+      ]
+    }
+  end
+
+  defp get_categories do
+    # Try to get from database first, fallback to hardcoded
+    try do
+      case App.Config.Specializations.list_categories() do
+        [] ->
+          get_default_categories()
+        categories ->
+          categories
+      end
+    rescue
+      _ ->
+        get_default_categories()
+    end
+  end
+
+  defp get_default_categories do
+    [
+      %{code: "medical_doctor", name: "Medical Doctors"},
+      %{code: "nursing", name: "Nursing Professionals"},
+      %{code: "mid_level", name: "Mid-level Providers"},
+      %{code: "community", name: "Community Health"}
+    ]
+  end
+
+  defp get_all_specializations do
+    # Try to get from database first, fallback to hardcoded
+    try do
+      case App.Config.Specializations.list_specializations() do
+        [] ->
+          get_default_specializations()
+        specializations ->
+          specializations
+      end
+    rescue
+      _ ->
+        get_default_specializations()
+    end
+  end
+
+  defp get_default_specializations do
+    [
+      %{code: "pediatrician", name: "Pediatrician"},
+      %{code: "general_practitioner", name: "General Practitioner"},
+      %{code: "nurse", name: "Registered Nurse"},
+      %{code: "nurse_practitioner", name: "Nurse Practitioner"},
+      %{code: "clinical_officer", name: "Clinical Officer"},
+      %{code: "community_health_worker", name: "Community Health Worker"}
+    ]
+  end
+
+  defp display_specialization_name(code) when is_binary(code) do
+    # Try to get from database first, fallback to simple formatting
+    try do
+      App.Config.Specializations.display_name(code)
+    rescue
+      _ ->
+        # Simple fallback formatting
+        code
+        |> String.replace("_", " ")
+        |> String.split(" ")
+        |> Enum.map(&String.capitalize/1)
+        |> Enum.join(" ")
+    end
+  end
+
+  defp display_specialization_name(_), do: "Unknown Specialization"
 end

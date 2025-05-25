@@ -1,4 +1,4 @@
-defmodule App.Config.Specializations do
+defmodule App.Setup.Specializations do
   @moduledoc """
   Centralized configuration for provider specializations.
   This module manages all specialization types, their display names,

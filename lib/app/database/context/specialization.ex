@@ -2,6 +2,10 @@ defmodule App.Config.Specializations do
   @moduledoc """
   Database-backed specialization management system.
   Provides functions for managing provider specializations and categories.
+
+  This module works in conjunction with the configuration-based specializations
+  to provide a hybrid approach where core specializations are defined in config
+  but can be extended and managed through the database.
   """
 
   import Ecto.Query, warn: false
@@ -164,7 +168,12 @@ defmodule App.Config.Specializations do
   def display_name(code) when is_binary(code) do
     case get_specialization_by_code(code) do
       %Specialization{name: name} -> name
-      nil -> String.replace(code, "_", " ") |> String.capitalize()
+      nil ->
+        # Fallback to configuration-based lookup
+        case App.Setup.Specializations.get_by_code(code) do
+          %{name: name} -> name
+          nil -> String.replace(code, "_", " ") |> String.capitalize()
+        end
     end
   end
 
@@ -174,7 +183,12 @@ defmodule App.Config.Specializations do
   def description(code) when is_binary(code) do
     case get_specialization_by_code(code) do
       %Specialization{description: desc} -> desc
-      nil -> nil
+      nil ->
+        # Fallback to configuration-based lookup
+        case App.Setup.Specializations.get_by_code(code) do
+          %{description: desc} -> desc
+          nil -> nil
+        end
     end
   end
 
@@ -249,7 +263,12 @@ defmodule App.Config.Specializations do
   def icon(code) when is_binary(code) do
     case get_specialization_by_code(code) do
       %Specialization{icon: icon} -> icon || "user-md"
-      nil -> "user-md"
+      nil ->
+        # Fallback to configuration-based lookup
+        case App.Setup.Specializations.get_by_code(code) do
+          %{icon: icon} -> icon
+          nil -> "user-md"
+        end
     end
   end
 
@@ -276,39 +295,6 @@ defmodule App.Config.Specializations do
     |> preload(:category)
     |> Repo.all()
   end
-
-  # Legacy compatibility functions for existing code
-
-  @doc """
-  Returns all specializations (for backward compatibility).
-  """
-  def all_specializations, do: list_specializations()
-
-  @doc """
-  Returns all categories (for backward compatibility).
-  """
-  def all_categories, do: list_categories()
-
-  @doc """
-  Returns specializations grouped by category code.
-  """
-  def grouped_by_category do
-    list_specializations_grouped()
-    |> Enum.map(fn {category, specializations} ->
-      {category.code, specializations}
-    end)
-    |> Enum.into(%{})
-  end
-
-  @doc """
-  Returns a specific specialization by code (for backward compatibility).
-  """
-  def get_by_code(code), do: get_specialization_by_code(code)
-
-  @doc """
-  Returns specializations by category code (for backward compatibility).
-  """
-  def by_category(category_code), do: specializations_by_category(category_code)
 
   # Administrative functions
 
@@ -355,5 +341,172 @@ defmodule App.Config.Specializations do
       prescribing_count: prescribing_count,
       licensed_count: licensed_count
     }
+  end
+
+  @doc """
+  Initializes the database with specializations from the configuration.
+  This function can be called during migrations or setup to populate
+  the database with the configuration-based specializations.
+  """
+  def initialize_from_config do
+    config_specializations = App.Setup.Specializations.all_specializations()
+    config_categories = App.Setup.Specializations.all_categories()
+
+    Repo.transaction(fn ->
+      # Create categories first
+      Enum.each(config_categories, fn category_config ->
+        case get_category_by_code(category_config.code) do
+          nil ->
+            create_category(%{
+              code: category_config.code,
+              name: category_config.name,
+              description: category_config.description,
+              display_order: 0,
+              is_active: true
+            })
+          _existing -> :ok
+        end
+      end)
+
+      # Create specializations
+      Enum.each(config_specializations, fn spec_config ->
+        case get_specialization_by_code(spec_config.code) do
+          nil ->
+            category = get_category_by_code(spec_config.category)
+            if category do
+              create_specialization(%{
+                code: spec_config.code,
+                name: spec_config.name,
+                description: spec_config.description,
+                category_id: category.id,
+                requires_license: spec_config.requires_license,
+                can_prescribe: spec_config.can_prescribe,
+                icon: spec_config.icon,
+                display_order: 0,
+                is_active: true
+              })
+            end
+          _existing -> :ok
+        end
+      end)
+    end)
+  end
+
+  # Legacy compatibility functions for existing code
+
+  @doc """
+  Returns all specializations (for backward compatibility).
+  """
+  def all_specializations, do: list_specializations()
+
+  @doc """
+  Returns all categories (for backward compatibility).
+  """
+  def all_categories, do: list_categories()
+
+  @doc """
+  Returns specializations grouped by category code.
+  """
+  def grouped_by_category do
+    list_specializations_grouped()
+    |> Enum.map(fn {category, specializations} ->
+      {category.code, specializations}
+    end)
+    |> Enum.into(%{})
+  end
+
+  @doc """
+  Returns a specific specialization by code (for backward compatibility).
+  """
+  def get_by_code(code), do: get_specialization_by_code(code)
+
+  @doc """
+  Returns specializations by category code (for backward compatibility).
+  """
+  def by_category(category_code), do: specializations_by_category(category_code)
+
+  @doc """
+  Sync database specializations with configuration.
+  This can be useful during deployments to ensure database is up to date.
+  """
+  def sync_with_config do
+    config_specs = App.Setup.Specializations.all_specializations()
+    db_specs = list_specializations()
+
+    # Find specializations that exist in config but not in database
+    config_codes = Enum.map(config_specs, & &1.code)
+    db_codes = Enum.map(db_specs, & &1.code)
+
+    missing_codes = config_codes -- db_codes
+
+    if length(missing_codes) > 0 do
+      initialize_from_config()
+      {:ok, "Added #{length(missing_codes)} specializations from configuration"}
+    else
+      {:ok, "Database is already in sync with configuration"}
+    end
+  end
+
+  @doc """
+  Returns specializations that are available in configuration but not in database.
+  """
+  def missing_from_database do
+    config_specs = App.Setup.Specializations.all_specializations()
+    db_codes = valid_codes()
+
+    Enum.filter(config_specs, fn spec -> spec.code not in db_codes end)
+  end
+
+  @doc """
+  Returns specializations that are in database but not in configuration.
+  This might indicate outdated entries that could be deactivated.
+  """
+  def not_in_configuration do
+    config_codes = App.Setup.Specializations.all_specializations()
+                   |> Enum.map(& &1.code)
+
+    list_specializations()
+    |> Enum.filter(fn spec -> spec.code not in config_codes end)
+  end
+
+  @doc """
+  Health check function to ensure database and configuration are consistent.
+  """
+  def health_check do
+    missing = missing_from_database()
+    extra = not_in_configuration()
+    total_db = Repo.aggregate(Specialization, :count, :id, where: [is_active: true])
+    total_config = length(App.Setup.Specializations.all_specializations())
+
+    %{
+      status: if(length(missing) == 0 and length(extra) == 0, do: :healthy, else: :needs_sync),
+      total_in_database: total_db,
+      total_in_configuration: total_config,
+      missing_from_database: length(missing),
+      not_in_configuration: length(extra),
+      suggestions: generate_health_suggestions(missing, extra)
+    }
+  end
+
+  defp generate_health_suggestions(missing, extra) do
+    suggestions = []
+
+    suggestions = if length(missing) > 0 do
+      suggestions ++ ["Run sync_with_config/0 to add missing specializations"]
+    else
+      suggestions
+    end
+
+    suggestions = if length(extra) > 0 do
+      suggestions ++ ["Consider deactivating specializations not in configuration: #{Enum.map(extra, & &1.code) |> Enum.join(", ")}"]
+    else
+      suggestions
+    end
+
+    if length(suggestions) == 0 do
+      ["Database and configuration are in sync"]
+    else
+      suggestions
+    end
   end
 end

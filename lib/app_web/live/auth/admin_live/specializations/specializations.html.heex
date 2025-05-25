@@ -138,18 +138,18 @@
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <%= for category <- @categories do %>
+            <%= for {category, specializations} <- @grouped_specializations do %>
               <div class="border border-gray-200 rounded-lg p-4">
                 <div class="flex items-center justify-between mb-3">
                   <h4 class="text-sm font-medium text-gray-900">{category.name}</h4>
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {count_by_category(@grouped_specializations, category.code)} specializations
+                    {length(specializations)} specializations
                   </span>
                 </div>
                 <p class="text-xs text-gray-500 mb-3">{category.description}</p>
-                
+
                 <div class="space-y-1">
-                  <%= for spec <- Map.get(@grouped_specializations, category.code, []) do %>
+                  <%= for spec <- specializations do %>
                     <div class="flex items-center justify-between text-xs">
                       <span class="text-gray-700">{spec.name}</span>
                       <div class="flex space-x-1">
@@ -202,9 +202,10 @@
                     <div class="text-xs text-gray-500 font-mono">{specialization.code}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <% category = Enum.find(@categories, &(&1.code == specialization.category)) %>
-                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{AppWeb.SpecializationHelpers.category_badge_class(specialization.category)}"}>
-                      {if category, do: category.name, else: specialization.category}
+                    <% category_name = format_specialization_category(specialization, @categories) %>
+                    <% category_code = if specialization.category, do: specialization.category.code, else: "unknown" %>
+                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{category_badge_class(category_code)}"}>
+                      {category_name}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -257,6 +258,38 @@
             <h4 class="text-sm font-medium text-gray-700">3. Deploy Changes</h4>
             <p class="text-sm text-gray-600">
               Restart the application to load the new configuration. The changes will be reflected throughout the system.
+            </p>
+          </div>
+        </div>
+
+        <!-- Sample Configuration Code -->
+        <div class="mt-6">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Sample Configuration</h4>
+          <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
+            <pre class="text-sm text-gray-100"><code>  <%= %{
+  code: "pediatrician",
+  name: "Pediatrician",
+  description: "Specialized in medical care of infants, children, and adolescents",
+  category: "medical_doctor",
+  requires_license: true,
+  can_prescribe: true,
+  icon: "stethoscope"
+}  %> </code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration vs Database Note -->
+      <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+        <div class="flex">
+          <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">Mixed Approach</h3>
+            <p class="mt-2 text-sm text-yellow-700">
+              This system uses both configuration files (for the core specialization definitions) and database tables
+              (for the actual provider assignments). This ensures consistency while allowing runtime flexibility for provider management.
             </p>
           </div>
         </div>

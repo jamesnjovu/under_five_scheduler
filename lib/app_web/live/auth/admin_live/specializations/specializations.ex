@@ -16,7 +16,7 @@ defmodule AppWeb.AdminLive.Specializations do
         |> assign(:page_title, "Specialization Management")
         |> assign(:specializations, Specializations.list_specializations())
         |> assign(:categories, Specializations.list_categories())
-        |> assign(:grouped_specializations, Specializations.grouped_by_category())
+        |> assign(:grouped_specializations, Specializations.list_specializations_grouped())
         |> assign(:statistics, Specializations.get_statistics())
         |> assign(:show_specialization_form, false)
         |> assign(:show_category_form, false)
@@ -111,13 +111,13 @@ defmodule AppWeb.AdminLive.Specializations do
       {:ok, _} ->
         {:noreply,
           socket
-          |> put_flash(:info, "Specialization deleted successfully.")
+          |> put_flash(:info, "Specialization deactivated successfully.")
           |> refresh_data()}
 
       {:error, _} ->
         {:noreply,
           socket
-          |> put_flash(:error, "Could not delete specialization. It may be referenced by existing providers.")
+          |> put_flash(:error, "Could not deactivate specialization. It may be referenced by existing providers.")
           |> refresh_data()}
     end
   end
@@ -188,13 +188,13 @@ defmodule AppWeb.AdminLive.Specializations do
       {:ok, _} ->
         {:noreply,
           socket
-          |> put_flash(:info, "Category deleted successfully.")
+          |> put_flash(:info, "Category deactivated successfully.")
           |> refresh_data()}
 
       {:error, _} ->
         {:noreply,
           socket
-          |> put_flash(:error, "Could not delete category. It may contain specializations.")
+          |> put_flash(:error, "Could not deactivate category. It may contain active specializations.")
           |> refresh_data()}
     end
   end
@@ -255,22 +255,57 @@ defmodule AppWeb.AdminLive.Specializations do
     socket
     |> assign(:specializations, Specializations.list_specializations())
     |> assign(:categories, Specializations.list_categories())
-    |> assign(:grouped_specializations, Specializations.grouped_by_category())
+    |> assign(:grouped_specializations, Specializations.list_specializations_grouped())
     |> assign(:statistics, Specializations.get_statistics())
   end
 
   # Helper functions for the template
   defp count_by_category(grouped_specializations, category_code) do
-    grouped_specializations
-    |> Map.get(category_code, [])
-    |> length()
+    case Enum.find(grouped_specializations, fn {category, _} -> category.code == category_code end) do
+      {_, specializations} -> length(specializations)
+      nil -> 0
+    end
   end
 
-  defp get_prescribing_count(statistics) do
-    statistics.prescribing_count
+  defp get_prescribing_count(specializations) do
+    Enum.count(specializations, fn spec -> spec.can_prescribe end)
   end
 
-  defp get_licensed_count(statistics) do
-    statistics.licensed_count
+  defp get_licensed_count(specializations) do
+    Enum.count(specializations, fn spec -> spec.requires_license end)
+  end
+
+  defp get_category_for_specialization(specialization, categories) do
+    Enum.find(categories, fn category ->
+      case specialization do
+        %{category: %{code: code}} -> category.code == code
+        %{category_id: category_id} -> category.id == category_id
+        _ -> false
+      end
+    end)
+  end
+
+  defp format_specialization_category(specialization, categories) do
+    case get_category_for_specialization(specialization, categories) do
+      %{name: name} -> name
+      nil ->
+        # Handle case where specialization has category field but no preloaded association
+        case specialization do
+          %{category: category} when is_map(category) -> category.name
+          _ -> "Unknown Category"
+        end
+    end
+  end
+
+  defp category_badge_class(category_code) do
+    case category_code do
+      "medical_doctor" -> "bg-red-100 text-red-800"
+      "nursing" -> "bg-blue-100 text-blue-800"
+      "mid_level" -> "bg-green-100 text-green-800"
+      "community" -> "bg-yellow-100 text-yellow-800"
+      "allied_health" -> "bg-purple-100 text-purple-800"
+      "mental_health" -> "bg-indigo-100 text-indigo-800"
+      _ -> "bg-gray-100 text-gray-800"
+    end
   end
 end
