@@ -60,6 +60,7 @@ defmodule AppWeb.Router do
       live "/reports", Reports, :index
       live "/settings", Settings, :index
       live "/sms_messages", SMSMessages, :index
+      live "/vaccine_schedules", VaccineSchedules, :index
     end
   end
 
@@ -80,6 +81,7 @@ defmodule AppWeb.Router do
       live "/settings", Settings, :index
       live "/appointments/:appointment_id/health", ChildHealthEnhanced, :index
       live "/health_dashboard", HealthDashboard, :index
+
     end
   end
 

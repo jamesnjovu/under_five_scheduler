@@ -838,4 +838,506 @@ defmodule App.HealthRecords do
 
     alerts
   end
+
+  # Add these functions to your existing lib/app/database/context/health_records.ex
+
+  @doc """
+  Enhanced function to get the next recommended checkup date with detailed information.
+  """
+  def get_next_checkup_recommendation(child_id) do
+    child = App.Accounts.get_child!(child_id)
+    last_appointment = get_last_completed_appointment(child_id)
+
+    checkup_info = App.Accounts.Child.next_checkup_age(child)
+
+    # Get health context
+    growth_records = list_growth_records(child_id) |> Enum.take(3)
+    immunization_coverage = calculate_immunization_coverage(child_id)
+    pending_immunizations = get_upcoming_immunizations(child_id)
+
+    %{
+      child: child,
+      checkup_info: checkup_info,
+      last_appointment: last_appointment,
+      health_context: %{
+        recent_growth: growth_records,
+        immunization_coverage: immunization_coverage,
+        pending_immunizations: pending_immunizations,
+        health_alerts: get_health_alerts(child_id)
+      },
+      recommendation_priority: determine_checkup_priority(checkup_info, last_appointment, immunization_coverage)
+    }
+  end
+
+  @doc """
+  Get comprehensive child health dashboard data.
+  """
+  def get_child_health_dashboard(child_id) do
+    child = App.Accounts.get_child!(child_id)
+
+    # Get all health data
+    growth_records = list_growth_records(child_id)
+    immunization_records = list_immunization_records(child_id)
+
+    # Calculate health metrics
+    growth_trends = if length(growth_records) >= 2, do: calculate_growth_trends(growth_records), else: nil
+    immunization_coverage = calculate_immunization_coverage(child_id)
+    next_checkup = get_next_checkup_recommendation(child_id)
+
+    # Get milestone tracking
+    milestones = get_developmental_milestones_status(child)
+
+    %{
+      child: child,
+      health_summary: %{
+        total_visits: count_completed_appointments(child_id),
+        growth_records_count: length(growth_records),
+        immunizations_completed: immunization_coverage.administered_vaccines,
+        immunization_coverage_percent: immunization_coverage.coverage_percentage
+      },
+      growth: %{
+        records: growth_records,
+        trends: growth_trends,
+        latest: List.first(growth_records)
+      },
+      immunizations: %{
+        records: immunization_records,
+        coverage: immunization_coverage,
+        upcoming: get_upcoming_immunizations(child_id),
+        overdue: get_missed_immunizations(child_id)
+      },
+      next_checkup: next_checkup,
+      milestones: milestones,
+      alerts: get_health_alerts(child_id)
+    }
+  end
+
+  @doc """
+  Get developmental milestones status based on child's age.
+  """
+  def get_developmental_milestones_status(child) do
+    age_months = App.Accounts.Child.age_in_months(child)
+
+    milestones = [
+      %{age: 2, milestone: "Lifts head when on tummy", category: "physical"},
+      %{age: 4, milestone: "Holds head steady", category: "physical"},
+      %{age: 6, milestone: "Sits with support", category: "physical"},
+      %{age: 9, milestone: "Sits without support", category: "physical"},
+      %{age: 12, milestone: "Pulls to stand", category: "physical"},
+      %{age: 15, milestone: "Walks independently", category: "physical"},
+      %{age: 18, milestone: "Runs steadily", category: "physical"},
+      %{age: 24, milestone: "Jumps with both feet", category: "physical"},
+
+      %{age: 4, milestone: "Smiles responsively", category: "social"},
+      %{age: 6, milestone: "Recognizes familiar faces", category: "social"},
+      %{age: 9, milestone: "Shows stranger anxiety", category: "social"},
+      %{age: 12, milestone: "Waves bye-bye", category: "social"},
+      %{age: 18, milestone: "Shows affection", category: "social"},
+      %{age: 24, milestone: "Plays alongside others", category: "social"},
+
+      %{age: 6, milestone: "Responds to name", category: "language"},
+      %{age: 9, milestone: "Says 'mama' or 'dada'", category: "language"},
+      %{age: 12, milestone: "Says first words", category: "language"},
+      %{age: 18, milestone: "Says 10+ words", category: "language"},
+      %{age: 24, milestone: "Combines words", category: "language"},
+      %{age: 36, milestone: "Speaks in sentences", category: "language"}
+    ]
+
+    # Filter milestones for current age and categorize
+    current_milestones = Enum.filter(milestones, &(&1.age <= age_months + 2))
+    upcoming_milestones = Enum.filter(milestones, &(&1.age > age_months and &1.age <= age_months + 6))
+
+    %{
+      age_months: age_months,
+      current: Enum.group_by(current_milestones, & &1.category),
+      upcoming: Enum.group_by(upcoming_milestones, & &1.category),
+      total_expected: length(current_milestones)
+    }
+  end
+
+  @doc """
+  Enhanced vaccine schedule management with WHO compliance checking.
+  """
+  def validate_vaccine_schedule_compliance(child_id) do
+    child = App.Accounts.get_child!(child_id)
+    age_months = App.Accounts.Child.age_in_months(child)
+
+    # Get all vaccines that should have been administered by now
+    expected_vaccines = list_vaccine_schedules()
+                        |> Enum.filter(&(&1.recommended_age_months <= age_months))
+
+    # Get actual immunization records
+    actual_records = list_immunization_records(child_id)
+
+    # Calculate compliance
+    compliance_report = Enum.map(expected_vaccines, fn vaccine ->
+      actual_record = Enum.find(actual_records, &(&1.vaccine_name == vaccine.vaccine_name))
+
+      status = case actual_record do
+        nil -> "missing"
+        %{status: "administered"} -> "completed"
+        %{status: "scheduled"} -> "scheduled"
+        %{status: "missed"} -> "missed"
+        _ -> "unknown"
+      end
+
+      delay_months = if actual_record && actual_record.administered_date do
+        administered_age = calculate_age_at_date(child.date_of_birth, actual_record.administered_date)
+        max(0, administered_age - vaccine.recommended_age_months)
+      else
+        if status == "missing", do: age_months - vaccine.recommended_age_months, else: 0
+      end
+
+      %{
+        vaccine: vaccine,
+        status: status,
+        actual_record: actual_record,
+        delay_months: delay_months,
+        is_overdue: status in ["missing", "missed"] and delay_months > 2,
+        priority: determine_vaccine_priority(vaccine, status, delay_months)
+      }
+    end)
+
+    # Calculate overall compliance metrics
+    total_expected = length(expected_vaccines)
+    completed = Enum.count(compliance_report, &(&1.status == "completed"))
+    overdue = Enum.count(compliance_report, &(&1.is_overdue))
+    scheduled = Enum.count(compliance_report, &(&1.status == "scheduled"))
+
+    compliance_percentage = if total_expected > 0, do: completed / total_expected * 100, else: 100.0
+
+    %{
+      child: child,
+      age_months: age_months,
+      vaccines: compliance_report,
+      summary: %{
+        total_expected: total_expected,
+        completed: completed,
+        overdue: overdue,
+        scheduled: scheduled,
+        compliance_percentage: Float.round(compliance_percentage, 1)
+      },
+      recommendations: generate_vaccination_recommendations(compliance_report),
+      next_due: get_next_due_vaccines(child, compliance_report)
+    }
+  end
+
+  @doc """
+  Generate age-appropriate immunization schedule for a new child.
+  """
+  def generate_personalized_immunization_schedule(child_id) do
+    child = App.Accounts.get_child!(child_id)
+    current_age_months = App.Accounts.Child.age_in_months(child)
+
+    # Get all vaccine schedules
+    all_vaccines = list_vaccine_schedules()
+
+    # Generate schedule based on current age
+    schedule = Enum.map(all_vaccines, fn vaccine ->
+      # Calculate when this vaccine should be given
+      due_date = if vaccine.recommended_age_months <= current_age_months do
+        # Already due - schedule ASAP
+        Date.add(Date.utc_today(), 7) # Next week
+      else
+        # Calculate future date
+        App.Accounts.Child.calculate_target_date(child.date_of_birth, vaccine.recommended_age_months)
+      end
+
+      # Determine urgency
+      urgency = cond do
+        vaccine.recommended_age_months < current_age_months - 2 -> "overdue"
+        vaccine.recommended_age_months <= current_age_months -> "due_now"
+        vaccine.recommended_age_months <= current_age_months + 2 -> "due_soon"
+        true -> "future"
+      end
+
+      %{
+        vaccine: vaccine,
+        due_date: due_date,
+        age_at_vaccination: vaccine.recommended_age_months,
+        urgency: urgency,
+        can_combine: can_combine_with_other_vaccines?(vaccine),
+        special_instructions: get_vaccine_instructions(vaccine)
+      }
+    end)
+               |> Enum.sort_by(&{&1.urgency == "overdue", &1.due_date})
+
+    %{
+      child: child,
+      current_age_months: current_age_months,
+      schedule: schedule,
+      overdue_count: Enum.count(schedule, &(&1.urgency == "overdue")),
+      due_now_count: Enum.count(schedule, &(&1.urgency == "due_now")),
+      next_appointment_recommended: get_earliest_due_date(schedule)
+    }
+  end
+
+  @doc """
+  Create comprehensive vaccination catch-up plan for children behind schedule.
+  """
+  def create_catch_up_vaccination_plan(child_id) do
+    compliance = validate_vaccine_schedule_compliance(child_id)
+    overdue_vaccines = Enum.filter(compliance.vaccines, &(&1.is_overdue))
+
+    if length(overdue_vaccines) == 0 do
+      %{message: "Child is up to date with vaccinations", plan: []}
+    else
+      # Group vaccines by visit possibility
+      catch_up_visits = plan_catch_up_visits(overdue_vaccines, compliance.child)
+
+      %{
+        child: compliance.child,
+        overdue_vaccines: overdue_vaccines,
+        catch_up_visits: catch_up_visits,
+        total_visits_needed: length(catch_up_visits),
+        estimated_completion: estimate_catch_up_completion(catch_up_visits),
+        priority_vaccines: Enum.filter(overdue_vaccines, &(&1.vaccine.is_mandatory)),
+        safety_considerations: get_catch_up_safety_notes(overdue_vaccines)
+      }
+    end
+  end
+
+  # Private helper functions
+
+  defp get_last_completed_appointment(child_id) do
+    App.Scheduling.list_appointments(child_id: child_id)
+    |> Enum.filter(&(&1.status == "completed"))
+    |> Enum.sort_by(& &1.scheduled_date, :desc)
+    |> List.first()
+  end
+
+  defp count_completed_appointments(child_id) do
+    App.Scheduling.list_appointments(child_id: child_id)
+    |> Enum.count(&(&1.status == "completed"))
+  end
+
+  defp determine_checkup_priority(checkup_info, last_appointment, immunization_coverage) do
+    base_priority = case checkup_info.priority do
+      "high" -> 5
+      "medium" -> 3
+      "low" -> 1
+    end
+
+    # Increase priority based on various factors
+    priority_score = base_priority
+
+    # Add points for overdue checkup
+    priority_score = if checkup_info.is_overdue, do: priority_score + 3, else: priority_score
+
+    # Add points for low immunization coverage
+    priority_score = if immunization_coverage.coverage_percentage < 80, do: priority_score + 2, else: priority_score
+
+    # Add points if no recent appointments
+    priority_score = if last_appointment == nil or
+                        Date.diff(Date.utc_today(), last_appointment.scheduled_date) > 180,
+                        do: priority_score + 2, else: priority_score
+
+    case priority_score do
+      score when score >= 8 -> "critical"
+      score when score >= 5 -> "high"
+      score when score >= 3 -> "medium"
+      _ -> "low"
+    end
+  end
+
+  defp calculate_age_at_date(birth_date, target_date) do
+    years_diff = target_date.year - birth_date.year
+    months_diff = target_date.month - birth_date.month
+
+    months_diff = if target_date.day < birth_date.day, do: months_diff - 1, else: months_diff
+
+    max(0, years_diff * 12 + months_diff)
+  end
+
+  defp determine_vaccine_priority(vaccine, status, delay_months) do
+    case {vaccine.is_mandatory, status, delay_months} do
+      {true, "missing", delay} when delay > 6 -> "critical"
+      {true, "missing", delay} when delay > 2 -> "high"
+      {true, "missed", _} -> "high"
+      {false, "missing", delay} when delay > 12 -> "medium"
+      {_, "scheduled", _} -> "low"
+      {_, "completed", _} -> "none"
+      _ -> "medium"
+    end
+  end
+
+  defp generate_vaccination_recommendations(compliance_report) do
+    overdue = Enum.filter(compliance_report, &(&1.is_overdue))
+    due_soon = Enum.filter(compliance_report, &(&1.status == "missing" and &1.delay_months <= 2))
+
+    recommendations = []
+
+    recommendations = if length(overdue) > 0 do
+      recommendations ++ ["Schedule catch-up vaccinations immediately for #{length(overdue)} overdue vaccines"]
+    else
+      recommendations
+    end
+
+    recommendations = if length(due_soon) > 0 do
+      recommendations ++ ["Schedule appointment for #{length(due_soon)} vaccines due soon"]
+    else
+      recommendations
+    end
+
+    if length(recommendations) == 0 do
+      ["Vaccination schedule is up to date - continue with routine checkups"]
+    else
+      recommendations
+    end
+  end
+
+  defp get_next_due_vaccines(child, compliance_report) do
+    all_vaccines = list_vaccine_schedules()
+    current_age = App.Accounts.Child.age_in_months(child)
+
+    # Find next vaccines due in the next 3 months
+    upcoming = Enum.filter(all_vaccines, fn vaccine ->
+      vaccine.recommended_age_months > current_age and
+      vaccine.recommended_age_months <= current_age + 3 and
+      not Enum.any?(compliance_report, &(&1.vaccine.vaccine_name == vaccine.vaccine_name))
+    end)
+               |> Enum.sort_by(& &1.recommended_age_months)
+               |> Enum.take(3)
+
+    Enum.map(upcoming, fn vaccine ->
+      due_date = calculate_target_date(child.date_of_birth, vaccine.recommended_age_months)
+
+      %{
+        vaccine: vaccine,
+        due_date: due_date,
+        months_until: vaccine.recommended_age_months - current_age,
+        age_at_vaccination: format_age_at_vaccination(vaccine.recommended_age_months)
+      }
+    end)
+  end
+
+  defp can_combine_with_other_vaccines?(vaccine) do
+    # Most vaccines can be given simultaneously, but some have restrictions
+    case vaccine.vaccine_name do
+      "BCG" -> false  # Usually given alone
+      "YF" -> false   # Yellow fever often given separately
+      _ -> true
+    end
+  end
+
+  defp get_vaccine_instructions(vaccine) do
+    case vaccine.vaccine_name do
+      "BCG" -> "Give in left arm, observe for 15 minutes"
+      "OPV" <> _ -> "Oral vaccine, no feeding 1 hour before/after"
+      "Rotavirus" <> _ -> "Oral vaccine, complete series before 8 months"
+      _ -> "Standard intramuscular injection"
+    end
+  end
+
+  defp get_earliest_due_date(schedule) do
+    schedule
+    |> Enum.filter(&(&1.urgency in ["overdue", "due_now", "due_soon"]))
+    |> Enum.map(& &1.due_date)
+    |> Enum.min(Date, fn -> Date.add(Date.utc_today(), 30) end)
+  end
+
+  defp plan_catch_up_visits(overdue_vaccines, child) do
+    # Group vaccines that can be given together
+    # Most vaccines can be given simultaneously, but some require spacing
+
+    grouped_vaccines = overdue_vaccines
+                       |> Enum.group_by(fn vaccine_info ->
+      # Group by urgency and spacing requirements
+      case vaccine_info.vaccine.vaccine_name do
+        "BCG" -> :separate_visit  # BCG usually given alone
+        "YF" -> :separate_visit   # Yellow fever often separate
+        _ -> :standard_visit
+      end
+    end)
+
+    visits = []
+
+    # Plan separate visits for special vaccines
+    separate_vaccines = Map.get(grouped_vaccines, :separate_visit, [])
+    visits = visits ++ Enum.map(separate_vaccines, fn vaccine_info ->
+      %{
+        visit_number: length(visits) + 1,
+        recommended_date: Date.add(Date.utc_today(), length(visits) * 14), # 2 weeks apart
+        vaccines: [vaccine_info],
+        visit_type: "catch_up_individual",
+        notes: "Special vaccine requiring separate visit"
+      }
+    end)
+
+    # Plan combined visit for standard vaccines (max 4-5 per visit)
+    standard_vaccines = Map.get(grouped_vaccines, :standard_visit, [])
+    standard_visits = Enum.chunk_every(standard_vaccines, 4) # Max 4 vaccines per visit
+
+    visits = visits ++ Enum.with_index(standard_visits, fn vaccine_group, index ->
+      %{
+        visit_number: length(visits) + index + 1,
+        recommended_date: Date.add(Date.utc_today(), (length(visits) + index) * 14),
+        vaccines: vaccine_group,
+        visit_type: "catch_up_combined",
+        notes: "Multiple catch-up vaccines - monitor for reactions"
+      }
+    end)
+
+    visits
+  end
+
+  defp estimate_catch_up_completion(catch_up_visits) do
+    if length(catch_up_visits) > 0 do
+      last_visit = List.last(catch_up_visits)
+      Date.add(last_visit.recommended_date, 14) # 2 weeks after last visit
+    else
+      Date.utc_today()
+    end
+  end
+
+  defp get_catch_up_safety_notes(overdue_vaccines) do
+    notes = ["Monitor child for 15 minutes after each vaccination"]
+
+    # Add specific notes based on vaccines
+    if Enum.any?(overdue_vaccines, &(String.contains?(&1.vaccine.vaccine_name, "DTP"))) do
+      notes = notes ++ ["DTP vaccines may cause fever - paracetamol may be needed"]
+    end
+
+    if Enum.any?(overdue_vaccines, &(&1.vaccine.vaccine_name == "BCG")) do
+      notes = notes ++ ["BCG may cause local reaction - this is normal"]
+    end
+
+    if length(overdue_vaccines) > 3 do
+      notes = notes ++ ["Multiple vaccines - consider spacing visits to reduce reactions"]
+    end
+
+    notes
+  end
+
+  defp format_age_at_vaccination(months) do
+    cond do
+      months == 0 -> "At birth"
+      months < 12 -> "#{months} month#{if months == 1, do: "", else: "s"}"
+      months == 12 -> "1 year"
+      months < 24 -> "#{months} months"
+      true -> "#{Float.round(months / 12, 1)} years"
+    end
+  end
+
+  defp calculate_target_date(birth_date, target_months) do
+    # Add months to birth date
+    target_year = birth_date.year + div(target_months, 12)
+    target_month = birth_date.month + rem(target_months, 12)
+
+    # Handle month overflow
+    {final_year, final_month} = if target_month > 12 do
+      {target_year + 1, target_month - 12}
+    else
+      {target_year, target_month}
+    end
+
+    # Create the target date, handling invalid dates (like Feb 30)
+    case Date.new(final_year, final_month, birth_date.day) do
+      {:ok, date} -> date
+      {:error, :invalid_date} ->
+        # If day doesn't exist in target month, use last day of month
+        last_day = Date.days_in_month(Date.new!(final_year, final_month, 1))
+        Date.new!(final_year, final_month, last_day)
+    end
+  end
 end
