@@ -84,8 +84,15 @@ defmodule AppWeb.AdminLive.Providers do
       "role" => "provider"
     }
 
+    # Prepare provider params with license number
+    provider_create_params = %{
+      "name" => provider_params["name"],
+      "specialization" => provider_params["specialization"],
+      "license_number" => provider_params["license_number"]
+    }
+
     # Create provider and user in a transaction
-    case create_provider_with_user(provider_params, user_params, password) do
+    case create_provider_with_user(provider_create_params, user_params, password) do
       {:ok, {provider, user}} ->
         socket =
           socket
@@ -170,6 +177,7 @@ defmodule AppWeb.AdminLive.Providers do
         name: provider.name,
         specialization: provider.specialization, # Legacy field
         specialization_info: specialization_info, # Enhanced specialization data
+        license_number: provider.license_number,
         user: user,
         total_appointments: total_appointments,
         upcoming_appointments: upcoming_appointments,
@@ -179,8 +187,8 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp get_specialization_info(specialization_code) when is_binary(specialization_code) do
-    # Try to get from database-backed specializations first
-    case App.Config.Specializations.get_specialization_by_code(specialization_code) do
+    # Use the setup module that we know works
+    case App.Setup.Specializations.get_by_code(specialization_code) do
       %{} = spec ->
         %{
           name: spec.name,
@@ -191,28 +199,15 @@ defmodule AppWeb.AdminLive.Providers do
           icon: spec.icon
         }
       nil ->
-        # Fallback to configuration-based specializations
-        case App.Config.Specializations.get_by_code(specialization_code) do
-          %{} = spec ->
-            %{
-              name: spec.name,
-              description: spec.description,
-              can_prescribe: spec.can_prescribe,
-              requires_license: spec.requires_license,
-              category: spec.category,
-              icon: spec.icon
-            }
-          nil ->
-            # Default fallback
-            %{
-              name: String.replace(specialization_code, "_", " ") |> String.capitalize(),
-              description: "Healthcare Provider",
-              can_prescribe: false,
-              requires_license: true,
-              category: nil,
-              icon: "user-md"
-            }
-        end
+        # Default fallback
+        %{
+          name: String.replace(specialization_code, "_", " ") |> String.capitalize(),
+          description: "Healthcare Provider",
+          can_prescribe: false,
+          requires_license: true,
+          category: nil,
+          icon: "user-md"
+        }
     end
   end
 
@@ -334,15 +329,9 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp get_category_specializations(category) do
-    # Try database-backed specializations first
-    case App.Config.Specializations.specializations_by_category(category) do
-      [] ->
-        # Fallback to configuration-based specializations
-        App.Config.Specializations.by_category(category)
-        |> Enum.map(& &1.code)
-      specializations ->
-        Enum.map(specializations, & &1.code)
-    end
+    # Use the setup module
+    App.Setup.Specializations.by_category(category)
+    |> Enum.map(& &1.code)
   rescue
     _ ->
       # If there's an error, return empty list
@@ -350,9 +339,8 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp is_valid_specialization?(code) do
-    # Check both database and configuration
-    App.Config.Specializations.valid?(code) or
-    (App.Config.Specializations.get_by_code(code) != nil)
+    # Check configuration
+    App.Setup.Specializations.valid?(code)
   rescue
     _ -> false
   end
@@ -377,96 +365,10 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   # Template helper functions
-  defp get_grouped_specialization_options do
-    # Try to get from database first, fallback to configuration
-    try do
-      case App.Config.Specializations.grouped_select_options() do
-        empty when empty == %{} ->
-          # If database is empty, try configuration fallback
-          get_config_grouped_options()
-        options ->
-          options
-      end
-    rescue
-      _ ->
-        get_config_grouped_options()
-    end
-  end
-
-  defp get_config_grouped_options do
-    # Hardcoded fallback options if both database and config modules are not available
-    %{
-      "Medical Doctors" => [
-        {"Pediatrician", "pediatrician"},
-        {"General Practitioner", "general_practitioner"}
-      ],
-      "Nursing Professionals" => [
-        {"Registered Nurse", "nurse"},
-        {"Nurse Practitioner", "nurse_practitioner"}
-      ],
-      "Mid-level Providers" => [
-        {"Clinical Officer", "clinical_officer"}
-      ],
-      "Community Health" => [
-        {"Community Health Worker", "community_health_worker"}
-      ]
-    }
-  end
-
-  defp get_categories do
-    # Try to get from database first, fallback to hardcoded
-    try do
-      case App.Config.Specializations.list_categories() do
-        [] ->
-          get_default_categories()
-        categories ->
-          categories
-      end
-    rescue
-      _ ->
-        get_default_categories()
-    end
-  end
-
-  defp get_default_categories do
-    [
-      %{code: "medical_doctor", name: "Medical Doctors"},
-      %{code: "nursing", name: "Nursing Professionals"},
-      %{code: "mid_level", name: "Mid-level Providers"},
-      %{code: "community", name: "Community Health"}
-    ]
-  end
-
-  defp get_all_specializations do
-    # Try to get from database first, fallback to hardcoded
-    try do
-      case App.Config.Specializations.list_specializations() do
-        [] ->
-          get_default_specializations()
-        specializations ->
-          specializations
-      end
-    rescue
-      _ ->
-        get_default_specializations()
-    end
-  end
-
-  defp get_default_specializations do
-    [
-      %{code: "pediatrician", name: "Pediatrician"},
-      %{code: "general_practitioner", name: "General Practitioner"},
-      %{code: "nurse", name: "Registered Nurse"},
-      %{code: "nurse_practitioner", name: "Nurse Practitioner"},
-      %{code: "clinical_officer", name: "Clinical Officer"},
-      %{code: "community_health_worker", name: "Community Health Worker"}
-    ]
-  end
-
   defp display_specialization_name(code) when is_binary(code) do
-    # Try to get from database first, fallback to simple formatting
+    # Try to get from setup module first, fallback to simple formatting
     try do
-      App.Config.Specializations.display_name(code)
+      App.Setup.Specializations.display_name(code)
     rescue
       _ ->
         # Simple fallback formatting

@@ -75,9 +75,10 @@
                     id="provider_specialization"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     required
+                    onchange="toggleLicenseRequirement(this.value)"
                   >
                     <option value="">Select a specialization</option>
-                    <%= for {category_name, options} <- App.Config.Specializations.grouped_select_options() do %>
+                    <%= for {category_name, options} <- App.Setup.Specializations.grouped_select_options() do %>
                       <optgroup label={category_name}>
                         <%= for {display_name, code} <- options do %>
                           <option value={code}>{display_name}</option>
@@ -85,6 +86,21 @@
                       </optgroup>
                     <% end %>
                   </select>
+                </div>
+
+                <div>
+                  <label for="provider_license_number" class="block text-sm font-medium text-gray-700">
+                    License Number
+                    <span id="license_required_indicator" class="text-red-500 hidden">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="provider[license_number]"
+                    id="provider_license_number"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., MD-ZM-001234"
+                  />
+                  <p id="license_help_text" class="mt-1 text-sm text-gray-500">Required for licensed specializations</p>
                 </div>
               </div>
 
@@ -148,7 +164,7 @@
                 <option value="all" selected={@filter == "all"}>All Providers</option>
 
                 <!-- Category filters -->
-                <%= for category <- App.Config.Specializations.all_categories() do %>
+                <%= for category <- App.Setup.Specializations.all_categories() do %>
                   <option value={"category:#{category.code}"} selected={@filter == "category:#{category.code}"}>
                     {category.name}
                   </option>
@@ -157,7 +173,7 @@
                 <option disabled>──────────</option>
 
                 <!-- Individual specialization filters -->
-                <%= for specialization <- App.Config.Specializations.all_specializations() do %>
+                <%= for specialization <- App.Setup.Specializations.all_specializations() do %>
                   <option value={specialization.code} selected={@filter == specialization.code}>
                     {specialization.name}
                   </option>
@@ -315,26 +331,32 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">
-                        <%= if provider.specialization_record do %>
-                          {provider.specialization_record.name}
+                        <%= if provider.specialization_info do %>
+                          {provider.specialization_info.name}
                         <% else %>
-                          {App.Config.Specializations.display_name(provider.specialization)}
+                          {display_specialization_name(provider.specialization)}
                         <% end %>
                       </div>
                       <div class="text-xs text-gray-500">
-                        <%= if provider.specialization_record do %>
-                          {provider.specialization_record.description}
+                        <%= if provider.specialization_info do %>
+                          {provider.specialization_info.description}
                         <% else %>
-                          {App.Config.Specializations.description(provider.specialization)}
+                          {App.Setup.Specializations.description(provider.specialization)}
                         <% end %>
                       </div>
                       <div class="mt-1 flex items-center space-x-2">
-                        <% can_prescribe = if provider.specialization_record,
-                             do: provider.specialization_record.can_prescribe,
-                             else: (spec = App.Config.Specializations.get_specialization_by_code(provider.specialization); spec && spec.can_prescribe) %>
-                        <% requires_license = if provider.specialization_record,
-                             do: provider.specialization_record.requires_license,
-                             else: (spec = App.Config.Specializations.get_specialization_by_code(provider.specialization); spec && spec.requires_license) %>
+                        <% can_prescribe = if provider.specialization_info do
+                             provider.specialization_info.can_prescribe
+                           else
+                             spec = App.Setup.Specializations.get_by_code(provider.specialization)
+                             spec && spec.can_prescribe
+                           end %>
+                        <% requires_license = if provider.specialization_info do
+                             provider.specialization_info.requires_license
+                           else
+                             spec = App.Setup.Specializations.get_by_code(provider.specialization)
+                             spec && spec.requires_license
+                           end %>
 
                         <%= if can_prescribe do %>
                           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
@@ -351,6 +373,9 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">{provider.user.email}</div>
                       <div class="text-sm text-gray-500">{provider.user.phone}</div>
+                      <%= if provider.license_number do %>
+                        <div class="text-xs text-gray-400">License: {provider.license_number}</div>
+                      <% end %>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">{provider.total_appointments} total</div>
@@ -382,3 +407,38 @@
     </main>
   </div>
 </div>
+
+<script>
+  function toggleLicenseRequirement(specializationCode) {
+    const licenseField = document.getElementById('provider_license_number');
+    const licenseIndicator = document.getElementById('license_required_indicator');
+    const helpText = document.getElementById('license_help_text');
+
+    // Specializations that require licenses
+    const licensedSpecializations = [
+      'pediatrician',
+      'general_practitioner',
+      'nurse',
+      'nurse_practitioner',
+      'clinical_officer',
+      'nutritionist',
+      'psychologist'
+    ];
+
+    const requiresLicense = licensedSpecializations.includes(specializationCode);
+
+    if (requiresLicense) {
+      licenseField.setAttribute('required', 'required');
+      licenseIndicator.classList.remove('hidden');
+      helpText.textContent = 'Required for this specialization';
+      helpText.classList.add('text-red-600');
+      helpText.classList.remove('text-gray-500');
+    } else {
+      licenseField.removeAttribute('required');
+      licenseIndicator.classList.add('hidden');
+      helpText.textContent = 'Not required for this specialization';
+      helpText.classList.remove('text-red-600');
+      helpText.classList.add('text-gray-500');
+    }
+  }
+</script>

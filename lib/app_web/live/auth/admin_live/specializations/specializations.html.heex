@@ -31,13 +31,13 @@
           <div class="ml-3">
             <h3 class="text-sm font-medium text-blue-800">Configuration-Based System</h3>
             <p class="mt-2 text-sm text-blue-700">
-              Specializations are managed in <code class="bg-blue-100 px-2 py-1 rounded text-xs">App.Config.Specializations</code>. 
+              Specializations are managed in <code class="bg-blue-100 px-2 py-1 rounded text-xs">App.Setup.Specializations</code>.
               To add, edit, or remove specializations, update the configuration module and redeploy the application.
               This ensures consistency across all parts of the system.
             </p>
             <div class="mt-3">
-              <a 
-                href="https://github.com/your-repo/blob/main/lib/app/config/specializations.ex" 
+              <a
+                href="https://github.com/your-repo/blob/main/lib/app/setup/specializations.ex"
                 target="_blank"
                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
@@ -62,7 +62,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Total Specializations</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(@specializations)}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.all_specializations())}</div>
                   </dd>
                 </dl>
               </div>
@@ -82,7 +82,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Can Prescribe</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{get_prescribing_count(@specializations)}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.prescribing_specializations())}</div>
                   </dd>
                 </dl>
               </div>
@@ -102,7 +102,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Licensed Required</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{get_licensed_count(@specializations)}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.licensed_specializations())}</div>
                   </dd>
                 </dl>
               </div>
@@ -122,7 +122,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Categories</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(@categories)}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.all_categories())}</div>
                   </dd>
                 </dl>
               </div>
@@ -138,15 +138,16 @@
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <%= for {category, specializations} <- @grouped_specializations do %>
+            <%= for {category_code, specializations} <- App.Setup.Specializations.grouped_by_category() do %>
+              <% category = Enum.find(App.Setup.Specializations.all_categories(), &(&1.code == category_code)) %>
               <div class="border border-gray-200 rounded-lg p-4">
                 <div class="flex items-center justify-between mb-3">
-                  <h4 class="text-sm font-medium text-gray-900">{category.name}</h4>
+                  <h4 class="text-sm font-medium text-gray-900">{if category, do: category.name, else: String.capitalize(category_code)}</h4>
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {length(specializations)} specializations
                   </span>
                 </div>
-                <p class="text-xs text-gray-500 mb-3">{category.description}</p>
+                <p class="text-xs text-gray-500 mb-3">{if category, do: category.description, else: "Healthcare specializations"}</p>
 
                 <div class="space-y-1">
                   <%= for spec <- specializations do %>
@@ -193,7 +194,8 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <%= for specialization <- @specializations do %>
+              <%= for specialization <- App.Setup.Specializations.all_specializations() do %>
+                <% category = Enum.find(App.Setup.Specializations.all_categories(), &(&1.code == specialization.category)) %>
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
@@ -202,9 +204,8 @@
                     <div class="text-xs text-gray-500 font-mono">{specialization.code}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <% category_name = format_specialization_category(specialization, @categories) %>
-                    <% category_code = if specialization.category, do: specialization.category.code, else: "unknown" %>
-                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{category_badge_class(category_code)}"}>
+                    <% category_name = if category, do: category.name, else: String.capitalize(specialization.category) %>
+                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{category_badge_class(specialization.category)}"}>
                       {category_name}
                     </span>
                   </td>
@@ -245,7 +246,7 @@
           <div>
             <h4 class="text-sm font-medium text-gray-700">1. Edit Configuration File</h4>
             <p class="text-sm text-gray-600">
-              Update <code class="bg-gray-100 px-2 py-1 rounded text-xs">lib/app/config/specializations.ex</code> to add, modify, or remove specializations.
+              Update <code class="bg-gray-100 px-2 py-1 rounded text-xs">lib/app/setup/specializations.ex</code> to add, modify, or remove specializations.
             </p>
           </div>
           <div>
@@ -266,15 +267,15 @@
         <div class="mt-6">
           <h4 class="text-sm font-medium text-gray-700 mb-2">Sample Configuration</h4>
           <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
-            <pre class="text-sm text-gray-100"><code>  <%= %{
-  code: "pediatrician",
-  name: "Pediatrician",
-  description: "Specialized in medical care of infants, children, and adolescents",
-  category: "medical_doctor",
-  requires_license: true,
-  can_prescribe: true,
-  icon: "stethoscope"
-}  %> </code></pre>
+            <pre class="text-sm text-gray-100"><code>{Jason.encode!(%{
+              code: "pediatrician",
+              name: "Pediatrician",
+              description: "Specialized in medical care of infants, children, and adolescents",
+              category: "medical_doctor",
+              requires_license: true,
+              can_prescribe: true,
+              icon: "stethoscope"
+            })}</code></pre>
           </div>
         </div>
       </div>
@@ -286,10 +287,10 @@
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
           </svg>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">Mixed Approach</h3>
+            <h3 class="text-sm font-medium text-yellow-800">Configuration-Based Approach</h3>
             <p class="mt-2 text-sm text-yellow-700">
-              This system uses both configuration files (for the core specialization definitions) and database tables
-              (for the actual provider assignments). This ensures consistency while allowing runtime flexibility for provider management.
+              This system uses configuration files for specialization definitions to ensure consistency across the application.
+              Changes require updating the configuration module and redeploying the application.
             </p>
           </div>
         </div>
