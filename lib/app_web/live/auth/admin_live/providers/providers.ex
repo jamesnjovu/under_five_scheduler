@@ -4,6 +4,7 @@ defmodule AppWeb.AdminLive.Providers do
   alias App.Accounts
   alias App.Scheduling
   alias App.Scheduling.Provider
+  alias App.Repo
 
   @impl true
   def mount(_params, session, socket) do
@@ -24,16 +25,16 @@ defmodule AppWeb.AdminLive.Providers do
         |> assign(:filter, "all")
         |> assign(:search, "")
         |> assign(:show_form, false)
-        |> assign(:provider_changeset, new_provider_changeset())
-        # For responsive sidebar toggle
+        |> assign(:changeset, new_provider_changeset())
+          # For responsive sidebar toggle
         |> assign(:show_sidebar, false)
 
       {:ok, socket}
     else
       {:ok,
-       socket
-       |> put_flash(:error, "You don't have access to this page.")
-       |> redirect(to: ~p"/dashboard")}
+        socket
+        |> put_flash(:error, "You don't have access to this page.")
+        |> redirect(to: ~p"/dashboard")}
     end
   end
 
@@ -63,25 +64,52 @@ defmodule AppWeb.AdminLive.Providers do
 
   @impl true
   def handle_event("toggle-form", _, socket) do
-    {:noreply, assign(socket, :show_form, !socket.assigns.show_form)}
+    {:noreply,
+      socket
+      |> assign(:show_form, !socket.assigns.show_form)
+      |> assign(:changeset, new_provider_changeset())}
   end
 
   @impl true
   def handle_event("save", %{"provider" => provider_params}, socket) do
-    # Create a provider and a user in a single transaction
-    case create_provider_with_user(provider_params) do
-      {:ok, provider} ->
-        socket =
-          socket
-          |> put_flash(:info, "Provider created successfully.")
-          |> assign(:providers, list_providers_with_details())
-          |> assign(:show_form, false)
-          |> assign(:provider_changeset, new_provider_changeset())
+    # Generate a random password
+    password = generate_random_password()
 
-        {:noreply, socket}
+    # Get specialization_id from the specialization code
+    specialization = App.Config.Specializations.get_specialization_by_code(provider_params["specialization"])
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, provider_changeset: changeset)}
+    if specialization do
+      # Prepare user params with auto-generated password
+      user_params = %{
+        "name" => provider_params["name"],
+        "email" => provider_params["email"],
+        "phone" => provider_params["phone"],
+        "password" => password,
+        "role" => "provider"
+      }
+
+      # Add specialization_id to provider params
+      provider_params = Map.put(provider_params, "specialization_id", specialization.id)
+
+      # Create provider and user in a transaction
+      case create_provider_with_user(provider_params, user_params, password) do
+        {:ok, {provider, user}} ->
+          socket =
+            socket
+            |> put_flash(:info, "Provider created successfully. Login credentials have been sent via email and SMS.")
+            |> assign(:providers, list_providers_with_details())
+            |> assign(:show_form, false)
+            |> assign(:changeset, new_provider_changeset())
+
+          {:noreply, socket}
+
+        {:error, changeset} ->
+          {:noreply, assign(socket, :changeset, changeset)}
+      end
+    else
+      changeset = new_provider_changeset()
+      changeset = %{changeset | errors: [specialization: {"is invalid", []}], valid?: false}
+      {:noreply, assign(socket, :changeset, changeset)}
     end
   end
 
@@ -106,17 +134,19 @@ defmodule AppWeb.AdminLive.Providers do
       })
 
       {:noreply,
-       socket
-       |> put_flash(:info, "Provider deleted successfully.")
-       |> assign(:providers, list_providers_with_details())}
+        socket
+        |> put_flash(:info, "Provider deleted successfully.")
+        |> assign(:providers, list_providers_with_details())}
     else
       _ ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Could not delete provider.")
-         |> assign(:providers, list_providers_with_details())}
+          socket
+          |> put_flash(:error, "Could not delete provider.")
+          |> assign(:providers, list_providers_with_details())}
     end
   end
+
+  # Private functions
 
   defp get_user_from_session(session) do
     token = session["user_token"]
@@ -128,6 +158,9 @@ defmodule AppWeb.AdminLive.Providers do
     providers = Scheduling.list_providers()
 
     Enum.map(providers, fn provider ->
+      # Preload specialization_record if it exists
+      provider = App.Repo.preload(provider, :specialization_record)
+
       # Get counts of appointments
       appointments = Scheduling.list_appointments(provider_id: provider.id)
       total_appointments = length(appointments)
@@ -147,7 +180,8 @@ defmodule AppWeb.AdminLive.Providers do
       %{
         id: provider.id,
         name: provider.name,
-        specialization: provider.specialization,
+        specialization: provider.specialization, # Legacy field
+        specialization_record: provider.specialization_record, # New field
         user: user,
         total_appointments: total_appointments,
         upcoming_appointments: upcoming_appointments
@@ -156,27 +190,89 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp new_provider_changeset do
-    # Create changesets for both provider and associated user
-    provider_changeset = Scheduling.change_provider(%Provider{})
-
-    # Return a map with both changesets
+    # Create a simple changeset structure that the form expects
     %{
-      provider: provider_changeset,
+      provider: Scheduling.change_provider(%Provider{}),
       user: Accounts.change_user_registration(%App.Accounts.User{})
     }
   end
 
-  defp create_provider_with_user(params) do
-    # In a real app, this would be a transaction to ensure both are created or neither
-    # This is simplified for the example
-    with {:ok, user} <-
-           Accounts.register_user(Map.put(params["user"] || %{}, "role", "provider")),
-         {:ok, provider} <-
-           Scheduling.create_provider(Map.put(params["provider"] || %{}, "user_id", user.id)) do
-      {:ok, provider}
-    else
-      {:error, changeset} -> {:error, changeset}
-    end
+  defp generate_random_password do
+    # Generate a secure random password
+    :crypto.strong_rand_bytes(12)
+    |> Base.encode64()
+    |> String.replace(~r/[^A-Za-z0-9]/, "")
+    |> String.slice(0, 12)
+  end
+
+  defp create_provider_with_user(provider_params, user_params, password) do
+    # Use a database transaction to ensure both are created or neither
+    Repo.transaction(fn ->
+      with {:ok, user} <- Accounts.register_user(user_params),
+           {:ok, provider} <- Scheduling.create_provider(Map.put(provider_params, "user_id", user.id)) do
+
+        # Send credentials via email and SMS
+        send_credentials_notification(user, password)
+
+        {provider, user}
+      else
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp send_credentials_notification(user, password) do
+    # Send email with login credentials
+    send_credentials_email(user, password)
+
+    # Send SMS with login credentials
+    send_credentials_sms(user, password)
+  end
+
+  defp send_credentials_email(user, password) do
+    subject = "Your Provider Account - Under Five Health Check-Up"
+
+    email_body = """
+    <h2>Welcome to Under Five Health Check-Up</h2>
+    <p>Dear #{user.name},</p>
+
+    <p>Your healthcare provider account has been created successfully.</p>
+
+    <h3>Login Credentials:</h3>
+    <ul>
+      <li><strong>Email:</strong> #{user.email}</li>
+      <li><strong>Password:</strong> #{password}</li>
+    </ul>
+
+    <p><strong>Important:</strong> Please change your password after your first login for security.</p>
+
+    <p>You can access the provider portal at: [Your Website URL]/users/log_in</p>
+
+    <p>If you have any questions, please contact the administrator.</p>
+
+    <p>Best regards,<br>Under Five Health Check-Up Team</p>
+    """
+
+    App.Accounts.UserNotifier.build_email(user.email, subject, email_body)
+    |> App.Mailer.deliver()
+  end
+
+  defp send_credentials_sms(user, password) do
+    message = """
+    Welcome to Under Five Health Check-Up!
+
+    Your provider account login:
+    Email: #{user.email}
+    Password: #{password}
+
+    Please change your password after first login.
+
+    Login at: [Your Website URL]
+    """
+
+    # Use your SMS service
+    App.Services.ProbaseSMS.send_sms(user.phone, message)
   end
 
   defp filtered_providers(providers, filter, search) do
@@ -187,16 +283,37 @@ defmodule AppWeb.AdminLive.Providers do
 
   defp filter_by_criteria(providers, "all"), do: providers
 
-  defp filter_by_criteria(providers, "pediatrician") do
-    Enum.filter(providers, fn p -> p.specialization == "pediatrician" end)
+  defp filter_by_criteria(providers, filter) do
+    # Handle category-based filtering
+    case filter do
+      "category:" <> category ->
+        category_specializations = App.Config.Specializations.specializations_by_category(category)
+                                   |> Enum.map(& &1.code)
+        Enum.filter(providers, fn p ->
+          # Check both new and legacy specialization fields
+          specialization_code = get_provider_specialization_code(p)
+          specialization_code in category_specializations
+        end)
+
+      # Handle individual specialization filtering
+      specialization ->
+        if App.Config.Specializations.valid?(specialization) do
+          Enum.filter(providers, fn p ->
+            get_provider_specialization_code(p) == specialization
+          end)
+        else
+          providers
+        end
+    end
   end
 
-  defp filter_by_criteria(providers, "nurse") do
-    Enum.filter(providers, fn p -> p.specialization == "nurse" end)
-  end
-
-  defp filter_by_criteria(providers, "general_practitioner") do
-    Enum.filter(providers, fn p -> p.specialization == "general_practitioner" end)
+  # Helper to get specialization code from either new or legacy field
+  defp get_provider_specialization_code(provider) do
+    cond do
+      provider.specialization_record -> provider.specialization_record.code
+      provider.specialization -> provider.specialization
+      true -> nil
+    end
   end
 
   defp search_providers(providers, ""), do: providers

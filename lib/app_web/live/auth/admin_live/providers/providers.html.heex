@@ -30,14 +30,29 @@
         <div class="bg-white shadow rounded-lg mb-6 p-6">
           <h2 class="text-lg font-medium text-gray-900 mb-6">Add New Provider</h2>
 
-          <.form for={@provider_changeset.provider} id="provider-form" phx-submit="save">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+            <div class="flex">
+              <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Auto-generated Credentials</h3>
+                <p class="mt-2 text-sm text-blue-700">
+                  A secure password will be automatically generated and sent to the provider via email and SMS.
+                  The provider will be required to change the password on first login.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <form phx-submit="save" id="provider-form">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-4">
                 <h3 class="font-medium text-gray-700">Provider Details</h3>
 
                 <div>
                   <label for="provider_name" class="block text-sm font-medium text-gray-700">
-                    Name
+                    Provider Name
                   </label>
                   <input
                     type="text"
@@ -62,86 +77,47 @@
                     required
                   >
                     <option value="">Select a specialization</option>
-                    <option value="pediatrician">Pediatrician</option>
-                    <option value="nurse">Nurse</option>
-                    <option value="general_practitioner">General Practitioner</option>
+                    <%= for {category_name, options} <- App.Config.Specializations.grouped_select_options() do %>
+                      <optgroup label={category_name}>
+                        <%= for {display_name, code} <- options do %>
+                          <option value={code}>{display_name}</option>
+                        <% end %>
+                      </optgroup>
+                    <% end %>
                   </select>
                 </div>
               </div>
 
               <div class="space-y-4">
-                <h3 class="font-medium text-gray-700">Account Details</h3>
+                <h3 class="font-medium text-gray-700">Contact Information</h3>
 
                 <div>
-                  <label for="user_name" class="block text-sm font-medium text-gray-700">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="user[name]"
-                    id="user_name"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label for="user_email" class="block text-sm font-medium text-gray-700">
-                    Email
+                  <label for="provider_email" class="block text-sm font-medium text-gray-700">
+                    Email Address
                   </label>
                   <input
                     type="email"
-                    name="user[email]"
-                    id="user_email"
+                    name="provider[email]"
+                    id="provider_email"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     required
                   />
+                  <p class="mt-1 text-sm text-gray-500">Login credentials will be sent to this email</p>
                 </div>
 
                 <div>
-                  <label for="user_phone" class="block text-sm font-medium text-gray-700">
-                    Phone
+                  <label for="provider_phone" class="block text-sm font-medium text-gray-700">
+                    Phone Number
                   </label>
                   <input
                     type="tel"
-                    name="user[phone]"
-                    id="user_phone"
+                    name="provider[phone]"
+                    id="provider_phone"
+                    placeholder="+260XXXXXXXXX"
                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     required
                   />
-                </div>
-              </div>
-
-              <div class="space-y-4">
-                <h3 class="font-medium text-gray-700">Password</h3>
-
-                <div>
-                  <label for="user_password" class="block text-sm font-medium text-gray-700">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    name="user[password]"
-                    id="user_password"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="user_password_confirmation"
-                    class="block text-sm font-medium text-gray-700"
-                  >
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    name="user[password_confirmation]"
-                    id="user_password_confirmation"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    required
-                  />
+                  <p class="mt-1 text-sm text-gray-500">Login credentials will be sent to this number via SMS</p>
                 </div>
 
                 <div class="pt-5">
@@ -149,16 +125,16 @@
                     type="submit"
                     class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    Create Provider
+                    Create Provider Account
                   </button>
                 </div>
               </div>
             </div>
-          </.form>
+          </form>
         </div>
       <% end %>
-      
-<!-- Search and filter section -->
+
+      <!-- Search and filter section -->
       <div class="bg-white shadow rounded-lg mb-6 p-4">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
           <div class="flex items-center space-x-4">
@@ -170,13 +146,22 @@
                 class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               >
                 <option value="all" selected={@filter == "all"}>All Providers</option>
-                <option value="pediatrician" selected={@filter == "pediatrician"}>
-                  Pediatricians
-                </option>
-                <option value="nurse" selected={@filter == "nurse"}>Nurses</option>
-                <option value="general_practitioner" selected={@filter == "general_practitioner"}>
-                  General Practitioners
-                </option>
+
+                <!-- Category filters -->
+                <%= for category <- App.Config.Specializations.all_categories() do %>
+                  <option value={"category:#{category.code}"} selected={@filter == "category:#{category.code}"}>
+                    {category.name}
+                  </option>
+                <% end %>
+
+                <option disabled>──────────</option>
+
+                <!-- Individual specialization filters -->
+                <%= for specialization <- App.Config.Specializations.all_specializations() do %>
+                  <option value={specialization.code} selected={@filter == specialization.code}>
+                    {specialization.name}
+                  </option>
+                <% end %>
               </select>
             </form>
           </div>
@@ -211,8 +196,8 @@
           </div>
         </div>
       </div>
-      
-<!-- Provider listing -->
+
+      <!-- Provider listing -->
       <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-200">
           <h3 class="text-lg font-medium leading-6 text-gray-900">
@@ -316,11 +301,52 @@
                           <div class="text-sm font-medium text-gray-900">
                             {provider.name}
                           </div>
+                          <%= if provider.user.confirmed_at do %>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              Verified
+                            </span>
+                          <% else %>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Pending
+                            </span>
+                          <% end %>
                         </div>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">{provider.specialization}</div>
+                      <div class="text-sm text-gray-900">
+                        <%= if provider.specialization_record do %>
+                          {provider.specialization_record.name}
+                        <% else %>
+                          {App.Config.Specializations.display_name(provider.specialization)}
+                        <% end %>
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        <%= if provider.specialization_record do %>
+                          {provider.specialization_record.description}
+                        <% else %>
+                          {App.Config.Specializations.description(provider.specialization)}
+                        <% end %>
+                      </div>
+                      <div class="mt-1 flex items-center space-x-2">
+                        <% can_prescribe = if provider.specialization_record,
+                             do: provider.specialization_record.can_prescribe,
+                             else: (spec = App.Config.Specializations.get_specialization_by_code(provider.specialization); spec && spec.can_prescribe) %>
+                        <% requires_license = if provider.specialization_record,
+                             do: provider.specialization_record.requires_license,
+                             else: (spec = App.Config.Specializations.get_specialization_by_code(provider.specialization); spec && spec.requires_license) %>
+
+                        <%= if can_prescribe do %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            Can Prescribe
+                          </span>
+                        <% end %>
+                        <%= if requires_license do %>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            Licensed
+                          </span>
+                        <% end %>
+                      </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">{provider.user.email}</div>
