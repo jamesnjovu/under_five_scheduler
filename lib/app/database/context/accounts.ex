@@ -581,6 +581,22 @@ defmodule App.Accounts do
     |> Repo.update()
   end
 
+  @doc """
+  Deletes a user.
+
+  ## Examples
+
+      iex> delete_user(user)
+      {:ok, %User{}}
+
+      iex> delete_user(user)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
   # User roles
 
   def is_admin?(%User{role: "admin"}), do: true
