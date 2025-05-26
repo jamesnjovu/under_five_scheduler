@@ -25,6 +25,7 @@ defmodule AppWeb.AdminLive.Parents do
         |> assign(:search, "")
         |> assign(:show_form, false)
         |> assign(:show_child_form, false)
+        |> assign(:show_details_modal, false)
         |> assign(:show_appointment_form, false)
         |> assign(:selected_parent_id, nil)
         |> assign(:selected_child_id, nil)
@@ -123,6 +124,7 @@ defmodule AppWeb.AdminLive.Parents do
     {:noreply,
       socket
       |> assign(:show_child_form, true)
+      |> assign(:show_details_modal, false)
       |> assign(:selected_parent_id, String.to_integer(parent_id))}
   end
 
@@ -442,5 +444,45 @@ defmodule AppWeb.AdminLive.Parents do
 
   defp get_child_by_id(children, child_id) do
     Enum.find(children, &(&1.id == child_id))
+  end
+
+  @impl true
+  def handle_event("view_parent_details", %{"parent_id" => parent_id}, socket) do
+    parent = Accounts.get_user!(parent_id)
+    children = Accounts.list_children(parent.id)
+
+    # Get appointment statistics
+    all_appointments = children
+                       |> Enum.flat_map(fn child ->
+      Scheduling.list_appointments(child_id: child.id)
+    end)
+
+    upcoming_appointments = Enum.count(all_appointments, fn appointment ->
+      Date.compare(appointment.scheduled_date, Date.utc_today()) in [:eq, :gt] and
+      appointment.status in ["scheduled", "confirmed"]
+    end)
+
+    completed_appointments = Enum.count(all_appointments, &(&1.status == "completed"))
+
+    parent_details = %{
+      parent: parent,
+      children: children,
+      total_appointments: length(all_appointments),
+      upcoming_appointments: upcoming_appointments,
+      completed_appointments: completed_appointments
+    }
+
+    {:noreply,
+      socket
+      |> assign(:show_details_modal, true)
+      |> assign(:parent_details, parent_details)}
+  end
+
+  @impl true
+  def handle_event("hide_details_modal", _, socket) do
+    {:noreply,
+      socket
+      |> assign(:show_details_modal, false)
+      |> assign(:parent_details, nil)}
   end
 end
