@@ -145,7 +145,7 @@
           </div>
           <div class="bg-gray-50 px-5 py-3">
             <div class="text-sm">
-              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-900">
+              <a href={~p"/admin/appointments"} class="font-medium text-indigo-600 hover:text-indigo-900">
                 View today's schedule
               </a>
             </div>
@@ -184,7 +184,7 @@
           </div>
           <div class="bg-gray-50 px-5 py-3">
             <div class="text-sm">
-              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-900">
+              <a href={~p"/admin/appointments"} class="font-medium text-indigo-600 hover:text-indigo-900">
                 View all scheduled
               </a>
             </div>
@@ -252,7 +252,7 @@
               <% end %>
             </div>
             <div class="px-6 py-4 bg-gray-50">
-              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+              <a href={~p"/admin/providers"} class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
                 View all providers
               </a>
             </div>
@@ -262,144 +262,88 @@
         <div>
           <!-- Recent activity section -->
           <div class="bg-white shadow rounded-lg">
-            <div class="px-6 py-5 border-b border-gray-200">
-              <h3 class="text-lg font-medium leading-6 text-gray-900">
-                Recent Activity
-              </h3>
+              <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">
+                  Recent Activity
+                </h3>
+              </div>
+
+              <%= if Enum.empty?(@recent_activity) do %>
+                <div class="flex flex-col items-center justify-center py-8">
+                  <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p class="mt-2 text-sm text-gray-500">No recent activity</p>
+                </div>
+              <% else %>
+                <ul role="list" class="divide-y divide-gray-200">
+                  <%= for activity <- @recent_activity do %>
+                    <li class="px-6 py-4">
+                      <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                          <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                            <%= case activity.icon do %>
+                              <% "check-circle" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+
+                              <% "x-circle" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+
+                              <% "calendar" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                </svg>
+
+                              <% "user-plus" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                </svg>
+
+                              <% "plus-circle" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                </svg>
+
+                              <% "trash" -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+
+                              <% _ -> %>
+                                <svg class={"h-5 w-5 #{activity.icon_color}"} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                            <% end %>
+                          </span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate">
+                            {activity.title}
+                          </p>
+                          <p class="text-sm text-gray-500 truncate">
+                            {activity.description}
+                          </p>
+                        </div>
+                        <div class="flex-shrink-0 text-sm text-gray-500">
+                          {activity.relative_time}
+                        </div>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              <% end %>
+
+              <div class="px-6 py-4 bg-gray-50">
+                <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                  View all activity
+                </a>
+              </div>
             </div>
-            <ul role="list" class="divide-y divide-gray-200">
-              <li class="px-6 py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg
-                        class="h-5 w-5 text-green-600"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      New appointment completed
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      Dr. Sarah Johnson completed an appointment with Emma Doe
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0 text-sm text-gray-500">
-                    30 minutes ago
-                  </div>
-                </div>
-              </li>
-              <li class="px-6 py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg
-                        class="h-5 w-5 text-blue-600"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      New child registered
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      John Doe added a new child: James Doe (3 months)
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0 text-sm text-gray-500">
-                    2 hours ago
-                  </div>
-                </div>
-              </li>
-              <li class="px-6 py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <span class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                      <svg
-                        class="h-5 w-5 text-yellow-600"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Appointment rescheduled
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      Appointment for Oliver Doe with Dr. Michael Chen was rescheduled to next week
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0 text-sm text-gray-500">
-                    5 hours ago
-                  </div>
-                </div>
-              </li>
-              <li class="px-6 py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                      <svg
-                        class="h-5 w-5 text-red-600"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Appointment cancelled
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      Appointment for Sophia Johnson was cancelled
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0 text-sm text-gray-500">
-                    Yesterday at 4:30 PM
-                  </div>
-                </div>
-              </li>
-            </ul>
-            <div class="px-6 py-4 bg-gray-50">
-              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                View all activity
-              </a>
             </div>
-          </div>
-        </div>
       </div>
       
 <!-- Monthly statistics -->

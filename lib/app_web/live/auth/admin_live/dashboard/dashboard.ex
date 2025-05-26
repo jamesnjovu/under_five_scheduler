@@ -25,6 +25,7 @@ defmodule AppWeb.AdminLive.Dashboard do
         |> assign(:stats, get_system_stats())
         |> assign(:providers, providers_with_appointments)
         |> assign(:appointment_chart_data, get_appointment_chart_data())
+        |> assign(:recent_activity, get_recent_activity())
         |> assign(:page_title, "Admin Dashboard")
         # For responsive sidebar toggle
         |> assign(:show_sidebar, false)
@@ -173,6 +174,168 @@ defmodule AppWeb.AdminLive.Dashboard do
         Enum.count(monthly_appointments, fn appt -> appt.status == "cancelled" end),
       monthly_no_show: Enum.count(monthly_appointments, fn appt -> appt.status == "no_show" end)
     }
+  end
 
+  defp get_recent_activity do
+    # Get recent audit logs for activity feed
+    recent_logs = App.Administration.Auditing.list_audit_logs([
+      limit: 10,
+      order_by: [desc: :inserted_at]
+    ])
+
+    # Get recent appointments
+    recent_appointments = App.Scheduling.list_appointments()
+                          |> Enum.filter(fn appt ->
+      Date.diff(Date.utc_today(), appt.inserted_at |> DateTime.to_date()) <= 7
+    end)
+                          |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
+                          |> Enum.take(5)
+
+    # Get recent user registrations
+    recent_users = App.Accounts.list_users()
+                   |> Enum.filter(fn user ->
+      Date.diff(Date.utc_today(), user.inserted_at |> DateTime.to_date()) <= 7
+    end)
+                   |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
+                   |> Enum.take(3)
+
+    # Combine and format activities
+    activities = []
+
+    # Add appointment activities
+    appointment_activities = Enum.map(recent_appointments, fn appointment ->
+      child = App.Accounts.get_child!(appointment.child_id)
+      provider = App.Scheduling.get_provider!(appointment.provider_id)
+
+      %{
+        type: :appointment,
+        icon: get_appointment_icon(appointment.status),
+        icon_color: get_appointment_icon_color(appointment.status),
+        title: get_appointment_title(appointment.status),
+        description: "#{child.name} with #{provider.name}",
+        timestamp: appointment.inserted_at,
+        relative_time: format_relative_time(appointment.inserted_at)
+      }
+    end)
+
+    # Add user registration activities
+    user_activities = Enum.map(recent_users, fn user ->
+      %{
+        type: :user_registration,
+        icon: "user-plus",
+        icon_color: "text-blue-600",
+        title: "New #{String.capitalize(user.role)} registered",
+        description: "#{user.name} joined the platform",
+        timestamp: user.inserted_at,
+        relative_time: format_relative_time(user.inserted_at)
+      }
+    end)
+
+    # Add audit log activities for important actions
+    audit_activities = recent_logs
+                       |> Enum.filter(&important_action?/1)
+                       |> Enum.map(fn log ->
+      %{
+        type: :audit_action,
+        icon: get_audit_icon(log.action),
+        icon_color: get_audit_icon_color(log.action),
+        title: format_audit_title(log),
+        description: format_audit_description(log),
+        timestamp: log.inserted_at,
+        relative_time: format_relative_time(log.inserted_at)
+      }
+    end)
+
+    # Combine all activities and sort by timestamp
+    (appointment_activities ++ user_activities ++ audit_activities)
+    |> Enum.sort_by(& &1.timestamp, {:desc, DateTime})
+    |> Enum.take(10)
+  end
+
+  # Helper functions for activity formatting
+  defp get_appointment_icon(status) do
+    case status do
+      "completed" -> "check-circle"
+      "cancelled" -> "x-circle"
+      "scheduled" -> "calendar"
+      "confirmed" -> "calendar-check"
+      "rescheduled" -> "calendar-days"
+      _ -> "calendar"
+    end
+  end
+
+  defp get_appointment_icon_color(status) do
+    case status do
+      "completed" -> "text-green-600"
+      "cancelled" -> "text-red-600"
+      "scheduled" -> "text-blue-600"
+      "confirmed" -> "text-indigo-600"
+      "rescheduled" -> "text-yellow-600"
+      _ -> "text-gray-600"
+    end
+  end
+
+  defp get_appointment_title(status) do
+    case status do
+      "completed" -> "Appointment completed"
+      "cancelled" -> "Appointment cancelled"
+      "scheduled" -> "New appointment scheduled"
+      "confirmed" -> "Appointment confirmed"
+      "rescheduled" -> "Appointment rescheduled"
+      _ -> "Appointment updated"
+    end
+  end
+
+  defp important_action?(log) do
+    log.action in ["create", "delete"] and
+    log.entity_type in ["parent", "provider", "appointment", "child"]
+  end
+
+  defp get_audit_icon(action) do
+    case action do
+      "create" -> "plus-circle"
+      "delete" -> "trash"
+      "update" -> "pencil"
+      _ -> "information-circle"
+    end
+  end
+
+  defp get_audit_icon_color(action) do
+    case action do
+      "create" -> "text-green-600"
+      "delete" -> "text-red-600"
+      "update" -> "text-blue-600"
+      _ -> "text-gray-600"
+    end
+  end
+
+  defp format_audit_title(log) do
+    entity_name = String.capitalize(String.replace(log.entity_type, "_", " "))
+    action_name = String.capitalize(log.action)
+
+    "#{entity_name} #{action_name}d"
+  end
+
+  defp format_audit_description(log) do
+    case log.details do
+      %{"name" => name} -> name
+      %{"child_name" => name} -> name
+      %{"parent_name" => name} -> name
+      %{"provider_name" => name} -> name
+      _ -> "#{log.entity_type} #{log.action}"
+    end
+  end
+
+  defp format_relative_time(datetime) do
+    now = DateTime.utc_now()
+    diff_seconds = DateTime.diff(now, datetime, :second)
+
+    cond do
+      diff_seconds < 60 -> "#{diff_seconds} seconds ago"
+      diff_seconds < 3600 -> "#{div(diff_seconds, 60)} minutes ago"
+      diff_seconds < 86400 -> "#{div(diff_seconds, 3600)} hours ago"
+      diff_seconds < 604800 -> "#{div(diff_seconds, 86400)} days ago"
+      true -> Calendar.strftime(datetime, "%B %d at %I:%M %p")
+    end
   end
 end
