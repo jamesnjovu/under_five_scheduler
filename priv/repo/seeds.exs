@@ -39,9 +39,9 @@ IO.puts("Creating admin user...")
 case get_or_create_user.(%{
   "name" => "Admin User",
   "email" => "admin@example.com",
-  "phone" => "+1234567890",
-  "password" => "adminpassword123",
-  "password_confirmation" => "adminpassword123",
+  "phone" => "260978921730",
+  "password" => "Dev@1234",
+  "password_confirmation" => "Dev@1234",
   "role" => "admin"
 }) do
   {:ok, admin} ->
@@ -59,8 +59,8 @@ providers_data = [
       "name" => "Dr. Sarah Johnson",
       "email" => "sarah.johnson@example.com",
       "phone" => "+260978921730",
-      "password" => "providerpass123",
-      "password_confirmation" => "providerpass123",
+      "password" => "Dev@1234",
+      "password_confirmation" => "Dev@1234",
       "role" => "provider"
     },
     provider: %{
@@ -73,9 +73,9 @@ providers_data = [
     user: %{
       "name" => "Dr. Michael Chen",
       "email" => "michael.chen@example.com",
-      "phone" => "+260978921731",
-      "password" => "providerpass123",
-      "password_confirmation" => "providerpass123",
+      "phone" => "+260978921730",
+      "password" => "Dev@1234",
+      "password_confirmation" => "Dev@1234",
       "role" => "provider"
     },
     provider: %{
@@ -88,9 +88,9 @@ providers_data = [
     user: %{
       "name" => "Nurse Jane Smith",
       "email" => "jane.smith@example.com",
-      "phone" => "+260978921732",
-      "password" => "providerpass123",
-      "password_confirmation" => "providerpass123",
+      "phone" => "+260978921730",
+      "password" => "Dev@1234",
+      "password_confirmation" => "Dev@1234",
       "role" => "provider"
     },
     provider: %{
@@ -103,9 +103,9 @@ providers_data = [
     user: %{
       "name" => "Clinical Officer Mary Banda",
       "email" => "mary.banda@example.com",
-      "phone" => "+260978921733",
-      "password" => "providerpass123",
-      "password_confirmation" => "providerpass123",
+      "phone" => "+260978921730",
+      "password" => "Dev@1234",
+      "password_confirmation" => "Dev@1234",
       "role" => "provider"
     },
     provider: %{
@@ -118,9 +118,9 @@ providers_data = [
     user: %{
       "name" => "CHW Grace Mwanza",
       "email" => "grace.mwanza@example.com",
-      "phone" => "+260978921734",
-      "password" => "providerpass123",
-      "password_confirmation" => "providerpass123",
+      "phone" => "+260978921730",
+      "password" => "Dev@1234",
+      "password_confirmation" => "Dev@1234",
       "role" => "provider"
     },
     provider: %{
@@ -205,25 +205,25 @@ parents_data = [
   %{
     "name" => "John Doe",
     "email" => "john.doe@example.com",
-    "phone" => "+260978921800",
-    "password" => "parentpass123",
-    "password_confirmation" => "parentpass123",
+    "phone" => "+260978921730",
+    "password" => "Dev@1234",
+    "password_confirmation" => "Dev@1234",
     "role" => "parent"
   },
   %{
     "name" => "Mary Tembo",
     "email" => "mary.tembo@example.com",
-    "phone" => "+260978921801",
-    "password" => "parentpass123",
-    "password_confirmation" => "parentpass123",
+    "phone" => "+260978921730",
+    "password" => "Dev@1234",
+    "password_confirmation" => "Dev@1234",
     "role" => "parent"
   },
   %{
     "name" => "Peter Mwila",
     "email" => "peter.mwila@example.com",
-    "phone" => "+260978921802",
-    "password" => "parentpass123",
-    "password_confirmation" => "parentpass123",
+    "phone" => "+260978921730",
+    "password" => "Dev@1234",
+    "password_confirmation" => "Dev@1234",
     "role" => "parent"
   }
 ]
@@ -452,7 +452,7 @@ IO.puts("- Parent users: #{length(parents)}")
 IO.puts("- Children: #{length(all_children)}")
 IO.puts("- Vaccine schedules: Initialized")
 IO.puts("\n🔐 Login credentials:")
-IO.puts("Admin: admin@example.com / adminpassword123")
-IO.puts("Provider: sarah.johnson@example.com / providerpass123")
-IO.puts("Parent: john.doe@example.com / parentpass123")
+IO.puts("Admin: admin@example.com / Dev@1234")
+IO.puts("Provider: sarah.johnson@example.com / Dev@1234")
+IO.puts("Parent: john.doe@example.com / Dev@1234")
 IO.puts("\n💡 You can now start the server with: mix phx.server")

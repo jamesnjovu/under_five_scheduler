@@ -14,39 +14,231 @@
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center">
           <h1 class="text-3xl font-bold text-gray-900">Specialization Management</h1>
-          <div class="text-sm text-gray-500">
-            Configuration-based system
+          <div class="flex items-center space-x-4">
+            <button
+              phx-click="new_category"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Add Category
+            </button>
+            <button
+              phx-click="new_specialization"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Add Specialization
+            </button>
           </div>
         </div>
       </div>
     </header>
 
     <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <!-- Configuration Info Banner -->
-      <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-        <div class="flex">
-          <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-blue-800">Configuration-Based System</h3>
-            <p class="mt-2 text-sm text-blue-700">
-              Specializations are managed in <code class="bg-blue-100 px-2 py-1 rounded text-xs">App.Setup.Specializations</code>.
-              To add, edit, or remove specializations, update the configuration module and redeploy the application.
-              This ensures consistency across all parts of the system.
-            </p>
-            <div class="mt-3">
-              <a
-                href="https://github.com/your-repo/blob/main/lib/app/setup/specializations.ex"
-                target="_blank"
-                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                View Configuration File →
-              </a>
-            </div>
+      <!-- Category Form Modal -->
+      <%= if @show_category_form do %>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+              <%= if @editing_category, do: "Edit Category", else: "Add New Category" %>
+            </h3>
+
+            <form phx-submit="save_category" phx-change="validate_category">
+              <div class="space-y-4">
+                <div>
+                  <label for="category_code" class="block text-sm font-medium text-gray-700">Code</label>
+                  <input
+                    type="text"
+                    name="specialization_category[code]"
+                    id="category_code"
+                    value={@category_changeset.changes[:code] || (@editing_category && @editing_category.code) || ""}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., medical_doctor"
+                    required
+                  />
+                  <%= if @category_changeset.errors[:code] do %>
+                    <p class="mt-1 text-sm text-red-600">{elem(@category_changeset.errors[:code], 0)}</p>
+                  <% end %>
+                </div>
+
+                <div>
+                  <label for="category_name" class="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    name="specialization_category[name]"
+                    id="category_name"
+                    value={@category_changeset.changes[:name] || (@editing_category && @editing_category.name) || ""}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., Medical Doctors"
+                    required
+                  />
+                  <%= if @category_changeset.errors[:name] do %>
+                    <p class="mt-1 text-sm text-red-600">{elem(@category_changeset.errors[:name], 0)}</p>
+                  <% end %>
+                </div>
+
+                <div>
+                  <label for="category_description" class="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    name="specialization_category[description]"
+                    id="category_description"
+                    rows="3"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Category description..."
+                  >{@category_changeset.changes[:description] || (@editing_category && @editing_category.description) || ""}</textarea>
+                </div>
+              </div>
+
+              <div class="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  phx-click="cancel_category_form"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
+                  <%= if @editing_category, do: "Update", else: "Create" %>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      <% end %>
+
+      <!-- Specialization Form Modal -->
+      <%= if @show_specialization_form do %>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+              <%= if @editing_specialization, do: "Edit Specialization", else: "Add New Specialization" %>
+            </h3>
+
+            <form phx-submit="save_specialization" phx-change="validate_specialization">
+              <div class="space-y-4">
+                <div>
+                  <label for="spec_code" class="block text-sm font-medium text-gray-700">Code</label>
+                  <input
+                    type="text"
+                    name="specialization[code]"
+                    id="spec_code"
+                    value={@specialization_changeset.changes[:code] || (@editing_specialization && @editing_specialization.code) || ""}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., pediatrician"
+                    required
+                  />
+                  <%= if @specialization_changeset.errors[:code] do %>
+                    <p class="mt-1 text-sm text-red-600">{elem(@specialization_changeset.errors[:code], 0)}</p>
+                  <% end %>
+                </div>
+
+                <div>
+                  <label for="spec_name" class="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    name="specialization[name]"
+                    id="spec_name"
+                    value={@specialization_changeset.changes[:name] || (@editing_specialization && @editing_specialization.name) || ""}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., Pediatrician"
+                    required
+                  />
+                  <%= if @specialization_changeset.errors[:name] do %>
+                    <p class="mt-1 text-sm text-red-600">{elem(@specialization_changeset.errors[:name], 0)}</p>
+                  <% end %>
+                </div>
+
+                <div>
+                  <label for="spec_description" class="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    name="specialization[description]"
+                    id="spec_description"
+                    rows="3"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Specialization description..."
+                  >{@specialization_changeset.changes[:description] || (@editing_specialization && @editing_specialization.description) || ""}</textarea>
+                </div>
+
+                <div>
+                  <label for="spec_category" class="block text-sm font-medium text-gray-700">Category</label>
+                  <select
+                    name="specialization[category_id]"
+                    id="spec_category"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <%= for category <- @categories do %>
+                      <%= if category.source == :database do %>
+                        <% selected = if @editing_specialization && @editing_specialization.category_id == category.id, do: "selected", else: "" %>
+                        <option value={category.id} selected={selected}>{category.name}</option>
+                      <% end %>
+                    <% end %>
+                  </select>
+                  <%= if @specialization_changeset.errors[:category_id] do %>
+                    <p class="mt-1 text-sm text-red-600">{elem(@specialization_changeset.errors[:category_id], 0)}</p>
+                  <% end %>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="specialization[requires_license]"
+                      id="spec_license"
+                      value="true"
+                      checked={@specialization_changeset.changes[:requires_license] || (@editing_specialization && @editing_specialization.requires_license) || false}
+                      class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label for="spec_license" class="ml-2 block text-sm text-gray-900">Requires License</label>
+                  </div>
+
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="specialization[can_prescribe]"
+                      id="spec_prescribe"
+                      value="true"
+                      checked={@specialization_changeset.changes[:can_prescribe] || (@editing_specialization && @editing_specialization.can_prescribe) || false}
+                      class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label for="spec_prescribe" class="ml-2 block text-sm text-gray-900">Can Prescribe</label>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="spec_icon" class="block text-sm font-medium text-gray-700">Icon</label>
+                  <input
+                    type="text"
+                    name="specialization[icon]"
+                    id="spec_icon"
+                    value={@specialization_changeset.changes[:icon] || (@editing_specialization && @editing_specialization.icon) || "user-md"}
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., stethoscope"
+                  />
+                </div>
+              </div>
+
+              <div class="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  phx-click="cancel_specialization_form"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                >
+                  <%= if @editing_specialization, do: "Update", else: "Create" %>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      <% end %>
 
       <!-- Stats cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -62,7 +254,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Total Specializations</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.all_specializations())}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{@statistics.total_specializations}</div>
                   </dd>
                 </dl>
               </div>
@@ -82,7 +274,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Can Prescribe</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.prescribing_specializations())}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{@statistics.prescribing_count}</div>
                   </dd>
                 </dl>
               </div>
@@ -102,7 +294,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Licensed Required</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.licensed_specializations())}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{@statistics.licensed_count}</div>
                   </dd>
                 </dl>
               </div>
@@ -122,7 +314,7 @@
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">Categories</dt>
                   <dd class="flex items-baseline">
-                    <div class="text-2xl font-semibold text-gray-900">{length(App.Setup.Specializations.all_categories())}</div>
+                    <div class="text-2xl font-semibold text-gray-900">{@statistics.total_categories}</div>
                   </dd>
                 </dl>
               </div>
@@ -131,42 +323,91 @@
         </div>
       </div>
 
-      <!-- Categories Overview -->
-      <div class="bg-white shadow rounded-lg mb-8">
+      <!-- Categories Table -->
+      <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
         <div class="px-6 py-5 border-b border-gray-200">
-          <h3 class="text-lg font-medium leading-6 text-gray-900">Categories Overview</h3>
+          <h3 class="text-lg font-medium leading-6 text-gray-900">Categories</h3>
         </div>
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <%= for {category_code, specializations} <- App.Setup.Specializations.grouped_by_category() do %>
-              <% category = Enum.find(App.Setup.Specializations.all_categories(), &(&1.code == category_code)) %>
-              <div class="border border-gray-200 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <h4 class="text-sm font-medium text-gray-900">{if category, do: category.name, else: String.capitalize(category_code)}</h4>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {length(specializations)} specializations
-                  </span>
-                </div>
-                <p class="text-xs text-gray-500 mb-3">{if category, do: category.description, else: "Healthcare specializations"}</p>
-
-                <div class="space-y-1">
-                  <%= for spec <- specializations do %>
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="text-gray-700">{spec.name}</span>
-                      <div class="flex space-x-1">
-                        <%= if spec.can_prescribe do %>
-                          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Rx</span>
-                        <% end %>
-                        <%= if spec.requires_license do %>
-                          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Lic</span>
-                        <% end %>
-                      </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Specializations Count
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Source
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <%= for category <- @categories do %>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">{category.name}</div>
+                    <div class="text-xs text-gray-500 font-mono">{category.code}</div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">{category.description}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      {Enum.count(@specializations, fn spec ->
+                        case spec do
+                          %{category: cat_code} when is_binary(cat_code) -> cat_code == category.code
+                          %{category_id: cat_id} -> cat_id == category.id
+                          _ -> false
+                        end
+                      end)}
                     </div>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= if category.source == :config do %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Config
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Database
+                      </span>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex space-x-2">
+                      <%= if category.source == :database do %>
+                        <button
+                          phx-click="edit_category"
+                          phx-value-id={category.id}
+                          class="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          phx-click="delete_category"
+                          phx-value-id={category.id}
+                          data-confirm="Are you sure you want to delete this category?"
+                          class="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      <% else %>
+                        <span class="text-gray-400">Config Only</span>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -189,23 +430,36 @@
                   Capabilities
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
+                  Source
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <%= for specialization <- App.Setup.Specializations.all_specializations() do %>
-                <% category = Enum.find(App.Setup.Specializations.all_categories(), &(&1.code == specialization.category)) %>
+              <%= for specialization <- @specializations do %>
+                <% category = Enum.find(@categories, fn cat ->
+                  case specialization do
+                    %{category: cat_code} when is_binary(cat_code) -> cat.code == cat_code
+                    %{category_id: cat_id} -> cat.id == cat_id
+                    _ -> false
+                  end
+                end) %>
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="text-sm font-medium text-gray-900">{specialization.name}</div>
                     </div>
                     <div class="text-xs text-gray-500 font-mono">{specialization.code}</div>
+                    <%= if specialization.description do %>
+                      <div class="text-xs text-gray-400 mt-1">{String.slice(specialization.description, 0, 50)}...</div>
+                    <% end %>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <% category_name = if category, do: category.name, else: String.capitalize(specialization.category) %>
-                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{category_badge_class(specialization.category)}"}>
+                    <% category_name = if category, do: category.name, else: "Unknown" %>
+                    <% category_code = if category, do: category.code, else: "unknown" %>
+                    <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{category_badge_class(category_code)}"}>
                       {category_name}
                     </span>
                   </td>
@@ -213,24 +467,49 @@
                     <div class="flex space-x-2">
                       <%= if specialization.can_prescribe do %>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                          </svg>
                           Can Prescribe
                         </span>
                       <% end %>
                       <%= if specialization.requires_license do %>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                          </svg>
                           Requires License
                         </span>
                       <% end %>
                     </div>
                   </td>
-                  <td class="px-6 py-4">
-                    <div class="text-sm text-gray-900">{specialization.description}</div>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <%= if specialization.source == :config do %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Config
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Database
+                      </span>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex space-x-2">
+                      <%= if specialization.source == :database do %>
+                        <button
+                          phx-click="edit_specialization"
+                          phx-value-id={specialization.id}
+                          class="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          phx-click="delete_specialization"
+                          phx-value-id={specialization.id}
+                          data-confirm="Are you sure you want to delete this specialization?"
+                          class="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      <% else %>
+                        <span class="text-gray-400">Config Only</span>
+                      <% end %>
+                    </div>
                   </td>
                 </tr>
               <% end %>
@@ -239,59 +518,47 @@
         </div>
       </div>
 
-      <!-- How to Modify -->
-      <div class="mt-8 bg-gray-50 border border-gray-200 rounded-md p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">How to Modify Specializations</h3>
-        <div class="space-y-4">
-          <div>
-            <h4 class="text-sm font-medium text-gray-700">1. Edit Configuration File</h4>
-            <p class="text-sm text-gray-600">
-              Update <code class="bg-gray-100 px-2 py-1 rounded text-xs">lib/app/setup/specializations.ex</code> to add, modify, or remove specializations.
+      <!-- Information Box -->
+      <div class="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div class="flex">
+          <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">Hybrid System</h3>
+            <p class="mt-2 text-sm text-blue-700">
+              This system supports both configuration-based and database-stored specializations.
+              Configuration specializations provide a fallback and ensure system consistency,
+              while database specializations can be dynamically managed by administrators.
             </p>
-          </div>
-          <div>
-            <h4 class="text-sm font-medium text-gray-700">2. Update Database (if needed)</h4>
-            <p class="text-sm text-gray-600">
-              If you're removing specializations, create a migration to update existing provider records.
-            </p>
-          </div>
-          <div>
-            <h4 class="text-sm font-medium text-gray-700">3. Deploy Changes</h4>
-            <p class="text-sm text-gray-600">
-              Restart the application to load the new configuration. The changes will be reflected throughout the system.
-            </p>
-          </div>
-        </div>
-
-        <!-- Sample Configuration Code -->
-        <div class="mt-6">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Sample Configuration</h4>
-          <div class="bg-gray-900 rounded-md p-4 overflow-x-auto">
-            <pre class="text-sm text-gray-100"><code>{Jason.encode!(%{
-              code: "pediatrician",
-              name: "Pediatrician",
-              description: "Specialized in medical care of infants, children, and adolescents",
-              category: "medical_doctor",
-              requires_license: true,
-              can_prescribe: true,
-              icon: "stethoscope"
-            })}</code></pre>
+            <div class="mt-3 space-y-1">
+              <p class="text-xs text-blue-600">
+                <strong>Config Items:</strong> Read-only, defined in code for consistency
+              </p>
+              <p class="text-xs text-blue-600">
+                <strong>Database Items:</strong> Fully manageable through this interface
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Configuration vs Database Note -->
-      <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+      <!-- Usage Statistics -->
+      <div class="mt-6 bg-gray-50 border border-gray-200 rounded-md p-4">
         <div class="flex">
-          <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
           </svg>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">Configuration-Based Approach</h3>
-            <p class="mt-2 text-sm text-yellow-700">
-              This system uses configuration files for specialization definitions to ensure consistency across the application.
-              Changes require updating the configuration module and redeploying the application.
-            </p>
+            <h3 class="text-sm font-medium text-gray-800">System Statistics</h3>
+            <div class="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-600">
+              <div>
+                <span class="font-medium">Database Specializations:</span> {Map.get(@statistics, :database_specializations, 0)}
+              </div>
+              <div>
+                <span class="font-medium">Config Specializations:</span> {Map.get(@statistics, :config_specializations, 0)}
+              </div>
+            </div>
           </div>
         </div>
       </div>

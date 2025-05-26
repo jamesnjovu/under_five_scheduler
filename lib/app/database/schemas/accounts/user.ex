@@ -68,7 +68,7 @@ defmodule App.Accounts.User do
     |> cast(attrs, [:name, :email, :phone, :role, :password, :email])
     |> validate_email(opts)
     |> validate_password(opts)
-    |> validate_format(:phone, ~r/^\+?[0-9]{10,14}$/, message: "must be a valid phone number")
+    |> validate_phone()
   end
 
   defp validate_email(changeset, opts) do
@@ -77,6 +77,15 @@ defmodule App.Accounts.User do
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
     |> maybe_validate_unique_email(opts)
+  end
+
+  defp validate_phone(changeset) do
+    changeset
+    |> validate_required([:phone])
+    |> validate_format(:phone, ~r/^\+?[0-9]{10,14}$/, message: "must be a valid phone number")
+    |> validate_length(:phone, max: 15)
+#    |> unsafe_validate_unique(:phone, App.Repo)
+#    |> unique_constraint(:phone)
   end
 
   defp validate_password(changeset, opts) do
