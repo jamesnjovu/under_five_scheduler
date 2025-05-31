@@ -25,6 +25,7 @@ defmodule AppWeb.AdminLive.Providers do
         |> assign(:filter, "all")
         |> assign(:search, "")
         |> assign(:show_form, false)
+        |> assign(:edit_provider, nil)
         |> assign(:changeset, new_provider_changeset())
           # For responsive sidebar toggle
         |> assign(:show_sidebar, false)
@@ -67,11 +68,109 @@ defmodule AppWeb.AdminLive.Providers do
     {:noreply,
       socket
       |> assign(:show_form, !socket.assigns.show_form)
+      |> assign(:edit_provider, nil)
       |> assign(:changeset, new_provider_changeset())}
   end
 
   @impl true
+  def handle_event("edit", %{"id" => id}, socket) do
+    provider = Scheduling.get_provider!(id) |> Repo.preload(:user)
+
+    changeset = %{
+      provider: Scheduling.change_provider(provider),
+      user: Accounts.change_user(provider.user)
+    }
+
+    {:noreply,
+      socket
+      |> assign(:show_form, true)
+      |> assign(:edit_provider, provider)
+      |> assign(:changeset, changeset)}
+  end
+
+  @impl true
   def handle_event("save", %{"provider" => provider_params}, socket) do
+    case socket.assigns.edit_provider do
+      nil ->
+        # Create new provider
+        create_new_provider(socket, provider_params)
+
+      provider ->
+        # Update existing provider
+        update_existing_provider(socket, provider, provider_params)
+    end
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    provider = Scheduling.get_provider!(id)
+    user = Accounts.get_user!(provider.user_id)
+
+    # Soft delete: set is_active to false instead of hard delete
+    case soft_delete_provider(provider, user) do
+      {:ok, _} ->
+        App.Administration.Auditing.log_action(%{
+          action: "deactivate",
+          entity_type: "provider",
+          entity_id: id,
+          user_id: socket.assigns.user.id,
+          ip_address: get_connect_ip(socket),
+          details: %{
+            provider_name: provider.name,
+            specialization: provider.specialization,
+            action: "soft_delete"
+          }
+        })
+
+        {:noreply,
+          socket
+          |> put_flash(:info, "Provider deactivated successfully.")
+          |> assign(:providers, list_providers_with_details())}
+
+      {:error, _} ->
+        {:noreply,
+          socket
+          |> put_flash(:error, "Could not deactivate provider.")
+          |> assign(:providers, list_providers_with_details())}
+    end
+  end
+
+  @impl true
+  def handle_event("activate", %{"id" => id}, socket) do
+    provider = Scheduling.get_provider!(id)
+    user = Accounts.get_user!(provider.user_id)
+
+    case reactivate_provider(provider, user) do
+      {:ok, _} ->
+        App.Administration.Auditing.log_action(%{
+          action: "reactivate",
+          entity_type: "provider",
+          entity_id: id,
+          user_id: socket.assigns.user.id,
+          ip_address: get_connect_ip(socket),
+          details: %{
+            provider_name: provider.name,
+            specialization: provider.specialization,
+            action: "reactivate"
+          }
+        })
+
+        {:noreply,
+          socket
+          |> put_flash(:info, "Provider reactivated successfully.")
+          |> assign(:providers, list_providers_with_details())}
+
+      {:error, _} ->
+        {:noreply,
+          socket
+          |> put_flash(:error, "Could not reactivate provider.")
+          |> assign(:providers, list_providers_with_details())}
+    end
+  end
+
+  # Private functions
+
+  defp create_new_provider(socket, provider_params) do
     # Generate a random password
     password = generate_random_password()
 
@@ -99,6 +198,7 @@ defmodule AppWeb.AdminLive.Providers do
           |> put_flash(:info, "Provider created successfully. Login credentials have been sent via email and SMS.")
           |> assign(:providers, list_providers_with_details())
           |> assign(:show_form, false)
+          |> assign(:edit_provider, nil)
           |> assign(:changeset, new_provider_changeset())
 
         {:noreply, socket}
@@ -108,40 +208,85 @@ defmodule AppWeb.AdminLive.Providers do
     end
   end
 
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    provider = Scheduling.get_provider!(id)
-    user = Accounts.get_user!(provider.user_id)
+  defp update_existing_provider(socket, provider, provider_params) do
+    user_params = %{
+      "name" => provider_params["name"],
+      "email" => provider_params["email"],
+      "phone" => provider_params["phone"]
+    }
 
-    # In a real app, consider soft-deletion or checking for dependencies
-    with {:ok, _} <- Scheduling.delete_provider(provider),
-         {:ok, _} <- Accounts.delete_user(user) do
-      App.Administration.Auditing.log_action(%{
-        action: "delete",
-        entity_type: "provider",
-        entity_id: id,
-        user_id: socket.assigns.user.id,
-        ip_address: get_connect_ip(socket),
-        details: %{
-          provider_name: provider.name,
-          specialization: provider.specialization
-        }
-      })
+    provider_update_params = %{
+      "name" => provider_params["name"],
+      "specialization" => provider_params["specialization"],
+      "license_number" => provider_params["license_number"]
+    }
 
-      {:noreply,
-        socket
-        |> put_flash(:info, "Provider deleted successfully.")
-        |> assign(:providers, list_providers_with_details())}
-    else
-      _ ->
-        {:noreply,
+    case update_provider_with_user(provider, provider_update_params, user_params) do
+      {:ok, {updated_provider, updated_user}} ->
+        App.Administration.Auditing.log_action(%{
+          action: "update",
+          entity_type: "provider",
+          entity_id: provider.id,
+          user_id: socket.assigns.user.id,
+          ip_address: get_connect_ip(socket),
+          details: %{
+            provider_name: updated_provider.name,
+            specialization: updated_provider.specialization,
+            changes: provider_update_params
+          }
+        })
+
+        socket =
           socket
-          |> put_flash(:error, "Could not delete provider.")
-          |> assign(:providers, list_providers_with_details())}
+          |> put_flash(:info, "Provider updated successfully.")
+          |> assign(:providers, list_providers_with_details())
+          |> assign(:show_form, false)
+          |> assign(:edit_provider, nil)
+          |> assign(:changeset, new_provider_changeset())
+
+        {:noreply, socket}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :changeset, changeset)}
     end
   end
 
-  # Private functions
+  defp soft_delete_provider(provider, user) do
+    Repo.transaction(fn ->
+      with {:ok, provider} <- Scheduling.update_provider(provider, %{is_active: false}),
+           # Optionally also deactivate the user account
+           {:ok, user} <- Accounts.update_user(user, %{}) do
+        {provider, user}
+      else
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp reactivate_provider(provider, user) do
+    Repo.transaction(fn ->
+      with {:ok, provider} <- Scheduling.update_provider(provider, %{is_active: true}),
+           {:ok, user} <- Accounts.update_user(user, %{}) do
+        {provider, user}
+      else
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp update_provider_with_user(provider, provider_params, user_params) do
+    Repo.transaction(fn ->
+      with {:ok, user} <- Accounts.update_user(provider.user, user_params),
+           {:ok, provider} <- Scheduling.update_provider(provider, provider_params) do
+        {provider, user}
+      else
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
 
   defp get_user_from_session(session) do
     token = session["user_token"]
@@ -150,6 +295,7 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp list_providers_with_details do
+    # Only show active providers by default, but include inactive for admin review
     providers = Scheduling.list_providers()
 
     Enum.map(providers, fn provider ->
@@ -306,6 +452,8 @@ defmodule AppWeb.AdminLive.Providers do
   end
 
   defp filter_by_criteria(providers, "all"), do: providers
+  defp filter_by_criteria(providers, "active"), do: Enum.filter(providers, & &1.is_active)
+  defp filter_by_criteria(providers, "inactive"), do: Enum.filter(providers, &(!&1.is_active))
 
   defp filter_by_criteria(providers, filter) do
     # Handle category-based filtering

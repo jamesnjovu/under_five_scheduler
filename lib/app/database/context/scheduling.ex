@@ -21,10 +21,50 @@ defmodule App.Scheduling do
       [%Provider{}, ...]
 
   """
-  def list_providers do
-    Provider
-    |> order_by(asc: :name)
-    |> Repo.all()
+  def list_providers(opts \\ []) do
+    base_query = from(
+      p in Provider,
+      order_by: [
+        asc: p.name
+      ]
+    )
+
+    query = Enum.reduce(
+      opts,
+      base_query,
+      fn
+        {:active_only, true}, query ->
+          where(query, [p], p.is_active == true)
+
+        {:include_inactive, true}, query ->
+          query
+        # Return all providers (active and inactive)
+
+        {:specialization, spec}, query ->
+          where(query, [p], p.specialization == ^spec)
+
+        _, query ->
+          query
+      end
+    )
+
+    Repo.all(query)
+  end
+
+  def list_active_providers do
+    list_providers(active_only: true)
+  end
+
+  def deactivate_provider(%Provider{} = provider) do
+    provider
+    |> Provider.changeset(%{is_active: false})
+    |> Repo.update()
+  end
+
+  def reactivate_provider(%Provider{} = provider) do
+    provider
+    |> Provider.changeset(%{is_active: true})
+    |> Repo.update()
   end
 
   @doc """
@@ -231,24 +271,34 @@ defmodule App.Scheduling do
 
   """
   def list_appointments(opts \\ []) do
-    base_query = from(a in Appointment, order_by: [asc: a.scheduled_date, asc: a.scheduled_time])
+    base_query = from(
+      a in Appointment,
+      order_by: [
+        asc: a.scheduled_date,
+        asc: a.scheduled_time
+      ]
+    )
 
-    Enum.reduce(opts, base_query, fn
-      {:child_id, child_id}, query ->
-        where(query, [a], a.child_id == ^child_id)
+    Enum.reduce(
+      opts,
+      base_query,
+      fn
+        {:child_id, child_id}, query ->
+          where(query, [a], a.child_id == ^child_id)
 
-      {:provider_id, provider_id}, query ->
-        where(query, [a], a.provider_id == ^provider_id)
+        {:provider_id, provider_id}, query ->
+          where(query, [a], a.provider_id == ^provider_id)
 
-      {:status, status}, query ->
-        where(query, [a], a.status == ^status)
+        {:status, status}, query ->
+          where(query, [a], a.status == ^status)
 
-      {:date, date}, query ->
-        where(query, [a], a.scheduled_date == ^date)
+        {:date, date}, query ->
+          where(query, [a], a.scheduled_date == ^date)
 
-      _, query ->
-        query
-    end)
+        _, query ->
+          query
+      end
+    )
     |> Repo.all()
     |> Repo.preload([:child, :provider])
   end
@@ -311,6 +361,139 @@ defmodule App.Scheduling do
        end
   end
 
+  def create_appointment_with_validation(attrs \\ %{}) do
+    with {:ok, provider} <- validate_provider_active(attrs["provider_id"]),
+         {:ok, appointment} <- create_appointment(attrs) do
+      {:ok, appointment}
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp validate_provider_active(provider_id) when is_binary(provider_id) do
+    validate_provider_active(String.to_integer(provider_id))
+  end
+
+  defp validate_provider_active(provider_id) when is_integer(provider_id) do
+    case get_provider!(provider_id) do
+      %Provider{is_active: true} = provider -> {:ok, provider}
+      %Provider{is_active: false} -> {:error, "Provider is not currently active"}
+    end
+  rescue
+    Ecto.NoResultsError -> {:error, "Provider not found"}
+  end
+
+  def get_provider_statistics do
+    total_providers = Repo.aggregate(Provider, :count, :id)
+    active_providers = Repo.aggregate(
+      Provider,
+      :count,
+      :id,
+      where: [
+        is_active: true
+      ]
+    )
+    inactive_providers = total_providers - active_providers
+
+    # Group by specialization
+    specialization_stats =
+      from(
+        p in Provider,
+        where: p.is_active == true,
+        group_by: p.specialization,
+        select: {p.specialization, count(p.id)}
+      )
+      |> Repo.all()
+      |> Enum.into(%{})
+
+    %{
+      total: total_providers,
+      active: active_providers,
+      inactive: inactive_providers,
+      by_specialization: specialization_stats
+    }
+  end
+
+  def notify_provider_status_change(provider, old_status, new_status) do
+    # Cancel future appointments if provider becomes inactive
+    if old_status == true && new_status == false do
+      cancel_future_appointments_for_provider(provider.id)
+    end
+
+    # Send notification to admin users about status change
+    admin_users = App.Accounts.list_users_by_role("admin")
+
+    Enum.each(
+      admin_users,
+      fn admin ->
+        # You could send email/SMS notification here
+        # App.Notifications.send_provider_status_notification(admin, provider, new_status)
+      end
+    )
+  end
+
+  defp cancel_future_appointments_for_provider(provider_id) do
+    today = Date.utc_today()
+
+    # Get all future appointments for this provider
+    future_appointments =
+      from(
+        a in Appointment,
+        where: a.provider_id == ^provider_id,
+        where: a.scheduled_date > ^today,
+        where: a.status in ["scheduled", "confirmed"]
+      )
+      |> Repo.all()
+      |> Repo.preload([child: :user])
+
+    # Cancel each appointment and notify patients
+    Enum.each(
+      future_appointments,
+      fn appointment ->
+        # Update appointment status
+        update_appointment(
+          appointment,
+          %{
+            status: "cancelled",
+            notes: "Appointment cancelled due to provider unavailability. Please reschedule."
+          }
+        )
+
+        # Send cancellation notification
+        App.Notifications.send_cancellation_notification(appointment)
+      end
+    )
+
+    length(future_appointments)
+  end
+
+  def can_deactivate_provider?(provider_id) do
+    today = Date.utc_today()
+
+    # Check if provider has any upcoming appointments
+    upcoming_count =
+      from(
+        a in Appointment,
+        where: a.provider_id == ^provider_id,
+        where: a.scheduled_date > ^today,
+        where: a.status in ["scheduled", "confirmed"]
+      )
+      |> Repo.aggregate(:count, :id)
+
+    # Provider can be deactivated if they have no upcoming appointments
+    # Or admin can force deactivation (which will cancel appointments)
+    %{
+      can_deactivate: true, # Always allow, but warn about consequences
+      upcoming_appointments: upcoming_count,
+      warning: if(
+        upcoming_count > 0,
+        do: "This will cancel #{upcoming_count} upcoming appointments",
+        else: nil
+      )
+    }
+  end
+
+
   @doc """
   Updates a appointment.
 
@@ -369,7 +552,7 @@ defmodule App.Scheduling do
 
          error ->
            error
-    end
+       end
   end
 
   defp handle_status_change(appointment, old_status) do
@@ -413,16 +596,23 @@ defmodule App.Scheduling do
 
   def get_available_slots(provider_id, date) do
     provider = get_provider!(provider_id)
-    day_of_week = Date.day_of_week(date)
-    schedule = get_provider_schedule(provider_id, day_of_week)
 
-    case schedule do
-      nil ->
-        []
+    # Only return slots if provider is active
+    if provider.is_active do
+      day_of_week = Date.day_of_week(date)
+      schedule = get_provider_schedule(provider_id, day_of_week)
 
-      schedule ->
-        existing_appointments = list_appointments(provider_id: provider_id, date: date)
-        generate_available_slots(schedule, existing_appointments)
+      case schedule do
+        nil ->
+          []
+
+        schedule ->
+          existing_appointments = list_appointments(provider_id: provider_id, date: date)
+          generate_available_slots(schedule, existing_appointments)
+      end
+    else
+      # Return empty list for inactive providers
+      []
     end
   end
 
@@ -447,10 +637,12 @@ defmodule App.Scheduling do
     |> Stream.iterate(&(&1 + slot_interval))
     |> Enum.take_while(&(&1 < end_minutes - slot_interval)) # Ensure slots fit within schedule
     |> Enum.map(&minutes_to_time/1)
-    |> Enum.filter(fn slot_time ->
-      # Only include slots that aren't already booked
-      not Enum.member?(booked_times, slot_time)
-    end)
+    |> Enum.filter(
+         fn slot_time ->
+           # Only include slots that aren't already booked
+           not Enum.member?(booked_times, slot_time)
+         end
+       )
   end
 
   # Helper to convert Time to minutes since midnight
@@ -498,11 +690,13 @@ defmodule App.Scheduling do
 
   defp log_appointment_action(appointment, action) do
     %AppointmentLog{}
-    |> AppointmentLog.changeset(%{
-      appointment_id: appointment.id,
-      action: action,
-      timestamp: DateTime.utc_now()
-    })
+    |> AppointmentLog.changeset(
+         %{
+           appointment_id: appointment.id,
+           action: action,
+           timestamp: DateTime.utc_now()
+         }
+       )
     |> Repo.insert()
   end
 
@@ -519,11 +713,15 @@ defmodule App.Scheduling do
   def upcoming_appointments(child_id) do
     today = Date.utc_today()
 
-    from(a in Appointment,
+    from(
+      a in Appointment,
       where: a.child_id == ^child_id,
       where: a.scheduled_date >= ^today,
       where: a.status in ["scheduled", "confirmed"],
-      order_by: [asc: a.scheduled_date, asc: a.scheduled_time],
+      order_by: [
+        asc: a.scheduled_date,
+        asc: a.scheduled_time
+      ],
       limit: 5
     )
     |> Repo.all()
@@ -533,10 +731,14 @@ defmodule App.Scheduling do
   def past_appointments(child_id) do
     today = Date.utc_today()
 
-    from(a in Appointment,
+    from(
+      a in Appointment,
       where: a.child_id == ^child_id,
       where: a.scheduled_date < ^today,
-      order_by: [desc: a.scheduled_date, desc: a.scheduled_time],
+      order_by: [
+        desc: a.scheduled_date,
+        desc: a.scheduled_time
+      ],
       limit: 10
     )
     |> Repo.all()
@@ -544,19 +746,44 @@ defmodule App.Scheduling do
   end
 
   def provider_appointments_for_date(provider_id, date) do
-    from(a in Appointment,
-      where: a.provider_id == ^provider_id,
-      where: a.scheduled_date == ^date,
-      where: a.status in ["scheduled", "confirmed"],
-      order_by: [asc: a.scheduled_time]
-    )
-    |> Repo.all()
-    |> Repo.preload([:child])
+    provider = get_provider!(provider_id)
+
+    if provider.is_active do
+      from(a in Appointment,
+        where: a.provider_id == ^provider_id,
+        where: a.scheduled_date == ^date,
+        where: a.status in ["scheduled", "confirmed"],
+        order_by: [asc: a.scheduled_time]
+      )
+      |> Repo.all()
+      |> Repo.preload([:child])
+    else
+      []
+    end
+  end
+
+  def search_providers(search_term, opts \\ []) do
+    active_only = Keyword.get(opts, :active_only, false)
+
+    base_query =
+      from(p in Provider,
+        where: ilike(p.name, ^"%#{search_term}%"),
+        order_by: [asc: p.name]
+      )
+
+    query = if active_only do
+      where(base_query, [p], p.is_active == true)
+    else
+      base_query
+    end
+
+    Repo.all(query)
   end
 
   def check_appointment_conflicts(provider_id, date, time, exclude_appointment_id \\ nil) do
     query =
-      from(a in Appointment,
+      from(
+        a in Appointment,
         where: a.provider_id == ^provider_id,
         where: a.scheduled_date == ^date,
         where: a.scheduled_time == ^time,
@@ -576,7 +803,8 @@ defmodule App.Scheduling do
   # Analytics functions
 
   def appointment_statistics(provider_id, start_date, end_date) do
-    from(a in Appointment,
+    from(
+      a in Appointment,
       where: a.provider_id == ^provider_id,
       where: a.scheduled_date >= ^start_date,
       where: a.scheduled_date <= ^end_date,
@@ -647,11 +875,14 @@ defmodule App.Scheduling do
   def list_provider_active_appointments(provider_id) do
     today = Date.utc_today()
 
-    from(a in Appointment,
+    from(
+      a in Appointment,
       where: a.provider_id == ^provider_id,
       where: a.scheduled_date == ^today,
       where: a.status in ["scheduled", "confirmed", "in_progress"],
-      order_by: [asc: a.scheduled_time]
+      order_by: [
+        asc: a.scheduled_time
+      ]
     )
     |> Repo.all()
     |> Repo.preload([:child, :provider])
@@ -715,10 +946,12 @@ defmodule App.Scheduling do
     # Preload all health-related data
     child_with_health =
       child
-      |> Repo.preload([
-        :growth_records,
-        :immunization_records
-      ])
+      |> Repo.preload(
+           [
+             :growth_records,
+             :immunization_records
+           ]
+         )
 
     # Attach health data to appointment
     Map.put(appointment, :child_health_data, child_with_health)
@@ -733,9 +966,12 @@ defmodule App.Scheduling do
 
     # Follow-up scheduling logic based on WHO guidelines
     follow_up_months = case age_months do
-      months when months < 6 -> 2   # Every 2 months for under 6 months
-      months when months < 12 -> 3  # Every 3 months for 6-12 months
-      months when months < 24 -> 6  # Every 6 months for 1-2 years
+      months when months < 6 -> 2
+      # Every 2 months for under 6 months
+      months when months < 12 -> 3
+      # Every 3 months for 6-12 months
+      months when months < 24 -> 6
+      # Every 6 months for 1-2 years
       _ -> 12                       # Yearly for 2-5 years
     end
 
@@ -762,7 +998,8 @@ defmodule App.Scheduling do
 
     # Get completed appointments in date range
     completed_appointments =
-      from(a in Appointment,
+      from(
+        a in Appointment,
         where: a.provider_id == ^provider_id,
         where: a.status == "completed",
         where: a.scheduled_date >= ^start_date and a.scheduled_date <= ^end_date,
@@ -773,14 +1010,16 @@ defmodule App.Scheduling do
 
     # Count health records created during this period
     growth_records_count =
-      from(g in App.HealthRecords.Growth,
+      from(
+        g in App.HealthRecords.Growth,
         where: g.child_id in ^completed_appointments,
         where: g.measurement_date >= ^start_date and g.measurement_date <= ^end_date
       )
       |> Repo.aggregate(:count, :id)
 
     immunizations_administered =
-      from(i in App.HealthRecords.Immunization,
+      from(
+        i in App.HealthRecords.Immunization,
         where: i.child_id in ^completed_appointments,
         where: i.status == "administered",
         where: i.administered_date >= ^start_date and i.administered_date <= ^end_date
@@ -825,23 +1064,30 @@ defmodule App.Scheduling do
 
     # Get previous appointments for this child
     previous_appointments =
-      from(a in Appointment,
+      from(
+        a in Appointment,
         where: a.child_id == ^child_id,
         where: a.id != ^appointment_id,
         where: a.status == "completed",
-        order_by: [desc: a.scheduled_date],
+        order_by: [
+          desc: a.scheduled_date
+        ],
         limit: 5
       )
       |> Repo.all()
       |> Repo.preload([:provider])
 
     # Get recent health records
-    recent_growth = App.HealthRecords.list_growth_records(child_id) |> Enum.take(3)
+    recent_growth = App.HealthRecords.list_growth_records(child_id)
+                    |> Enum.take(3)
     recent_immunizations =
-      from(i in App.HealthRecords.Immunization,
+      from(
+        i in App.HealthRecords.Immunization,
         where: i.child_id == ^child_id,
         where: i.status == "administered",
-        order_by: [desc: i.administered_date],
+        order_by: [
+          desc: i.administered_date
+        ],
         limit: 5
       )
       |> Repo.all()

@@ -37,8 +37,8 @@ config :app, Oban,
    ]
 
 config :app, :probase_sms,
-   username: System.get_env("SMS_USERNAME") || "your_test_username",  # Replace with your test credentials
-   password: System.get_env("SMS_PASSWORD") || "your_test_password",
+   username: System.get_env("SMS_USERNAME") || "Prince Mambwe",  # Replace with your test credentials
+   password: System.get_env("SMS_PASSWORD") || "avcyYJwUqnyJfdfjeJcf",
    sender_id: System.get_env("SMS_SENDER") || "U5Health" # Default sender ID
 
 # Configures the endpoint
