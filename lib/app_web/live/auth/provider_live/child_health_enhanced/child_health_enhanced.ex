@@ -120,7 +120,7 @@ defmodule AppWeb.ProviderLive.ChildHealthEnhanced do
   def handle_event("start_appointment", _, socket) do
     appointment = socket.assigns.appointment
 
-    case Scheduling.update_appointment(appointment, %{status: "in_progress"}) |> IO.inspect do
+    case Scheduling.update_appointment(appointment, %{status: "in_progress"}) do
       {:ok, updated_appointment} ->
         {
           :noreply,

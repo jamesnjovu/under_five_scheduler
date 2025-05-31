@@ -29,7 +29,6 @@ defmodule AppWeb.USSDController do
         "phoneNumber" => phone_number,
         "text" => text
       }) do
-        IO.inspect phone_number
     # Get or create USSD session
     session = USSDSession.get_or_create(session_id, phone_number)
 

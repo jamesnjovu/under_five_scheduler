@@ -702,7 +702,6 @@ defmodule App.Scheduling do
 
   defp schedule_appointment_notifications(appointment) do
     appointment = Repo.preload(appointment, child: :user)
-    IO.inspect(appointment)
     user = appointment.child.user
 
     # Schedule reminder notifications based on user preferences

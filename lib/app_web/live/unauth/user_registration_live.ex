@@ -175,7 +175,6 @@ defmodule AppWeb.UserRegistrationLive do
 
   def handle_event("validate", %{"user" => user_params}, socket) do
     changeset = Accounts.change_user_registration(%User{}, user_params)
-    IO.inspect(changeset)
     {:noreply, assign_form1(socket, Map.put(changeset, :action, :validate))}
   end
 

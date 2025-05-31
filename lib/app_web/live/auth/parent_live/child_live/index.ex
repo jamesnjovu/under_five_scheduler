@@ -10,7 +10,6 @@ defmodule AppWeb.ChildLive.Index do
 
     if user && Accounts.is_parent?(user) do
       children = Accounts.list_children(user.id)
-      |> IO.inspect
 
       socket =
         socket

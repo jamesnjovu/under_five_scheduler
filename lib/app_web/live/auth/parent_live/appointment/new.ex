@@ -97,9 +97,7 @@ defmodule AppWeb.AppointmentLive.New do
 
   @impl true
   def handle_event("next_month", _params, socket) do
-    IO.inspect socket.assigns.current_month
     new_month = Date.add(socket.assigns.current_month, 32) |> Date.beginning_of_month()
-    IO.inspect new_month
     calendar_weeks = generate_calendar_weeks(new_month)
 
     {:noreply,
@@ -127,9 +125,6 @@ defmodule AppWeb.AppointmentLive.New do
 
   @impl true
   def handle_event("select_time", %{"time" => time_string}, socket) do
-    # Add debug logging to see the actual time_string
-    IO.inspect(time_string, label: "Time string received")
-
     # More robust time parsing
     case parse_time(time_string) do
       {:ok, time} ->
@@ -172,9 +167,6 @@ defmodule AppWeb.AppointmentLive.New do
     appointment_params = Ecto.Changeset.apply_changes(socket.assigns.appointment_changeset)
     params_map = Map.from_struct(appointment_params)
 
-    # Debug output
-    IO.inspect(params_map, label: "Appointment parameters")
-
     # Check for required fields
     required_fields = [:scheduled_date, :scheduled_time, :status, :notes, :child_id, :provider_id]
     missing_fields = Enum.filter(required_fields, fn field -> is_nil(Map.get(params_map, field)) end)
@@ -193,7 +185,6 @@ defmodule AppWeb.AppointmentLive.New do
       {:error, %Ecto.Changeset{} = changeset} ->
         # Extract and format the error messages
         error_details = detailed_changeset_errors(changeset)
-        IO.inspect(error_details, label: "Changeset errors")
 
         error_message = "Error creating appointment: " <> format_changeset_errors(changeset)
 

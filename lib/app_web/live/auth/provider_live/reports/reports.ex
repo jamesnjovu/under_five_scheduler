@@ -160,7 +160,6 @@ defmodule AppWeb.ProviderLive.Reports do
         csv_data = generate_csv_export(report_data, provider, date_range)
         filename = "provider_report_#{Date.to_string(date_range.start_date)}_to_#{Date.to_string(date_range.end_date)}.csv"
 
-        IO.inspect "kkkkk"
         socket
         |> push_event("download_file", %{
           data: csv_data,
