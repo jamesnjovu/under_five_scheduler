@@ -73,7 +73,33 @@ defmodule AppWeb.Auth.Navigation do
         </svg>
         <span>Health Dashboard</span>
       </.link>
-
+    <.link
+    :if={@current_user.role == "admin"}
+    navigate={~p"/admin/admin_users"}
+    class={
+    if @current_url in [
+         ~p"/admin/admin_users"
+       ],
+       do: active_class(),
+       else: nav_class()
+    }
+    >
+    <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="h-5 w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="8.5" cy="7" r="4"></circle>
+    <path d="M20 8v6M23 11h-6"></path>
+    <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M17 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+    <span>Admin Users</span>
+    </.link>
       <.link
         :if={@current_user.role == "admin"}
         navigate={~p"/admin/providers"}

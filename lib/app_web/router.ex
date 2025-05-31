@@ -62,6 +62,7 @@ defmodule AppWeb.Router do
       live "/sms_messages", SMSMessages, :index
       live "/vaccine_schedules", VaccineSchedules, :index
       live "/specializations", Specializations, :index
+      live "/admin_users", AdminUsers, :index
     end
   end
 
