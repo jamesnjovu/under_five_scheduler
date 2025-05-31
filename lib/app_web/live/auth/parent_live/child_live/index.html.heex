@@ -1,15 +1,11 @@
 <div class="flex h-screen bg-gray-50">
   <!-- Sidebar navigation - responsive version -->
-  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
-    <div class="p-4">
-      <div class="flex items-center justify-center">
-        <span class="text-xl font-bold">Parent Portal</span>
-      </div>
-      <div class="mt-2 text-center text-sm">
-        <span>{@user.name}</span>
-      </div>
-    </div>
-  </.side_nav_res>
+
+  <.side_nav_res
+    show_sidebar={@show_sidebar}
+    socket={@socket}
+    current_user={@current_user}
+   />
   <!-- Main content area -->
   <div class="flex-1 overflow-auto">
     <!-- Mobile sidebar toggle -->
@@ -188,9 +184,9 @@
                       <div class="text-sm text-gray-900">{child.medical_record_number}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        {App.Accounts.Child.next_checkup_age(child)}
-                      </span>
+                      <p class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full #{AppWeb.ChildLive.Show.checkup_badge_class(child)}"}>
+                                       Next check-up: {AppWeb.ChildLive.Show.format_next_checkup(child)}
+                                     </p>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div class="flex justify-end space-x-3">

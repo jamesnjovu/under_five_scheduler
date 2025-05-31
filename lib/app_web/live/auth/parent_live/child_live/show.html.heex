@@ -1,15 +1,10 @@
 <div class="flex h-screen bg-gray-50">
   <!-- Sidebar navigation - responsive version -->
-  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
-    <div class="p-4">
-      <div class="flex items-center justify-center">
-        <span class="text-xl font-bold">Parent Portal</span>
-      </div>
-      <div class="mt-2 text-center text-sm">
-        <span>{@user.name}</span>
-      </div>
-    </div>
-  </.side_nav_res>
+  <.side_nav_res
+    show_sidebar={@show_sidebar}
+    socket={@socket}
+    current_user={@current_user}
+   />
   
 <!-- Main content area -->
   <!-- Main content area -->
@@ -147,9 +142,9 @@
             <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt class="text-sm font-medium text-gray-500">Next check-up recommendation</dt>
               <dd class="mt-1 sm:mt-0 sm:col-span-2">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  {App.Accounts.Child.next_checkup_age(@child)}
-                </span>
+               <p class={"px-2 inline-flex text-xs leading-5 font-semibold rounded-full #{checkup_badge_class(@child)}"}>
+                 Next check-up: {format_next_checkup(@child)}
+               </p>
               </dd>
             </div>
           </dl>

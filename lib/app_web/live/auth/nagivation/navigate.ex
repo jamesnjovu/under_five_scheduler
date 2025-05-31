@@ -382,7 +382,7 @@ defmodule AppWeb.Auth.Navigation do
 
       <div class="mt-8 border-t border-indigo-700"></div>
 
-      <.link navigate={~p"/users/log_out"} class={nav_class()}>
+      <.link navigate={~p"/users/log_out"} class={nav_class()<>"block px-4 py-2 hover:bg-indigo-700 flex items-center space-x-2 text-red-300 hover:text-red-200"}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5"

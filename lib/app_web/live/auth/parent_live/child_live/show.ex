@@ -77,6 +77,32 @@ defmodule AppWeb.ChildLive.Show do
 
     # Only allow cancellation for future appointments that are scheduled or confirmed
     Date.compare(appointment.scheduled_date, today) == :gt &&
-    appointment.status in ["scheduled", "confirmed"]
+      appointment.status in ["scheduled", "confirmed"]
+  end
+
+  def format_next_checkup(child) do
+    checkup_info = App.Accounts.Child.next_checkup_age(child)
+
+    case checkup_info do
+      %{description: description, is_overdue: true} ->
+        "Overdue: #{description}"
+      %{description: description, priority: "high"} ->
+        "Due: #{description}"
+      %{description: description} ->
+        description
+      _ ->
+        "Schedule checkup"
+    end
+  end
+
+  def checkup_badge_class(child) do
+    checkup_info = App.Accounts.Child.next_checkup_age(child)
+
+    case checkup_info do
+      %{is_overdue: true} -> "bg-red-100 text-red-800"
+      %{priority: "high"} -> "bg-orange-100 text-orange-800"
+      %{priority: "medium"} -> "bg-yellow-100 text-yellow-800"
+      _ -> "bg-green-100 text-green-800"
+    end
   end
 end

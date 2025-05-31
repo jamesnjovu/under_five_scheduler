@@ -1,15 +1,10 @@
 <div class="flex h-screen bg-gray-50">
   <!-- Sidebar navigation - responsive version -->
-  <.side_nav_res show_sidebar={@show_sidebar} socket={@socket}>
-    <div class="p-4">
-      <div class="flex items-center justify-center">
-        <span class="text-xl font-bold">Parent Portal</span>
-      </div>
-      <div class="mt-2 text-center text-sm">
-        <span>{@user.name}</span>
-      </div>
-    </div>
-  </.side_nav_res>
+    <.side_nav_res
+      show_sidebar={@show_sidebar}
+      socket={@socket}
+      current_user={@current_user}
+     />
   
 <!-- Main content area -->
   <div class="flex-1 overflow-auto">

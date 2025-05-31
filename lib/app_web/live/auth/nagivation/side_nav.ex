@@ -67,6 +67,19 @@ defmodule AppWeb.Components.SideNav do
             {String.replace(@provider.specialization, "_", " ")}
           </div>
         </div>
+        <div
+          :if={@current_user.role == "admin"}
+          class="text-center">
+          <span class="text-xl font-bold text-white">Admin Portal</span>
+        </div>
+        <div
+          :if={@current_user.role == "parent"}
+          class="text-center">
+          <span class="text-xl font-bold text-white">Parent Portal</span>
+          <div class="mt-2 text-center text-sm">
+            <span>{@current_user.name}</span>
+          </div>
+        </div>
       </div>
       {render_slot(@inner_block)}
       {live_render(@socket, AppWeb.Auth.Navigation, sticky: true, id: "Nav")}

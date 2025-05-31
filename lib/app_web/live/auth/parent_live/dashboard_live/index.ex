@@ -70,4 +70,19 @@ defmodule AppWeb.DashboardLive.Index do
 
     "#{hour}:#{String.pad_leading("#{minute}", 2, "0")} #{am_pm}"
   end
+
+  defp format_next_checkup(child) do
+    checkup_info = App.Accounts.Child.next_checkup_age(child)
+
+    case checkup_info do
+      %{description: description, is_overdue: true} ->
+        "Overdue: #{description}"
+      %{description: description, priority: "high"} ->
+        "Due: #{description}"
+      %{description: description} ->
+        description
+      _ ->
+        "Schedule checkup"
+    end
+  end
 end
