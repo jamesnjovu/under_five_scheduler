@@ -26,16 +26,9 @@ defmodule AppWeb.AdminLive.Parents do
         |> assign(:show_form, false)
         |> assign(:show_child_form, false)
         |> assign(:show_details_modal, false)
-        |> assign(:show_appointment_form, false)
         |> assign(:selected_parent_id, nil)
-        |> assign(:selected_child_id, nil)
         |> assign(:parent_changeset, Accounts.change_user_registration(%User{}))
         |> assign(:child_changeset, nil)
-        |> assign(:providers, Scheduling.list_providers())
-        |> assign(:available_slots, [])
-        |> assign(:selected_date, nil)
-        |> assign(:selected_provider_id, nil)
-          # For responsive sidebar toggle
         |> assign(:show_sidebar, false)
 
       {:ok, socket}
@@ -177,112 +170,6 @@ defmodule AppWeb.AdminLive.Parents do
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :child_changeset, changeset)}
-  end
-
-  @impl true
-  def handle_event("show_appointment_form", %{"child_id" => child_id}, socket) do
-    {:noreply,
-      socket
-      |> assign(:show_appointment_form, true)
-      |> assign(:selected_child_id, String.to_integer(child_id))
-      |> assign(:selected_date, nil)
-      |> assign(:selected_provider_id, nil)
-      |> assign(:available_slots, [])}
-  end
-
-  @impl true
-  def handle_event("hide_appointment_form", _, socket) do
-    {:noreply,
-      socket
-      |> assign(:show_appointment_form, false)
-      |> assign(:selected_child_id, nil)
-      |> assign(:selected_date, nil)
-      |> assign(:selected_provider_id, nil)
-      |> assign(:available_slots, [])}
-  end
-
-  @impl true
-  def handle_event("date_selected", %{"date" => date_string}, socket) do
-    case Date.from_iso8601(date_string) do
-      {:ok, date} ->
-        # Reset available slots when date changes
-        {:noreply,
-          socket
-          |> assign(:selected_date, date)
-          |> assign(:available_slots, [])}
-
-      {:error, _} ->
-        {:noreply, socket}
-    end
-  end
-
-  @impl true
-  def handle_event("provider_selected", %{"provider_id" => provider_id}, socket) do
-    provider_id = String.to_integer(provider_id)
-
-    if socket.assigns.selected_date do
-      available_slots = Scheduling.get_available_slots(provider_id, socket.assigns.selected_date)
-
-      {:noreply,
-        socket
-        |> assign(:selected_provider_id, provider_id)
-        |> assign(:available_slots, available_slots)}
-    else
-      {:noreply, assign(socket, :selected_provider_id, provider_id)}
-    end
-  end
-
-  @impl true
-  def handle_event("create_appointment", %{"time" => time_string}, socket) do
-    case Time.from_iso8601(time_string) do
-      {:ok, time} ->
-        appointment_params = %{
-          child_id: socket.assigns.selected_child_id,
-          provider_id: socket.assigns.selected_provider_id,
-          scheduled_date: socket.assigns.selected_date,
-          scheduled_time: time,
-          status: "scheduled",
-          notes: "Appointment created by admin"
-        }
-
-        case Scheduling.create_appointment(appointment_params) do
-          {:ok, appointment} ->
-            child = Accounts.get_child!(socket.assigns.selected_child_id)
-            provider = Scheduling.get_provider!(socket.assigns.selected_provider_id)
-
-            # Log the creation
-            App.Administration.Auditing.log_action(%{
-              action: "create",
-              entity_type: "appointment",
-              entity_id: appointment.id,
-              user_id: socket.assigns.user.id,
-              details: %{
-                child_name: child.name,
-                provider_name: provider.name,
-                scheduled_date: appointment.scheduled_date,
-                scheduled_time: appointment.scheduled_time
-              }
-            })
-
-            {:noreply,
-              socket
-              |> put_flash(:info, "Appointment created successfully for #{child.name}.")
-              |> assign(:show_appointment_form, false)
-              |> assign(:selected_child_id, nil)
-              |> assign(:selected_date, nil)
-              |> assign(:selected_provider_id, nil)
-              |> assign(:available_slots, [])
-              |> assign(:parents, list_parents_with_details())}
-
-          {:error, changeset} ->
-            {:noreply,
-              socket
-              |> put_flash(:error, "Failed to create appointment: #{format_errors(changeset)}")}
-        end
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Invalid time selected.")}
-    end
   end
 
   @impl true

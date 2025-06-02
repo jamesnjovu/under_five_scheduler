@@ -1,0 +1,621 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar navigation -->
+  <.side_nav_res
+    show_sidebar={@show_sidebar}
+    socket={@socket}
+    current_user={@current_user}
+   />
+
+  <!-- Main content area -->
+  <div class="flex-1 overflow-auto">
+    <!-- Mobile sidebar toggle -->
+    <div class="fixed z-20 top-4 left-4 md:hidden">
+      <button
+        phx-click="toggle_sidebar"
+        class="p-2 rounded-md bg-indigo-600 text-white shadow-md hover:bg-indigo-700 focus:outline-none"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Book Appointment</h1>
+          <p class="mt-1 text-sm text-gray-600">Administrative appointment booking</p>
+        </div>
+        <.link
+          href={~p"/admin/parents"}
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Parents
+        </.link>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <.flash_group flash={@flash} />
+
+      <!-- Progress steps -->
+      <nav aria-label="Progress" class="mb-8">
+        <ol role="list" class="space-y-4 md:flex md:space-y-0 md:space-x-8">
+          <li class="md:flex-1">
+            <div class={
+              "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pl-0 md:pt-4 md:pb-0 " <>
+              if(@current_step == "select_child", do: "border-indigo-600", else: if(@child, do: "border-green-500", else: "border-gray-200"))
+            }>
+              <span class={
+                "text-sm font-medium " <>
+                if(@current_step == "select_child", do: "text-indigo-600", else: if(@child, do: "text-green-500", else: "text-gray-500"))
+              }>
+                Step 1
+              </span>
+              <span class="text-sm font-medium">Select Child</span>
+            </div>
+          </li>
+
+          <li class="md:flex-1">
+            <div class={
+              "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pl-0 md:pt-4 md:pb-0 " <>
+              if(@current_step == "select_provider", do: "border-indigo-600", else: if(@selected_provider_id, do: "border-green-500", else: "border-gray-200"))
+            }>
+              <span class={
+                "text-sm font-medium " <>
+                if(@current_step == "select_provider", do: "text-indigo-600", else: if(@selected_provider_id, do: "text-green-500", else: "text-gray-500"))
+              }>
+                Step 2
+              </span>
+              <span class="text-sm font-medium">Select Provider</span>
+            </div>
+          </li>
+
+          <li class="md:flex-1">
+            <div class={
+              "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pl-0 md:pt-4 md:pb-0 " <>
+              if(@current_step == "select_date", do: "border-indigo-600", else: if(@selected_date, do: "border-green-500", else: "border-gray-200"))
+            }>
+              <span class={
+                "text-sm font-medium " <>
+                if(@current_step == "select_date", do: "text-indigo-600", else: if(@selected_date, do: "text-green-500", else: "text-gray-500"))
+              }>
+                Step 3
+              </span>
+              <span class="text-sm font-medium">Select Date</span>
+            </div>
+          </li>
+
+          <li class="md:flex-1">
+            <div class={
+              "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pl-0 md:pt-4 md:pb-0 " <>
+              if(@current_step == "select_time", do: "border-indigo-600", else: if(@selected_time, do: "border-green-500", else: "border-gray-200"))
+            }>
+              <span class={
+                "text-sm font-medium " <>
+                if(@current_step == "select_time", do: "text-indigo-600", else: if(@selected_time, do: "text-green-500", else: "text-gray-500"))
+              }>
+                Step 4
+              </span>
+              <span class="text-sm font-medium">Select Time</span>
+            </div>
+          </li>
+
+          <li class="md:flex-1">
+            <div class={
+              "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pl-0 md:pt-4 md:pb-0 " <>
+              if(@current_step == "confirm", do: "border-indigo-600", else: "border-gray-200")
+            }>
+              <span class={
+                "text-sm font-medium " <>
+                if(@current_step == "confirm", do: "text-indigo-600", else: "text-gray-500")
+              }>
+                Step 5
+              </span>
+              <span class="text-sm font-medium">Confirm</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Step content -->
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
+          <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              {case @current_step do
+                "select_child" -> "Select Child"
+                "select_provider" -> "Select Healthcare Provider"
+                "select_date" -> "Select Appointment Date"
+                "select_time" -> "Select Appointment Time"
+                "confirm" -> "Confirm Appointment"
+              end}
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+              {case @current_step do
+                "select_child" -> "Choose which child needs a health check-up"
+                "select_provider" -> "Choose a healthcare provider for the appointment"
+                "select_date" -> "Select a date for the appointment"
+                "select_time" -> "Choose an available time slot"
+                "confirm" -> "Review and confirm appointment details"
+              end}
+            </p>
+          </div>
+
+          <%= if @current_step != "select_child" do %>
+            <button
+              phx-click="back"
+              class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Back
+            </button>
+          <% end %>
+        </div>
+
+        <div class="px-4 py-5 sm:p-6">
+          <%= case @current_step do %>
+            <% "select_child" -> %>
+              <%= if Enum.empty?(@all_children) do %>
+                <div class="py-10 px-4 flex flex-col items-center justify-center">
+                  <svg
+                    class="h-12 w-12 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197L15 21z"
+                    />
+                  </svg>
+                  <h3 class="mt-2 text-sm font-medium text-gray-900">No children registered</h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                    No children are registered in the system yet
+                  </p>
+                  <div class="mt-6">
+                    <.link
+                      href={~p"/admin/parents"}
+                      class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Manage Parents & Children
+                    </.link>
+                  </div>
+                </div>
+              <% else %>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <%= for %{child: child, parent: parent} <- @all_children do %>
+                    <div
+                      phx-click="select_child"
+                      phx-value-child_id={child.id}
+                      class={
+                        "cursor-pointer transform transition-transform hover:scale-105 bg-white overflow-hidden shadow-sm rounded-lg border-2 " <>
+                        if(@child && @child.id == child.id, do: "border-indigo-500 ring-2 ring-indigo-500", else: "border-gray-200 hover:border-indigo-300")
+                      }
+                    >
+                      <div class="p-6">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 font-medium text-lg">
+                              {String.first(child.name)}
+                            </span>
+                          </div>
+                          <div class="ml-4 flex-1">
+                            <h4 class="text-lg font-medium text-gray-900">{child.name}</h4>
+                            <p class="text-sm text-gray-500">
+                              {App.Accounts.Child.formatted_age(child)}
+                            </p>
+                            <p class="text-xs text-gray-400">
+                              Parent: {parent.name}
+                            </p>
+                            <p class="text-xs text-gray-400">
+                              MRN: {child.medical_record_number}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+
+            <% "select_provider" -> %>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <%= for provider <- @providers do %>
+                  <div
+                    phx-click="select_provider"
+                    phx-value-provider_id={provider.id}
+                    class={
+                      "cursor-pointer transform transition-transform hover:scale-105 bg-white overflow-hidden shadow-sm rounded-lg border-2 " <>
+                      if(@selected_provider_id == provider.id, do: "border-indigo-500 ring-2 ring-indigo-500", else: "border-gray-200 hover:border-indigo-300")
+                    }
+                  >
+                    <div class="p-6">
+                      <div class="flex flex-col items-center text-center">
+                        <div class="flex-shrink-0 h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-8 w-8 text-blue-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="mt-4">
+                          <h4 class="text-lg font-medium text-gray-900">{provider.name}</h4>
+                          <p class="text-sm text-gray-500">
+                            {App.Setup.Specializations.display_name(provider.specialization)}
+                          </p>
+                          <%= if provider.license_number do %>
+                            <p class="text-xs text-gray-400 mt-1">
+                              License: {provider.license_number}
+                            </p>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+            <% "select_date" -> %>
+              <div class="max-w-3xl mx-auto">
+                <div class="bg-white rounded-lg shadow p-6">
+                  <h4 class="text-lg font-medium text-gray-900 mb-4">
+                    Select an appointment date
+                  </h4>
+
+                  <p class="mb-6 text-sm text-gray-500">
+                    Please select an available date from the calendar below. Only dates when the provider is available are active.
+                  </p>
+
+                  <div class="calendar-container">
+                    <div class="flex justify-between items-center mb-6">
+                      <button
+                        phx-click="prev_month"
+                        class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg class="h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      <h3 class="text-lg font-semibold text-gray-900">
+                        <%= Calendar.strftime(@current_month, "%B %Y") %>
+                      </h3>
+
+                      <button
+                        phx-click="next_month"
+                        class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg class="h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-gray-700 mb-2">
+                      <div>Sun</div>
+                      <div>Mon</div>
+                      <div>Tue</div>
+                      <div>Wed</div>
+                      <div>Thu</div>
+                      <div>Fri</div>
+                      <div>Sat</div>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-2">
+                      <%= for week <- @calendar_weeks do %>
+                        <%= for day <- week do %>
+                          <%= if is_nil(day) do %>
+                            <!-- Empty cell for days not in current month -->
+                            <div class="h-12 border border-transparent rounded"></div>
+                          <% else %>
+                            <%
+                              today = Date.utc_today()
+                              is_today = Date.compare(day, today) == :eq
+                              is_past = Date.compare(day, today) == :lt
+                              is_available = day in @available_dates
+
+                              day_classes = cond do
+                                is_past -> "text-gray-300 cursor-not-allowed bg-gray-50"
+                                is_available -> "text-gray-900 bg-white hover:bg-indigo-50 cursor-pointer"
+                                true -> "text-gray-300 cursor-not-allowed bg-gray-50"
+                              end
+                            %>
+
+                            <button
+                              phx-click={if is_available, do: "select_date", else: nil}
+                              phx-value-date={if is_available, do: Date.to_iso8601(day), else: nil}
+                              disabled={!is_available || is_past}
+                              class={
+                                "h-12 w-full flex items-center justify-center rounded border #{day_classes} " <>
+                                "#{is_today && "border-indigo-500 ring-1 ring-indigo-500" || "border-gray-200"} " <>
+                                "#{is_available && !is_past && "hover:border-indigo-500 hover:text-indigo-700" || ""} " <>
+                                "#{@selected_date && Date.compare(day, @selected_date) == :eq && "bg-indigo-100 text-indigo-700" || ""}"
+                              }
+                            >
+                              <span class="text-sm">
+                                <%= day.day %>
+
+                                <%= if is_available && !is_past do %>
+                                  <div class="w-1 h-1 bg-green-500 rounded-full mx-auto mt-1"></div>
+                                <% end %>
+                              </span>
+                            </button>
+                          <% end %>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <div class="mt-6 flex items-center">
+                    <div class="flex items-center mr-6">
+                      <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                      <span class="text-sm text-gray-600">Available</span>
+                    </div>
+
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
+                      <span class="text-sm text-gray-600">Unavailable</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            <% "select_time" -> %>
+              <%= if Enum.empty?(@available_slots) do %>
+                <div class="text-center py-6">
+                  <svg
+                    class="mx-auto h-12 w-12 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <h3 class="mt-2 text-sm font-medium text-gray-900">No available slots</h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                    There are no available appointment slots for this date. Please choose another date.
+                  </p>
+                  <div class="mt-6">
+                    <button
+                      phx-click="back"
+                      class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Select Another Date
+                    </button>
+                  </div>
+                </div>
+              <% else %>
+                <div class="max-w-lg mx-auto">
+                  <h4 class="text-lg font-medium text-gray-900 mb-4">
+                    Available time slots for {format_date(@selected_date)}
+                  </h4>
+                  <div class="grid grid-cols-3 gap-4">
+                    <%= for slot <- @available_slots do %>
+                      <button
+                        phx-click="select_time"
+                        phx-value-time={Time.to_iso8601(slot)}
+                        class={
+                          "transform transition-all hover:scale-105 py-2 px-4 border rounded-md text-sm font-medium " <>
+                          if(@selected_time == slot,
+                            do: "bg-indigo-100 text-indigo-700 border-indigo-500 ring-2 ring-indigo-500",
+                            else: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50")
+                        }
+                      >
+                        {format_time(slot)}
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+            <% "confirm" -> %>
+              <div class="max-w-3xl mx-auto">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                  <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                      Appointment Details
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                      Please review the information below and confirm.
+                    </p>
+                  </div>
+                  <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Child</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {@child.name}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Parent</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {@parent.name}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Age</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {App.Accounts.Child.formatted_age(@child)}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Medical Record Number</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {@child.medical_record_number}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Healthcare Provider</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {Enum.find(@providers, &(&1.id == @selected_provider_id)).name}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Specialization</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {App.Setup.Specializations.display_name(Enum.find(@providers, &(&1.id == @selected_provider_id)).specialization)}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {format_date(@selected_date)}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Time</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                          {format_time(@selected_time)}
+                        </dd>
+                      </div>
+                      <div class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Admin Notes</dt>
+                        <dd class="mt-1">
+                          <textarea
+                            id="notes"
+                            name="notes"
+                            rows="3"
+                            phx-blur="update_notes"
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Add any admin notes or special instructions..."
+                          ><%= if @appointment_changeset, do: Ecto.Changeset.get_field(@appointment_changeset, :notes, "Appointment created by admin") %></textarea>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div class="bg-gray-50 px-4 py-4 sm:px-6 flex justify-between">
+                    <button
+                      phx-click="back"
+                      class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Back
+                    </button>
+                    <button
+                      phx-click="confirm_appointment"
+                      class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Confirm Appointment
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 ml-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mt-8 bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div class="flex">
+                    <div class="flex-shrink-0">
+                      <svg
+                        class="h-5 w-5 text-blue-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div class="ml-3 flex-1 md:flex md:justify-between">
+                      <p class="text-sm text-blue-700">
+                        The parent will receive confirmation notifications via their preferred communication channels (SMS/Email). This appointment will appear in both the parent's and provider's dashboards.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          <% end %>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

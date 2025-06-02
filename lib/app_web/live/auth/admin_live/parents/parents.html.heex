@@ -501,13 +501,12 @@
                           <!-- Empty cell -->
                         </td>
                         <td class="px-6 py-2 whitespace-nowrap">
-                          <button
-                            phx-click="show_appointment_form"
-                            phx-value-child_id={child.id}
-                            class="text-green-600 hover:text-green-900 text-xs"
-                          >
-                            Book Appointment
-                          </button>
+                          <.link
+                              href={~p"/admin/appointments/new/#{child.id}"}
+                              class="text-green-600 hover:text-green-900 text-xs"
+                            >
+                              Book Appointment
+                            </.link>
                         </td>
                       </tr>
                     <% end %>
@@ -586,118 +585,6 @@
               </button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <!-- Appointment Creation Form Modal -->
-  <%= if @show_appointment_form do %>
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Book Appointment</h3>
-            <button
-              phx-click="hide_appointment_form"
-              class="text-gray-400 hover:text-gray-600"
-            >
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <%= if @selected_child_id do %>
-            <% child = get_child_by_id(Enum.flat_map(@parents, & &1.children), @selected_child_id) %>
-            <div class="mb-4 p-3 bg-blue-50 rounded-md">
-              <div class="flex items-center">
-                <svg class="h-5 w-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <div>
-                  <div class="text-sm font-medium text-blue-900">{child.name}</div>
-                  <div class="text-xs text-blue-700">{App.Accounts.Child.formatted_age(child)}</div>
-                </div>
-              </div>
-            </div>
-          <% end %>
-
-          <div class="space-y-4">
-            <!-- Date Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
-              <input
-                type="date"
-                phx-change="date_selected"
-                name="date"
-                min={Date.utc_today() |> Date.add(1) |> Date.to_iso8601()}
-                class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-
-            <!-- Provider Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Select Provider</label>
-              <select
-                phx-change="provider_selected"
-                name="provider_id"
-                class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              >
-                <option value="">Choose a provider...</option>
-                <%= for provider <- @providers do %>
-                  <option value={provider.id}>
-                    {provider.name} - {App.Setup.Specializations.display_name(provider.specialization)}
-                  </option>
-                <% end %>
-              </select>
-            </div>
-
-            <!-- Available Time Slots -->
-            <%= if @selected_date && @selected_provider_id && length(@available_slots) > 0 do %>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Available Time Slots</label>
-                <div class="grid grid-cols-3 gap-2">
-                  <%= for slot <- @available_slots do %>
-                    <button
-                      type="button"
-                      phx-click="create_appointment"
-                      phx-value-time={Time.to_iso8601(slot)}
-                      class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      {format_time(slot)}
-                    </button>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-
-            <%= if @selected_date && @selected_provider_id && length(@available_slots) == 0 do %>
-              <div class="text-center py-4">
-                <div class="text-gray-500">
-                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <h3 class="mt-2 text-sm font-medium text-gray-900">No Available Slots</h3>
-                  <p class="mt-1 text-sm text-gray-500">
-                    No available time slots for the selected date and provider.
-                  </p>
-                </div>
-              </div>
-            <% end %>
-          </div>
-
-          <div class="mt-6 flex justify-end space-x-3">
-            <button
-              type="button"
-              phx-click="hide_appointment_form"
-              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -860,16 +747,15 @@
                             {String.capitalize(child.status)}
                           </span>
 
-                          <button
-                            phx-click="show_appointment_form"
-                            phx-value-child_id={child.id}
+                          <.link
+                            href={~p"/admin/appointments/new/#{child.id}"}
                             class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
                           >
                             <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Book Appointment
-                          </button>
+                          </.link>
                         </div>
                       </div>
 
