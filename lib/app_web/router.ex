@@ -33,7 +33,7 @@ defmodule AppWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{AppWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-      get "/", PageController, :home
+      live "/", LandingLive, :home
       live "/users/register", UserRegistrationLive, :new
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
