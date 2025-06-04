@@ -107,7 +107,9 @@ defmodule App.Accounts do
 
   """
   def get_user_by_phone(phone) when is_binary(phone) do
-    Repo.get_by(User, phone: phone)
+    User
+    |> where([a], a.phone == phone)
+    |> Repo.one()
   end
 
   @doc """
