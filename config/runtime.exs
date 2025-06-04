@@ -49,19 +49,15 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-#  config :app, App.Mailer,
-#     adapter: Swoosh.Adapters.SMTP,
-#     relay: "smtp.gmail.com",
-#     username: "reports@probasegroup.com",
-#     password: "gwsm henv uwrl bnyj",
-#     port: 587,
-#     tls: :if_available,
-#     ssl: false,
-#     allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-#     retries: 3
-
-
-  # Disable swoosh api client as it is only required for production adapters.
-  config :swoosh, :api_client, false
+  config :app, App.Mailer,
+     adapter: Swoosh.Adapters.SMTP,
+     relay: "smtp.gmail.com",
+     username: "reports@probasegroup.com",
+     password: "gwsm henv uwrl bnyj",
+     port: 587,
+     tls: :if_available,
+     ssl: false,
+     allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+     retries: 3
 
 end
