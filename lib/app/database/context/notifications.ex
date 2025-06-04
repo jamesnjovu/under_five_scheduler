@@ -196,15 +196,8 @@ defmodule App.Notifications do
   # Implementation of actual SMS sending
   # In production, this would integrate with an SMS gateway service
   defp send_sms(phone_number, message) do
-    # In development, just log the message
-    if Mix.env() == :dev do
-      IO.puts("SMS to #{phone_number}: #{message}")
-      {:ok, :sent}
-    else
-      # In production or when explicitly configured, send real SMS
-      App.Services.ProbaseSMS.send_sms(phone_number, message)
-      {:ok, :sent}
-    end
+    App.Services.ProbaseSMS.send_sms(phone_number, message)
+    {:ok, :sent}
   end
 
   # Implementation of Email sending functions
@@ -263,7 +256,9 @@ defmodule App.Notifications do
 
     <ul>
       <li><strong>Previous Date/Time:</strong> #{format_date(old_date)} at #{format_time(old_time)}</li>
-      <li><strong>New Date/Time:</strong> #{format_date(appointment.scheduled_date)} at #{format_time(appointment.scheduled_time)}</li>
+      <li><strong>New Date/Time:</strong> #{format_date(appointment.scheduled_date)} at #{
+      format_time(appointment.scheduled_time)
+    }</li>
       <li><strong>Provider:</strong> #{appointment.provider.name}</li>
       <li><strong>Location:</strong> Health Center Main Building</li>
     </ul>
@@ -323,13 +318,11 @@ defmodule App.Notifications do
     if length(subscriptions) > 0 do
       # In production, we would use a web push service like web-push-encryption
       # For now, we'll just log it
-      if Mix.env() == :dev do
         IO.puts("Push notification to user #{user_id}:")
         IO.puts("  Title: #{title}")
         IO.puts("  Body: #{body}")
         IO.puts("  Data: #{inspect(data)}")
-        {:ok, :sent}
-      else
+
         # In production, use the web push library
         # WebPush.send_notification(subscription, %{
         #   title: title,
@@ -339,7 +332,6 @@ defmodule App.Notifications do
 
         # Return a success response for now
         {:ok, :sent}
-      end
     else
       {:ok, :no_subscriptions}
     end
@@ -433,7 +425,7 @@ defmodule App.Notifications do
       %NotificationPreference{
         sms_enabled: true,
         email_enabled: true,
-        push_enabled: false,  # Make sure push_enabled field exists
+        push_enabled: false, # Make sure push_enabled field exists
         reminder_hours: 24,
         user_id: user_id
       }
@@ -494,27 +486,22 @@ defmodule App.Notifications do
   # Now let's modify the send_sms function to record the message
   defp send_sms(phone_number, message, user_id \\ nil, appointment_id \\ nil) do
     # First, create a record in the database
-    {:ok, sms_record} = create_sms_message(%{
-      phone_number: phone_number,
-      message: message,
-      user_id: user_id,
-      appointment_id: appointment_id
-    })
+    {:ok, sms_record} = create_sms_message(
+      %{
+        phone_number: phone_number,
+        message: message,
+        user_id: user_id,
+        appointment_id: appointment_id
+      }
+    )
 
     # Then send the actual SMS
-    result = if Mix.env() == :dev && !Application.get_env(:app, :send_real_sms_in_dev, false) do
-      # In development, just log the message
-      IO.puts("SMS to #{phone_number}: #{message}")
-      {:ok, %{"messageId" => "dev-mode-#{:rand.uniform(10000)}"}}
-    else
-      # In production, send real SMS
-      App.Services.ProbaseSMS.send_sms(phone_number, message)
-    end
+    result = App.Services.ProbaseSMS.send_sms(phone_number, message)
 
     # Update the record based on the result
     case result do
       {:ok, [%{message_id: message_id, status: "SUCCESS"} | _]} ->
-#        Update our record with the message ID
+        #        Update our record with the message ID
         update_sms_status(sms_record.id, "sent", nil, message_id)
 
         {:ok, message_id}

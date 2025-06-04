@@ -35,14 +35,11 @@ defmodule App.Workers.SMSReminderWorker do
 
   defp send_sms(phone_number, message) do
     # In development, just log the message
-    if Mix.env() == :dev do
+
       IO.puts("SMS Reminder to #{phone_number}: #{message}")
-      {:ok, :sent}
-    else
       # In production or when explicitly configured, send real SMS
       App.Services.ProbaseSMS.send_sms(phone_number, message)
       {:ok, :sent}
-    end
   end
 
   defp format_time(time) do
