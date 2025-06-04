@@ -35,8 +35,8 @@
     <header class="bg-white shadow">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
         <div class="flex items-center">
-          <a
-            href="/children"
+          <.link
+            navigate="/children"
             class="mr-4 inline-flex items-center text-gray-500 hover:text-gray-700"
           >
             <svg
@@ -54,7 +54,7 @@
               />
             </svg>
             <span class="ml-1">Back to all children</span>
-          </a>
+          </.link>
           <h1 class="text-3xl font-bold text-gray-900">{@child.name}</h1>
         </div>
         <div class="flex space-x-3">
@@ -79,7 +79,7 @@
             Edit
           </.link>
           <.link
-            href={~p"/appointments/new?child_id=#{@child.id}"}
+            navigate={~p"/appointments/new?child_id=#{@child.id}"}
             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             <svg
@@ -163,7 +163,7 @@
             </p>
           </div>
           <.link
-            href={~p"/appointments/new?child_id=#{@child.id}"}
+            navigate={~p"/appointments/new?child_id=#{@child.id}"}
             class="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Schedule
@@ -188,7 +188,7 @@
             <p class="mt-1 text-sm text-gray-500">Schedule a health check-up for your child</p>
             <div class="mt-6">
               <.link
-                href={~p"/appointments/new?child_id=#{@child.id}"}
+                navigate={~p"/appointments/new?child_id=#{@child.id}"}
                 class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <svg
@@ -275,18 +275,18 @@
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <a
-                        href={"/appointments/#{appointment.id}"}
+                      <.link
+                        navigate={"/appointments/#{appointment.id}"}
                         class="text-indigo-600 hover:text-indigo-900 mr-3"
                       >
                         View
-                      </a>
-                      <a
-                        href={"/appointments/#{appointment.id}/reschedule"}
+                      </.link>
+                      <.link
+                        navigate={"/appointments/#{appointment.id}/reschedule"}
                         class="text-indigo-600 hover:text-indigo-900"
                       >
                         Reschedule
-                      </a>
+                      </.link>
                     </td>
                   </tr>
                 <% end %>

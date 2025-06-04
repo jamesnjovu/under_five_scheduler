@@ -42,8 +42,8 @@
     <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <!-- Quick actions -->
       <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <a
-          href="/children/new"
+        <.link
+          navigate="/children/new"
           class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-green-500"
         >
           <div class="flex items-center">
@@ -74,10 +74,10 @@
               <p class="text-sm text-gray-500">Add a new child to your account</p>
             </div>
           </div>
-        </a>
+        </.link>
 
-        <a
-          href="/appointments/new"
+        <.link
+          navigate="/appointments/new"
           class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-blue-500"
         >
           <div class="flex items-center">
@@ -108,10 +108,10 @@
               <p class="text-sm text-gray-500">Book a new health check-up</p>
             </div>
           </div>
-        </a>
+        </.link>
 
-        <a
-          href="/children"
+        <.link
+          navigate="/children"
           class="group transform transition-all hover:scale-105 bg-white overflow-hidden shadow rounded-lg px-6 py-5 border-l-4 border-purple-500"
         >
           <div class="flex items-center">
@@ -136,7 +136,7 @@
               <p class="text-sm text-gray-500">View and edit children's profiles</p>
             </div>
           </div>
-        </a>
+        </.link>
       </div>
       
 <!-- Children -->
@@ -151,12 +151,12 @@
                 Registered children under your account.
               </p>
             </div>
-            <a
-              href="/children/new"
+            <.link
+              navigate="/children/new"
               class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Add Child
-            </a>
+            </.link>
           </div>
 
           <%= if Enum.empty?(@children) do %>
@@ -178,8 +178,8 @@
               <h3 class="mt-2 text-sm font-medium text-gray-900">No children registered</h3>
               <p class="mt-1 text-sm text-gray-500">Add a child to manage appointments</p>
               <div class="mt-6">
-                <a
-                  href="/children/new"
+                <.link
+                  navigate="/children/new"
                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg
@@ -196,14 +196,14 @@
                     />
                   </svg>
                   Add Child
-                </a>
+                </.link>
               </div>
             </div>
           <% else %>
             <ul role="list" class="divide-y divide-gray-200">
               <%= for child <- @children do %>
                 <li>
-                  <a href={"/children/#{child.id}"} class="block hover:bg-gray-50">
+                  <.link navigate={"/children/#{child.id}"} class="block hover:bg-gray-50">
                     <div class="px-4 py-4 sm:px-6">
                       <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -239,7 +239,7 @@
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </.link>
                 </li>
               <% end %>
             </ul>
@@ -259,12 +259,12 @@
                 Your next scheduled health check-ups.
               </p>
             </div>
-            <a
-              href="/appointments/new"
+            <.link
+              navigate="/appointments/new"
               class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Schedule
-            </a>
+            </.link>
           </div>
 
           <%= if Enum.empty?(@upcoming_appointments) do %>
@@ -284,8 +284,8 @@
               <h3 class="mt-2 text-sm font-medium text-gray-900">No upcoming appointments</h3>
               <p class="mt-1 text-sm text-gray-500">Schedule a health check-up</p>
               <div class="mt-6">
-                <a
-                  href="/appointments/new"
+                <.link
+                  navigate="/appointments/new"
                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg
@@ -302,7 +302,7 @@
                     />
                   </svg>
                   Schedule Appointment
-                </a>
+                </.link>
               </div>
             </div>
           <% else %>
@@ -387,18 +387,18 @@
                         </span>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a
-                          href={"/appointments/#{appointment.id}"}
+                        <.link
+                          navigate={"/appointments/#{appointment.id}"}
                           class="text-indigo-600 hover:text-indigo-900 mr-3"
                         >
                           View
-                        </a>
-                        <a
-                          href={"/appointments/#{appointment.id}/reschedule"}
+                        </.link>
+                        <.link
+                          navigate={"/appointments/#{appointment.id}/reschedule"}
                           class="text-indigo-600 hover:text-indigo-900"
                         >
                           Reschedule
-                        </a>
+                        </.link>
                       </td>
                     </tr>
                   <% end %>
@@ -406,12 +406,12 @@
               </table>
             </div>
             <div class="py-4 px-4 bg-gray-50 border-t border-gray-200">
-              <a
-                href="/appointments"
+              <.link
+                navigate="/appointments"
                 class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
               >
                 View all appointments
-              </a>
+              </.link>
             </div>
           <% end %>
         </div>

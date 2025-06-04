@@ -61,7 +61,8 @@ defmodule App.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.13"},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:gen_smtp, "~> 1.1"},
     ]
   end
 

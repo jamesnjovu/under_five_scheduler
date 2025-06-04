@@ -32,7 +32,7 @@
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
         <h1 class="text-3xl font-bold text-gray-900">My Appointments</h1>
         <.link
-          href={~p"/appointments/new"}
+          navigate={~p"/appointments/new"}
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <svg
@@ -169,7 +169,7 @@
                 </p>
                 <div class="mt-6">
                   <.link
-                    href={~p"/appointments/new"}
+                    navigate={~p"/appointments/new"}
                     class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     <svg
@@ -274,18 +274,18 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div class="flex space-x-3">
-                            <a
-                              href={"/appointments/#{appointment.id}"}
+                            <.link
+                              navigate={"/appointments/#{appointment.id}"}
                               class="text-indigo-600 hover:text-indigo-900"
                             >
                               View
-                            </a>
-                            <a
-                              href={"/appointments/#{appointment.id}/reschedule"}
+                            </.link>
+                            <.link
+                              navigate={"/appointments/#{appointment.id}/reschedule"}
                               class="text-indigo-600 hover:text-indigo-900"
                             >
                               Reschedule
-                            </a>
+                            </.link>
                             <button
                               phx-click="cancel_appointment"
                               phx-value-id={appointment.id}

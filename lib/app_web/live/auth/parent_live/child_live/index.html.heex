@@ -191,13 +191,13 @@
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div class="flex justify-end space-x-3">
                         <.link
-                          patch={~p"/children/#{child}/edit"}
+                          navigate={~p"/children/#{child}/edit"}
                           class="text-indigo-600 hover:text-indigo-900"
                         >
                           Edit
                         </.link>
                         <.link
-                          href={~p"/appointments/new?child_id=#{child.id}"}
+                          navigate={~p"/appointments/new?child_id=#{child.id}"}
                           class="text-green-600 hover:text-green-900"
                         >
                           Book Appointment
@@ -232,12 +232,12 @@
             </p>
           </div>
           <div class="mt-5">
-            <a
-              href="/appointments/new"
+            <.link
+              navigate="/appointments/new"
               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Schedule a check-up
-            </a>
+            </.link>
           </div>
         </div>
       </div>
