@@ -152,23 +152,43 @@ defmodule AppWeb.UserRegistrationLive do
       |> assign(trigger_submit: false, check_errors: false)
       |> assign_form1(changeset)
 
-    {:ok, socket, temporary_assigns: [form: nil]}
+    {
+      :ok,
+      socket,
+      temporary_assigns: [
+        form: nil
+      ]
+    }
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do
     case Accounts.register_user(user_params) do
       {:ok, user} ->
-        {:ok, _} =
-          Accounts.deliver_user_confirmation_instructions(
-            user,
-            &url(~p"/users/confirm/#{&1}")
-          )
+        Task.start(
+          fn ->
+            {:ok, _} =
+              Accounts.deliver_user_confirmation_instructions(
+                user,
+                &url(~p"/users/confirm/#{&1}")
+              )
+          end
+        )
 
         changeset = Accounts.change_user_registration(user)
-        {:noreply, socket |> assign(trigger_submit: true) |> assign_form1(changeset)}
+        {
+          :noreply,
+          socket
+          |> assign(trigger_submit: true)
+          |> assign_form1(changeset)
+        }
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form1(changeset)}
+        {
+          :noreply,
+          socket
+          |> assign(check_errors: true)
+          |> assign_form1(changeset)
+        }
     end
   end
 
