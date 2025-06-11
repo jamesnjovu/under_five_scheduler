@@ -8,6 +8,7 @@ defmodule App.Accounts do
 
   alias App.Accounts.{User, UserToken, UserNotifier, Child}
   alias App.Notifications.NotificationPreference
+  alias App.Accounts.PasswordResetOTP
 
   ## Database getters
 
@@ -609,4 +610,185 @@ defmodule App.Accounts do
 
   def is_parent?(%User{role: "parent"}), do: true
   def is_parent?(_), do: false
+
+  @doc """
+  Initiates password reset by sending OTP to user's phone.
+  """
+  def initiate_password_reset_by_email(email) do
+    case get_user_by_email(email) do
+      nil ->
+        # Return success even if user not found to prevent phone number enumeration
+        {:ok, :otp_sent}
+
+      user ->
+        # Invalidate any existing OTP for this user
+        invalidate_existing_otps(user.id)
+
+        # Create new OTP
+        otp_changeset = PasswordResetOTP.create_otp(user, user.phone)
+
+        case Repo.insert(otp_changeset) do
+          {:ok, otp} ->
+            # Send SMS with OTP
+            send_password_reset_otp(user.phone, otp.otp_code, user.name)
+            {:ok, :otp_sent}
+
+          {:error, changeset} ->
+            {:error, changeset}
+        end
+    end
+  end
+
+  @doc """
+  Verifies the OTP code for password reset.
+  """
+  def verify_password_reset_otp(phone_number, otp_code) do
+    case get_active_password_reset_otp(phone_number) do
+      nil ->
+        {:error, :invalid_otp}
+
+      otp ->
+        cond do
+          PasswordResetOTP.expired?(otp) ->
+            {:error, :expired}
+
+          PasswordResetOTP.verified?(otp) ->
+            {:error, :already_used}
+
+          PasswordResetOTP.max_attempts_reached?(otp) ->
+            {:error, :max_attempts}
+
+          otp.otp_code == otp_code ->
+            # Mark as verified
+            case Repo.update(PasswordResetOTP.verify_changeset(otp)) do
+              {:ok, verified_otp} ->
+                {:ok, verified_otp}
+
+              {:error, changeset} ->
+                {:error, changeset}
+            end
+
+          true ->
+            # Increment attempts
+            Repo.update(PasswordResetOTP.increment_attempts_changeset(otp))
+            {:error, :invalid_otp}
+        end
+    end
+  end
+
+  @doc """
+  Resets password using verified OTP.
+  """
+  def reset_password_with_otp(email, otp_code, new_password) do
+    with {:ok, otp} <- verify_otp_for_reset(email, otp_code),
+         user <- get_user!(otp.user_id),
+         {:ok, updated_user} <- update_user_password_direct(user, new_password) do
+
+      # Invalidate the OTP after successful password reset
+      Repo.delete(otp)
+
+      {:ok, updated_user}
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Resends OTP for password reset.
+  """
+  def resend_password_reset_otp(phone_number) do
+    case get_user_by_phone(phone_number) do
+      nil ->
+        {:ok, :otp_sent}
+
+      user ->
+        # Check if there's a recent OTP (within last 2 minutes)
+        if has_recent_otp?(user.id) do
+          {:error, :too_soon}
+        else
+          # Invalidate existing OTPs and create new one
+          invalidate_existing_otps(user.id)
+
+          otp_changeset = PasswordResetOTP.create_otp(user, phone_number)
+
+          case Repo.insert(otp_changeset) do
+            {:ok, otp} ->
+              send_password_reset_otp(user.phone, otp.otp_code, user.name)
+              {:ok, :otp_sent}
+
+            {:error, changeset} ->
+              {:error, changeset}
+          end
+        end
+    end
+  end
+
+  # Private helper functions
+
+  defp get_active_password_reset_otp(email) do
+    from(otp in PasswordResetOTP,
+      where: otp.email == ^email and
+             is_nil(otp.verified_at) and
+             otp.expires_at > ^DateTime.utc_now(),
+      order_by: [desc: otp.inserted_at],
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
+  defp verify_otp_for_reset(email, otp_code) do
+    case get_active_password_reset_otp(email) do
+      nil ->
+        {:error, :invalid_otp}
+
+      otp ->
+        if otp.otp_code == otp_code and !PasswordResetOTP.verified?(otp) do
+          {:ok, otp}
+        else
+          {:error, :invalid_otp}
+        end
+    end
+  end
+
+  defp invalidate_existing_otps(user_id) do
+    from(otp in PasswordResetOTP,
+      where: otp.user_id == ^user_id and is_nil(otp.verified_at)
+    )
+    |> Repo.delete_all()
+  end
+
+  defp has_recent_otp?(user_id) do
+    two_minutes_ago = DateTime.add(DateTime.utc_now(), -120, :second)
+
+    from(otp in PasswordResetOTP,
+      where: otp.user_id == ^user_id and otp.inserted_at > ^two_minutes_ago
+    )
+    |> Repo.exists?()
+  end
+
+  defp update_user_password_direct(user, password) do
+    changeset =
+      user
+      |> User.password_changeset(%{password: password})
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(:user, changeset)
+    |> Ecto.Multi.delete_all(:tokens, UserToken.by_user_and_contexts_query(user, :all))
+    |> Repo.transaction()
+    |> case do
+         {:ok, %{user: user}} -> {:ok, user}
+         {:error, :user, changeset, _} -> {:error, changeset}
+       end
+  end
+
+  defp send_password_reset_otp(phone_number, otp_code, user_name) do
+    message = """
+    Hello #{user_name},
+    Your password reset code for Under Five Health Check-Up is: #{otp_code}
+    This code will expire in 10 minutes. Do not share this code with anyone.
+    If you did not request this reset, please ignore this message.
+    """
+
+    App.Services.ProbaseSMS.send_sms(phone_number, message)
+  end
 end

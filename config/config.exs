@@ -23,6 +23,8 @@ config :app, Oban,
          {"0 6 * * *", App.Workers.HealthAlertGeneratorWorker},
          # Weekly follow-up reminders on Mondays at 9 AM
          {"0 9 * * 1", App.Workers.FollowUpReminderWorker},
+         # Every hour
+         {"0 */1 * * *", App.Workers.OTPCleanupWorker},
          # Daily immunization reminders at 10 AM
          {"0 10 * * *", App.Workers.ImmunizationReminderWorker, args: %{reminder_type: "upcoming"}},
          # Weekly overdue immunization alerts on Fridays at 2 PM
