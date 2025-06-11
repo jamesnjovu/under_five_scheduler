@@ -9,27 +9,27 @@
   <!-- Main content area -->
   <div class="flex-1 overflow-auto">
     <!-- Enhanced Header with gradient -->
-    <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 shadow-lg">
-      <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <header class="bg-white shadow shadow-lg">
+      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-indigo-900">My Appointments</h1>
-            <p class="text-indigo-100 mt-1">Manage your daily schedule and patient appointments</p>
+            <h1 class="text-3xl font-bold text-gray-900">My Appointments</h1>
+            <p class="mt-1 text-sm text-gray-600">Manage your daily schedule and patient appointments</p>
           </div>
 
           <!-- Quick Stats Cards -->
           <div class="hidden lg:flex space-x-4">
-            <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
-              <div class="text-2xl font-bold text-white">{@daily_stats.total}</div>
-              <div class="text-xs text-indigo-100">Total Today</div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-lg border border-gray-600 px-4 py-3 text-center">
+              <div class="text-2xl font-bold text-gray-600">{@daily_stats.total}</div>
+              <div class="text-xs text-gray-500">Total Today</div>
             </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
-              <div class="text-2xl font-bold text-white">{@daily_stats.completed}</div>
-              <div class="text-xs text-indigo-100">Completed</div>
+            <div class="bg-white/10 backdrop-blur-sm border border-gray-600 rounded-lg px-4 py-3 text-center">
+              <div class="text-2xl font-bold text-gray-600">{@daily_stats.completed}</div>
+              <div class="text-xs text-gray-500">Completed</div>
             </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
-              <div class="text-2xl font-bold text-white">{@daily_stats.confirmed + @daily_stats.scheduled}</div>
-              <div class="text-xs text-indigo-100">Upcoming</div>
+            <div class="bg-white/10 border border-gray-600 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+              <div class="text-2xl font-bold text-gray-600">{@daily_stats.confirmed + @daily_stats.scheduled}</div>
+              <div class="text-xs text-gray-500">Upcoming</div>
             </div>
           </div>
         </div>
