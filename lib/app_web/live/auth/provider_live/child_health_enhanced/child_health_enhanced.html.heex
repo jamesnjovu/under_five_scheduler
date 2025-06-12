@@ -94,6 +94,12 @@
                   <dt class="text-sm font-medium text-gray-500">Full Name</dt>
                   <dd class="text-sm text-gray-900">{@child.name}</dd>
                 </div>
+                <%= if @child.gender do %>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Gender</dt>
+                  <dd class="text-sm text-gray-900">{@child.gender}</dd>
+                </div>
+                <% end %>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Date of Birth</dt>
                   <dd class="text-sm text-gray-900">{format_date(@child.date_of_birth)}</dd>
@@ -140,7 +146,7 @@
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">Next Checkup</dt>
-                  <dd class="text-sm text-gray-900">{next_checkup_age(@child)}</dd>
+                  <dd class="text-sm text-gray-900">{next_checkup_age(@child).target_date}</dd>
                 </div>
               </dl>
             </div>

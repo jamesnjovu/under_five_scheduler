@@ -281,6 +281,20 @@
                           />
                         </div>
                       </div>
+                      <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                          Child's Gender
+                        </label>
+                        <div class="mt-1">
+                          <.input
+                            field={@form[:gender]}
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            option={["Male", "Female"]}
+                            prompt="-- Select Gender --"
+                            required
+                          />
+                        </div>
+                      </div>
 
                       <div>
                         <label for="date_of_birth" class="block text-sm font-medium text-gray-700">

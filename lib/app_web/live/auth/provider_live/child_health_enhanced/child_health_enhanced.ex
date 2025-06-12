@@ -495,7 +495,7 @@ defmodule AppWeb.ProviderLive.ChildHealthEnhanced do
   end
 
   defp next_checkup_age(child) do
-    App.Accounts.Child.next_checkup_age(child)
+    App.Accounts.Child.next_checkup_age(child) |> IO.inspect
   end
 
   defp safe_percentage(value) when is_number(value) do

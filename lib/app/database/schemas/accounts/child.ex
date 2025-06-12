@@ -10,6 +10,7 @@ defmodule App.Accounts.Child do
     field :date_of_birth, :date
     field :medical_record_number, :string
     field :name, :string
+    field :gender, :string
     field :status, :string
 
     belongs_to :user, User
@@ -21,7 +22,7 @@ defmodule App.Accounts.Child do
   @doc false
   def changeset(child, attrs) do
     child
-    |> cast(attrs, [:name, :date_of_birth, :medical_record_number, :user_id])
+    |> cast(attrs, [:name, :date_of_birth, :gender, :medical_record_number, :user_id])
     |> validate_required([:name, :date_of_birth, :user_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_date_of_birth()
